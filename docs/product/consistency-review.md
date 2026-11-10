@@ -36,6 +36,13 @@ Legenda razrješenja: **DD** = dokumentacijska odluka donesena u ovom koraku (re
 | N-21 | Nigdje nije pokriven zahtjev trgovina aplikacija za **brisanje računa iz aplikacije** (Apple App Store smjernica 5.1.1(v) — primjenjivost na račune kreirane pozivnicom treba provjeriti). | — | Dodano u FS-01 i Q-T10. |
 | N-22 | Kategorija izostanka "bolest" mogla bi biti podatak o zdravlju (čl. 9) — nigdje nije adresirano. | business-rules, user-journeys | MVP prijava izostanka **bez razloga i bez slobodnog teksta**; ⚖️ Q-P16. |
 
+### Dopuna — Faza 3 (2026-11-10), fizički model
+| ID | Nalaz | Razrješenje |
+|---|---|---|
+| N-23 | Traženi fizički model ima tablice `guardians` i `child_guardians`, a domenski model samo `guardianship` vezan na korisnički profil. Skrbnik mora postojati u vrtiću prije nego prihvati pozivnicu. | **DD-09:** `guardians` = zapis osobe u pojedinom vrtiću (bez e-pošte i telefona; adresa za pozivnicu samo u `invitations`), `child_guardians` = veza sa zastavicama i valjanošću. |
+| N-24 | Domenski model ima `pickup_person` + `pickup_authorization`; za MVP to je jedna osoba po djetetu. | **DD-10:** jedna tablica `pickup_authorizations` (ime + valjanost po djetetu); dupliciranje imena za braću i sestre prihvaćeno radi jednostavnosti. |
+| N-25 | FR-07-3 traži povijest verzija objavljenih obavijesti, a demo opseg ne uključuje uređivanje nakon objave. | **DD-11:** u demu se objavljena obavijest ne može uređivati, samo arhivirati; `announcement_revisions` odgođen do produkcijskog opsega. |
+
 ## 2. Nedovršeni dijelovi (stanje prije ovog koraka)
 
 | Područje | Stanje | Sada |

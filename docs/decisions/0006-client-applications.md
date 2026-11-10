@@ -43,3 +43,11 @@ Apple Developer USD 99/year; Google Play USD 25 one-off. Vercel Pro ~USD 20/user
 ## Open points
 - D-6: approve one-app strategy and admin hosting option.
 - Q-T03: shared kindergarten tablets vs personal phones for educators (affects session model and MDM).
+
+## Phase 3 addendum (2026-11-10) — admin hosting
+- **Demo:** admin runs locally only (ADR-0009); no hosting decision needed to build or present the demo.
+- The admin server holds **no service key**; Server Components and Server Actions act with the user's session
+  (admin-app.md). Consequently any host processes request logs and rendered personal data in transit → it is a
+  processor either way.
+- Recommendation unchanged: decide after the DPO conversation (Q-P08) between Vercel (`fra1` functions) and an
+  EU-headquartered host; record in a new ADR before staging. Status remains **Proposed**.

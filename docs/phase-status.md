@@ -1,6 +1,8 @@
 # Status faza
 
-**Trenutna faza:** FAZA 1 — Definicija/arhitektura proizvoda → **specifikacija izrađena (nacrt); čeka validaciju s vrtićima**
+**Trenutna faza:** FAZA 3 — Tehnička arhitektura → **dovršena (nacrt), čeka odobrenje za Fazu 4 (dizajn) i izgradnju dema**
+**Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
+**Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
 **Zadnje ažuriranje:** 2026-11-10
 
@@ -21,6 +23,11 @@
 ## 🔄 U tijeku
 - Faza 1: kompletan nacrt specifikacije (PRD, FS-01…FS-15, kriteriji prihvaćanja, inventar podataka, plan validacije) — **čeka tok V** (intervjui) za zaključavanje MVP-a.
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
+- **Faza 3 — tehnička arhitektura (2026-11-10):**
+  - [x] [architecture/technical-architecture.md](architecture/technical-architecture.md), [database-schema.md](architecture/database-schema.md), [api-conventions.md](architecture/api-conventions.md), [mobile-app.md](architecture/mobile-app.md), [admin-app.md](architecture/admin-app.md), [local-development.md](architecture/local-development.md)
+  - [x] ADR-0009…0015 (Proposed) + dodatak ADR-0006
+  - [x] Lokalni Supabase stack pokrenut u ovom okruženju (Docker Hub registry); RLS spike 14/14 — [architecture/spikes/rls-spike.sql](architecture/spikes/rls-spike.sql)
+  - [ ] Spike Expo + pnpm + TypeScript 7 (P3-1) → prvi zadatak sloja D0
 - **Faza 2 — ograničeni opseg** (nalog vlasnika 2026-11-10: sigurnosna arhitektura i priprema za incidente; ostali privatnosni dokumenti čekaju validaciju). D-18 i dalje formalno čeka odluku vlasnika o punoj Fazi 2.
   - [x] Threat model (STRIDE) — [security/threat-model.md](security/threat-model.md)
   - [x] Sigurnosni zahtjevi (SR, Critical–Low, NEG-01…15) — [security/security-requirements.md](security/security-requirements.md)
@@ -54,6 +61,10 @@
 | D-16 | Pregled dokumentacijskih odluka DD-01…DD-08 i pretpostavki A-01…A-09 | Pregledati i potvrditi/odbiti | [product/consistency-review.md](product/consistency-review.md), [product/prd.md](product/prd.md) §9 |
 | D-17 | Pokretanje toka V: potvrda plana validacije i popisa kontakata (ravnatelji, odgojitelji, DPO) | Pokrenuti odmah — blokira zaključavanje MVP-a | [product/validation-plan.md](product/validation-plan.md) |
 | D-18 | Prijelaz u Fazu 2 (privatnost/sigurnost) paralelno s validacijom ili tek nakon nje | Paralelno samo za dokumente neovisne o opsegu (threat model, breach plan); ostalo nakon validacije | [roadmap.md](roadmap.md) |
+| ~~D-19~~ | ~~Demo prije validacije~~ | **Odluka vlasnika 2026-11-10:** graditi demo cijele aplikacije; MVP nepotvrđen; samo lokalno i sintetički | [roadmap.md](roadmap.md) (Izgradnja demo verzije) |
+| D-20 | Pregled ADR-0009…0015 (lokalni demo, e-pošta, mediji, offline dolasci, backup, autorizacija u bazi, klijentski stog) | Prihvatiti 0009, 0012, 0014, 0015 za izgradnju dema; 0010, 0011, 0013 tek prije staginga | [decisions/](decisions/) |
+| D-21 | Pregled dokumentacijskih odluka DD-09…DD-11 (guardians/child_guardians, pickup_authorizations, obavijesti bez uređivanja u demu) | Prihvatiti | [product/consistency-review.md](product/consistency-review.md) |
+| D-22 | Prijelaz u Fazu 4 (dizajn) i zatim sloj D0 izgradnje | Odobriti | [roadmap.md](roadmap.md), [backlog.md](backlog.md) |
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost

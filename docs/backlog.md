@@ -41,9 +41,25 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] [P2-26] Odluke Q-S10, Q-S11, Q-S12 (sesije, kod za povezivanje, zaključavanje aplikacije) prije Faze 6
 
 ## Faza 3
-- [P3-1] Spike: Expo + pnpm + Turborepo monorepo
-- [P3-2] Spike: RLS helperi + pgTAP + mjerenje performansi sa 1.000 sintetičke djece
-- [P3-3] ADR-ovi: e-mail pružatelj, mediji, offline dolasci, backup/restore
+- [ ] [P3-1] Spike: Expo + pnpm + Turborepo monorepo (+ kompatibilnost TypeScript 7, R-39) — **premješteno u D0 (Faza 5), prvi zadatak**
+- [x] [P3-2a] Spike: RLS helperi, kompozitni FK, exclusion, opoziv — `architecture/spikes/rls-spike.sql` (14/14)
+- [ ] [P3-2b] Mjerenje performansi RLS-a s 10 vrtića / 1.000 djece — D0
+- [x] [P3-3] ADR-ovi 0009–0015 (lokalni demo, e-pošta, mediji, offline, backup, autorizacija u bazi, klijentski stog) + dodatak ADR-0006 (hosting admina)
+- [x] [P3-4] Tehnička arhitektura, shema baze, API konvencije, mobilna i admin aplikacija, lokalno okruženje — `architecture/`
+
+## Faza 4 — Dizajn (sljedeće)
+- [ ] [P4-1] `/impeccable shape` za ključne ekrane: odgojitelj — evidencija dolazaka; roditelj — početna; uprava — pregled vrtića
+- [ ] [P4-2] DESIGN.md: paleta (mekana zelena + topli neutralni, provjera kontrasta WCAG 2.2 AA), tipografija s hrvatskim dijakriticima, razmaci, radijusi, stanja
+- [ ] [P4-3] `packages/tokens` izvorni JSON iz DESIGN.md
+- [ ] [P4-4] Ključni ekrani (Figma ili kodni prototip) — 6 mobilnih + 4 admin ekrana
+- [ ] [P4-5] Test prototipa s odgojiteljima (validation-plan §5) — može se spojiti s intervjuima
+
+## Demo izgradnja (vidi roadmap)
+- [ ] [D0-1] Monorepo skeleton (pnpm, Turborepo, TS strict, ESLint granice), P3-1 spike
+- [ ] [D0-2] `supabase/` config (sigurne postavke — local-development §3a), prve migracije: organizations, facilities, academic_years, groups, profiles, memberships, private helperi, grantovi
+- [ ] [D0-3] pgTAP: ST-RLS-00 katalog + prvi NEG testovi; CI `quality`, `db`, `security`
+- [ ] [D0-4] Sintetički seed generator (`packages/test-fixtures`) + sigurnosne ograde skripti
+- [ ] [D1…D5] prema roadmapu (vertikalni slojevi)
 
 ## Faza 5 (unaprijed zabilježeno)
 - [P5-1] CI provjera: tablica bez RLS-a ruši build

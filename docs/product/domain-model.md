@@ -40,6 +40,9 @@
 - Ne koristiti email kao trajni identifikator korisnika ili skrbnika.
 - Ne koristiti naziv skupine ili ulogu kao sigurnosni dokaz.
 
+## Fizička implementacija (Faza 3)
+Preslikavanje entiteta na tablice, odgođeni entiteti i RLS strategija: [../architecture/database-schema.md](../architecture/database-schema.md) §2 (DD-09, DD-10, DD-11).
+
 ## Razriješeno u v0.2 (prijedlozi za pregled vlasnika)
 - Zamjena = vrsta rasporeda (DD-01). Zastavice na skrbničkoj vezi, ograničenje kao zaseban entitet (DD-02).
 - Preuzimanje: `pickup_person` + `pickup_authorization` po djetetu (DD-03).

@@ -52,5 +52,6 @@ documented env vars (`.env.example` only), small focused modules, conventional c
 ## Documentation map
 - [docs/README.md](docs/README.md) — index
 - [docs/roadmap.md](docs/roadmap.md) · [docs/phase-status.md](docs/phase-status.md) · [docs/backlog.md](docs/backlog.md)
-- [docs/architecture.md](docs/architecture.md) · [docs/decisions/](docs/decisions/) · [docs/risks.md](docs/risks.md)
+- [docs/architecture.md](docs/architecture.md) · [docs/architecture/](docs/architecture/) (implementation: schema, API, apps, local dev) · [docs/decisions/](docs/decisions/) · [docs/risks.md](docs/risks.md)
+- [docs/security/](docs/security/) (threat model, SR requirements, test plan, incident response)
 - [docs/open-questions.md](docs/open-questions.md) · [docs/privacy/](docs/privacy/) · [docs/tooling/skills.md](docs/tooling/skills.md)

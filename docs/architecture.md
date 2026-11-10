@@ -1,5 +1,11 @@
 # VrtićOS — Architecture (Phase 0 proposal)
 
+> **Phase 3 update (2026-11-10):** implementation-level architecture now lives in [architecture/](architecture/):
+> [technical-architecture](architecture/technical-architecture.md) · [database-schema](architecture/database-schema.md) ·
+> [api-conventions](architecture/api-conventions.md) · [mobile-app](architecture/mobile-app.md) · [admin-app](architecture/admin-app.md) ·
+> [local-development](architecture/local-development.md). Where they differ from this overview, the Phase 3 documents win;
+> the repository layout in §3 is superseded by technical-architecture §2.
+
 Status: **PROPOSED** — nothing here is approved until the linked ADRs are accepted.
 Owner decisions pending are tracked in [phase-status.md](phase-status.md).
 

@@ -19,6 +19,21 @@ Kratice: **DoD** = Definition of Done. Svaki DoD implicitno uključuje: ažurira
 
 ---
 
+## Izgradnja demo verzije (odluka vlasnika 2026-11-10)
+Vlasnik je odlučio izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua. MVP ostaje nepotvrđen.
+Demo radi **samo lokalno** sa sintetičkim podacima (ADR-0009). Faze 5–12 izvode se kao **vertikalni slojevi**;
+svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin aplikaciju:
+
+| Sloj | Sadržaj | Faze | Gotovo kada |
+|---|---|---|---|
+| D0 Temelj | monorepo, CI, lokalni stack, migracije osnovnih tablica i helpera, seed, ST-RLS-00 | 5 | `pnpm demo` pokreće sve; CI zelen |
+| D1 Identitet i struktura | prijava OTP, MFA uprave, pozivnice (Mailpit), vrtić/objekti/godine/skupine, djelatnici i rasporedi | 6 | uprava postavi vrtić i pozove odgojitelja; NEG testovi prolaze |
+| D2 Djeca i skrbnici | djeca, upisi, premještaj, skrbnici, ograničenja, ovlaštene osobe | 7 | skrbnik vidi samo svoje dijete (NEG-03…06) |
+| D3 Dolasci i izostanci | evidencija s predajom, poništavanje, offline red, izostanci, pregled uprave | 8 (+ FS-14) | jutarnji tok < 30 s; AC-05/06 |
+| D4 Komunikacija | obavijesti, centar obavijesti u aplikaciji, razgovori, dnevni pregled | 9–10 | AC-07, AC-10, AC-11 |
+| D5 Demo poliranje | sintetički scenarij za prezentaciju, banner, skripta prezentacije, Impeccable audit | — | prezentacija vrtiću moguća |
+| Nakon dema | fotografije (11), prava ispitanika i retencija (12), QA i vanjski pregled (13), pilot (14) | 11–14 | prema roadmapu |
+
 ## Tok V — Validacija s kupcima (kontinuirano, od Faze 0)
 - **Cilj:** potvrditi problem, kupca, cijenu i proces nabave prije većeg ulaganja u razvoj.
 - **Zadaci:** 3–5 razgovora s ravnateljima/odgojiteljima istarskih vrtića; razgovor s jednim DPO-om vrtića;

@@ -7,7 +7,7 @@
 | Status faza i odluke za odobrenje | [phase-status.md](phase-status.md) |
 | Roadmap | [roadmap.md](roadmap.md) |
 | Backlog | [backlog.md](backlog.md) |
-| Arhitektura | [architecture.md](architecture.md) |
+| Arhitektura | [architecture.md](architecture.md) · [tehnička](architecture/technical-architecture.md) · [baza](architecture/database-schema.md) · [API](architecture/api-conventions.md) · [mobilna](architecture/mobile-app.md) · [admin](architecture/admin-app.md) · [lokalno](architecture/local-development.md) |
 | ADR-ovi | [decisions/](decisions/) |
 | Rizici | [risks.md](risks.md) |
 | Otvorena pitanja | [open-questions.md](open-questions.md) |
