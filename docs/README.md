@@ -13,5 +13,5 @@
 | Otvorena pitanja | [open-questions.md](open-questions.md) |
 | Proizvod | [product/prd.md](product/prd.md) · [functional-specs](product/functional-specs.md) · [acceptance-criteria](product/acceptance-criteria.md) · [validation-plan](product/validation-plan.md) · [traceability](product/traceability.md) · [consistency-review](product/consistency-review.md) · ostalo u [product/](product/) |
 | Privatnost i GDPR | [privacy/](privacy/) · [inventar podataka](privacy/data-inventory.md) |
-| Sigurnost | [security/](security/) (Faza 2) |
+| Sigurnost | [security/](security/) · [threat model](security/threat-model.md) · [zahtjevi](security/security-requirements.md) · [testovi](security/security-test-plan.md) · [incidenti](security/incident-response-plan.md) |
 | Alati i skillovi | [tooling/skills.md](tooling/skills.md) |

@@ -31,8 +31,14 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 
 ## Faza 2
 - [P2-1…18] 18 privatnosnih dokumenata (vidi [privacy/README.md](privacy/README.md))
-- [P2-19] Threat model (STRIDE po komponenti)
-- [P2-20] Odabir ASVS L2 / MASVS kontrola
+- [x] [P2-19] Threat model (STRIDE po komponenti) — `security/threat-model.md` (nacrt v0.1)
+- [x] [P2-21] Plan odgovora na incidente — `security/incident-response-plan.md` (nacrt; uloge neimenovane)
+- [x] [P2-22] Sigurnosni zahtjevi s prioritetima i sljedivošću — `security/security-requirements.md`
+- [x] [P2-23] Plan sigurnosnog testiranja — `security/security-test-plan.md`
+- [ ] [P2-20] Odabir ASVS L2 / MASVS kontrola — detaljna kontrolna lista (u zahtjevima samo približno mapiranje, §12)
+- [ ] [P2-24] Registar podizvršitelja s kontaktima za incidente (SR-VEN-01) — ovisi o D-3, D-6, D-7
+- [ ] [P2-25] Imenovati uloge za incidente i kontakte (Q-S07) — odluka vlasnika
+- [ ] [P2-26] Odluke Q-S10, Q-S11, Q-S12 (sesije, kod za povezivanje, zaključavanje aplikacije) prije Faze 6
 
 ## Faza 3
 - [P3-1] Spike: Expo + pnpm + Turborepo monorepo
@@ -44,3 +50,17 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [P5-2] Secret scanning + dependency scanning u CI-u
 - [P5-3] Uključiti Impeccable hook (ako D-11) i zapisati u `.claude/settings.json`
 - [P5-4] Skripta za dohvat Impeccable enginea iz npm registryja s provjerom SHA-256 (za nove sesije)
+- [P5-5] Statička provjera kataloga baze (ST-RLS-00): RLS, `SECURITY DEFINER`, grantovi, `security_invoker`, javni bucketi
+- [P5-6] pgTAP paket s negativnim testovima NEG-01…NEG-15 kao uvjet za merge
+- [P5-7] Izvoz logova u EU pohranu (SR-LOG-03) — ovisi o Q-S08
+- [P5-8] Potpisivanje OTA ažuriranja (SR-SUP-03)
+- [P5-9] Push slanje uz obvezni pristupni token (SR-PUSH-02)
+- [P5-10] Strojno čitljiva matrica dozvola + generator pgTAP testova (security-test-plan §1)
+- [P5-11] CSP i sigurnosna zaglavlja admin weba (SR-WEB-02)
+- [P5-12] Monitoring scrubbing + test (ST-LOG-01)
+- [P5-13] Feature flag / način održavanja po modulu za brzo ograničavanje incidenta
+
+## Faza 13 (unaprijed zabilježeno)
+- [P13-1] Tabletop vježba incidentnog plana (najmanje P-01, P-03, P-04)
+- [P13-2] Vježba rotacije ključeva i PITR restore u zasebnom okruženju
+- [P13-3] Vanjski penetracijski test (ako D-13 odobren)

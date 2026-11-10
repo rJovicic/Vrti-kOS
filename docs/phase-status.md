@@ -21,6 +21,12 @@
 ## 🔄 U tijeku
 - Faza 1: kompletan nacrt specifikacije (PRD, FS-01…FS-15, kriteriji prihvaćanja, inventar podataka, plan validacije) — **čeka tok V** (intervjui) za zaključavanje MVP-a.
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
+- **Faza 2 — ograničeni opseg** (nalog vlasnika 2026-11-10: sigurnosna arhitektura i priprema za incidente; ostali privatnosni dokumenti čekaju validaciju). D-18 i dalje formalno čeka odluku vlasnika o punoj Fazi 2.
+  - [x] Threat model (STRIDE) — [security/threat-model.md](security/threat-model.md)
+  - [x] Sigurnosni zahtjevi (SR, Critical–Low, NEG-01…15) — [security/security-requirements.md](security/security-requirements.md)
+  - [x] Plan sigurnosnog testiranja — [security/security-test-plan.md](security/security-test-plan.md)
+  - [x] Plan odgovora na incidente (nacrt, uloge neimenovane, nije uvježban) — [security/incident-response-plan.md](security/incident-response-plan.md)
+  - [ ] ASVS/MASVS kontrolna lista (P2-20), registar podizvršitelja (P2-24), imenovanje uloga za incidente (P2-25)
 
 ## ⛔ Blokirano
 - `npx impeccable install` / `update` — `impeccable.style` blokiran mrežnom politikom okruženja (zaobiđeno instalacijom iz git taga).
@@ -51,7 +57,7 @@
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost
-US-matičnih procesora — vidi Q-P01…Q-P15.
+US-matičnih procesora — vidi Q-P01…Q-P16. Incidentni plan pretpostavlja ulogu izvršitelja (IR-A1) i ne odlučuje o obavještavanju AZOP-a ni ispitanika.
 
 
 ## Napredak Faze 1 — 2026-11-10

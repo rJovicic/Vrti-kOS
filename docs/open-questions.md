@@ -34,6 +34,13 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-S04 | Primjenjuje li se Zakon o kibernetičkoj sigurnosti (NIS2) na VrtićOS ili vrtiće? (preliminarno: vjerojatno ne zbog veličine — provjeriti) | ⚖️ |
 | Q-S05 | Tko ima administratorski pristup Supabase/Vercel/GitHub organizacijama? MFA obavezan? | 👤 |
 | Q-S06 | Kako se kontrolira i auditira operativni pristup platform tima bazi (konzola pružatelja) kad u proizvodu nema break-glassa (FS-09)? Četiri oka, zapis, obavijest vrtiću? | 👤 ⚖️ |
+| Q-S07 | Tko su osobe (i zamjenici) za uloge u incidentu: voditelj incidenta, tehnički voditelj, komunikacija? Postoji li dežurstvo u radnom vremenu vrtića (6–17 h)? | 👤 |
+| Q-S08 | Koliko dugo dobavljači (Supabase plan, hosting) čuvaju logove i trebamo li izvoz logova u vlastitu EU pohranu? Koji rok čuvanja sigurnosnih logova (⚖️ uskladiti s retencijom)? | 👤 ⚖️ |
+| Q-S09 | Ciljana vremena odgovora po razini incidenta (prijedlog u incidentnom planu §3) — interni cilj ili ugovorna obveza prema vrtiću? | 👤 ⚖️ |
+| Q-S10 | Trajanje access tokena i treba li opoziv sesije djelovati odmah (provjera sesije u politikama, SR-SESS-04) uz cijenu dodatnog upita? | 👤 |
+| Q-S11 | Treba li povezivanje skrbnika s djetetom uz e-mail pozivnicu tražiti i kod predan osobno u vrtiću (zaštita od pogrešne e-pošte, R-30)? | 👤 🏫 |
+| Q-S12 | Treba li zaključavanje aplikacije za djelatnike (PIN/otključavanje uređaja nakon neaktivnosti)? Povezano s Q-T03. | 🏫 👤 |
+| Q-S13 | Sigurnosni kontakt i postupak za prijavu ranjivosti (`security.txt`, odgovorno otkrivanje)? | 👤 |
 
 ## Proizvod i tehnologija (Q-T)
 
