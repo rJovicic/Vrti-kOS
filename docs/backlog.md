@@ -12,11 +12,12 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 ## Faza 1
 - [P1-1] Rječnik pojmova (HR↔EN identifikatori) — `docs/product/glossary.md`
 - [P1-2] Matrica uloga i dozvola — ovisi o P1-1
-- [P1-3] Korisnička putovanja (odgojitelj, roditelj, ravnatelj)
-- [P1-4] Poslovna pravila i rubni slučajevi
-- [P1-5] Domenski model (validacija ERD-a iz architecture.md)
-- [P1-6] NFR dokument
-- [P1-7] PRD + MVP opseg (MoSCoW) — ovisi o V-2
+- [x] [P1-3] Korisnička putovanja (nacrt) — `product/user-journeys.md`
+- [x] [P1-4] Poslovna pravila i rubni slučajevi (nacrt) — `product/business-rules.md`
+- [x] [P1-5] Domenski model (nacrt) — `product/domain-model.md`
+- [x] [P1-6] NFR dokument (nacrt) — `product/nfr.md`
+- [x] Privremeni MVP opseg (nacrt) — `product/mvp-scope.md`
+- [ ] [P1-7] PRD + MVP opseg (MoSCoW) — ovisi o V-2 i V-3
 
 ## Faza 2
 - [P2-1…18] 18 privatnosnih dokumenata (vidi [privacy/README.md](privacy/README.md))
