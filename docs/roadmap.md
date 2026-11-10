@@ -55,7 +55,9 @@ Kratice: **DoD** = Definition of Done. Svaki DoD implicitno uključuje: ažurira
   poslovna pravila (skrbništvo, ograničenja pristupa, zamjene, premještaji, višestruka članstva);
   MoSCoW prioritizacija; NFR (performanse, dostupnost, pristupačnost, podrška).
 - **Isporuke:** `docs/product/prd.md`, `glossary.md`, `roles-and-permissions.md`, `user-journeys.md`,
-  `business-rules.md`, `domain-model.md`, `nfr.md`, `mvp-scope.md`.
+  `business-rules.md`, `domain-model.md`, `nfr.md`, `mvp-scope.md`, `functional-specs.md`,
+  `acceptance-criteria.md`, `validation-plan.md`, `traceability.md`, `consistency-review.md`;
+  `docs/privacy/data-inventory.md` v0 (premješteno iz Faze 2 jer ga specifikacija treba).
 - **Tehnički rizici:** prekompleksan model; nejasni pojmovi između vrtića.
 - **Privatnost/sigurnost:** svaki atribut djeteta mora imati svrhu (ulaz u data inventory).
 - **Testovi:** pregled matrice dozvola s pravim korisnicima (validacija, ne kod).

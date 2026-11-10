@@ -7,12 +7,12 @@
 ## Zašto većina dokumenata još ne postoji
 Inventar podataka, pravne osnove, retencija i DPA ovise o domenskom modelu (Faza 1) i izboru procesora
 (odluke D-3, D-6, D-7). Pisati ih sada značilo bi izmišljati činjenice. Iznimka je **DPIA screening**, koji je
-započet u Fazi 0 jer utječe na arhitekturu.
+započet u Fazi 0 jer utječe na arhitekturu, i **inventar podataka v0**, izrađen u Fazi 1 jer ga traži specifikacija MVP-a.
 
 | # | Dokument | Status | Faza | Ovisi o |
 |---|---|---|---|---|
-| 1 | data-inventory.md | Planirano | 2 | Domenski model (F1) |
-| 2 | data-classification.md | Planirano | 2 | #1 |
+| 1 | [data-inventory.md](data-inventory.md) | **Nacrt v0** (izrađen u F1) | 1 → 2 | Domenski model (F1) |
+| 2 | data-classification.md | Planirano (ljestvica R1–R5 predložena u data-inventory §1) | 2 | #1 |
 | 3 | data-flow-map.md | Planirano | 2 | #1, ADR-0003/6/7 |
 | 4 | gdpr-compliance-matrix.md | Planirano | 2 | #1–3 |
 | 5 | lawful-basis-analysis.md | Planirano | 2 | Q-P01, Q-P02 ⚖️ |

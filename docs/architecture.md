@@ -126,6 +126,12 @@ erDiagram
   ORGANIZATION ||--o{ INVITATION : issues
 ```
 
+Phase 1 alignment (2026-11-10, see `product/consistency-review.md`): the logical model in
+`product/domain-model.md` v0.2 is authoritative over this ERD sketch. Notable deltas: `STAFF_ASSIGNMENT` carries
+`assignment_type` (regular/substitute, DD-01); `PICKUP_PERSON` is paired with a per-child `PICKUP_AUTHORIZATION`
+(DD-03); `ACCESS_RESTRICTION` is a separate entity on guardianship (DD-02); `CONSENT_*` and `MEDIA_*` are **not MVP**
+(D-15); added `ANNOUNCEMENT_REVISION`, `NOTICE_ACKNOWLEDGMENT`, `DATA_SUBJECT_REQUEST`, `RETENTION_RULE`.
+
 Key modelling decisions to validate:
 - **Time-bounded relationships.** `ENROLLMENT` and `STAFF_ASSIGNMENT` carry `valid_from/valid_to`; access is
   computed from *current* relationships, so moving a child between groups or ending a substitute's
@@ -145,7 +151,7 @@ Key modelling decisions to validate:
 | `org_admin` | organization | All in org | Kindergarten administration |
 | `director` (ravnatelj) | organization | All in org | Reports, announcements |
 | `educator` (odgojitelj) | assigned groups (current) | Only enrolled in their current groups | Attendance, reports, messages |
-| `staff_other` (e.g. kitchen, health lead) | organization, limited | **[open]** — likely none or menu-only | Needs Phase 1 decision |
+| `staff_other` (e.g. kitchen, health lead) | organization, limited | None | **Not in MVP** (DD-05) |
 | `guardian` (roditelj/skrbnik) | own children | Only own children, subject to `access_restricted` | Absences, messages, consent |
 
 ## 6. Cross-cutting architecture (to be detailed in Phase 3)

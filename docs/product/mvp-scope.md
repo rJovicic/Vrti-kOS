@@ -1,6 +1,6 @@
 # Opseg MVP-a — privremeni prijedlog v0.1
 
-**Status:** prijedlog za razgovore, nije konačna specifikacija niti odobrenje razvoja.
+**Status:** prijedlog za razgovore, nije konačna specifikacija niti odobrenje razvoja. v0.2 (2026-11-10): jelovnik premješten u *Should* (N-11); dodani FS-08 i FS-15; specifikacije u `functional-specs.md`.
 
 ## Ciljni korisnici
 1. Roditelji/skrbnici — pregled objavljenih informacija i prijava izostanka.
@@ -14,14 +14,16 @@
 - Vremenski ograničeni rasporedi djelatnika i zamjene.
 - Dolasci/odlasci i prijava izostanka.
 - Osnovne obavijesti.
-- Jelovnik ako vrtići potvrde da je važan i ne uključuje profiliranje zdravstvenih potreba.
+- Push i obavijesti u aplikaciji bez osobnih podataka (FS-08).
+- Prava ispitanika i retencija kao operativni minimum prije produkcije (FS-15).
 - Audit, prava pristupa, retencija i sigurnosne kontrole nisu dodatne funkcije nego uvjeti za MVP.
 
 ## Should have — validirati
 - Jednostavan dnevni pregled bez zdravstvenih ili razvojnih bilješki.
 - Razgovor roditelj–tim skupine.
 - Kalendar događaja.
-- Osnovni izvještaji za ravnatelja.
+- Osnovni izvještaji za ravnatelja (pregled dolazaka, bez izvoza).
+- Jelovnik po objektu, ako vrtići potvrde važnost; bez profiliranja zdravstvenih potreba (premješteno iz Must, N-11).
 
 ## Could have / kasnije
 - Fotografije i mediji (moguće tek nakon zasebne procjene privola, pristupa i retencije).

@@ -1,6 +1,6 @@
 # Matrica uloga i dozvola — nacrt v0
 
-**Status:** nacrt Faze 1 (P1-2), nije odobren za implementaciju.  
+**Status:** nacrt Faze 1 (P1-2), nije odobren za implementaciju. Usklađeno 2026-11-10 (`consistency-review.md`): dodani ključevi i retci za FS-02, FS-13, FS-15; odgojitelj i izostanak → Otvoreno.  
 **Ovisi o:** `docs/product/glossary.md` (P1-1), razgovorima s vrtićima i pravnoj/DPO validaciji.  
 **Temeljno pravilo:** deny by default. UI prikaz nije sigurnosna kontrola; svaka dozvola mora biti provedena na poslužitelju/bazi i testirana negativnim slučajevima.
 
@@ -31,6 +31,8 @@ Prijedlog: `membership` nosi organizacijsku ulogu; dodatne veze (`staff_assignme
 
 **Napomena:** pedagog, psiholog, zdravstveni voditelj, kuhinja i administrativni djelatnici ne smiju se automatski svrstati u jednu široku ulogu. Potrebno je validirati stvarne zadatke i odvojene dozvole.
 
+**MVP uloge (DD-05):** `platform_admin`, `org_admin`, `director`, `educator`, `guardian`. `staff_other` i stručni suradnici nemaju račune ni pristup u MVP-u. Prijedlog A-03: u MVP-u `org_admin` i `director` imaju isti skup dozvola dok intervjui ne potvrde razliku (Q-T09). Skrbnik ima i članstvo (`role = guardian`) i skrbničku vezu; bez veze nema pristupa djetetu (DD-08).
+
 ## 3. Legenda matrice
 
 - **Da** — predloženo dopuštenje unutar opsega uloge i svih relacijskih uvjeta.
@@ -51,10 +53,10 @@ Prijedlog: `membership` nosi organizacijsku ulogu; dodatne veze (`staff_assignme
 | Dodijeliti raspored/zamjenu djelatniku | Ne | Ogr. | Da | Ne | Ne | Ne |
 | Pregledati dolaske/odlaske | Ne* | Ogr. | Ogr. | Ogr. | Ne | Ogr. |
 | Evidentirati dolazak/odlazak | Ne | Ogr. | Ogr. | Ogr. | Ne | Ne |
-| Prijaviti izostanak | Ne | Ogr. | Ogr. | Ne | Ne | Ogr. |
+| Prijaviti izostanak | Ne | Ogr. | Ogr. | Otvoreno | Ne | Ogr. |
 | Urediti/poništiti evidenciju dolaska | Ne | Ogr. | Ogr. | Ogr.** | Ne | Ne |
-| Pisati dnevni izvještaj | Ne | Ogr. | Ogr. | Ogr. | Ne | Ne |
-| Čitati dnevni izvještaj | Ne | Ogr. | Ogr. | Ogr. | Ne | Ogr. |
+| Pisati dnevni pregled | Ne | Ogr. | Ogr. | Ogr. | Ne | Ne |
+| Čitati dnevni pregled | Ne | Ogr. | Ogr. | Ogr. | Ne | Ogr. |
 | Objaviti jelovnik | Ne | Ogr. | Ogr. | Ne | Otvoreno | Ne |
 | Čitati jelovnik | Ne | Da | Da | Da | Ogr. | Da |
 | Objaviti obavijest | Ne | Da | Da | Ogr.*** | Ne | Ne |
@@ -63,11 +65,14 @@ Prijedlog: `membership` nosi organizacijsku ulogu; dodatne veze (`staff_assignme
 | Dodavati/čitati fotografije | Ne* | Ogr. | Ogr. | Ogr. | Ne | Ogr. |
 | Upravljati privolama | Ne | Ogr. | Ogr. | Ne | Ne | Ogr. |
 | Upravljati osobama za preuzimanje | Ne | Ogr. | Ogr. | Ogr.**** | Ne | Ogr. |
+| Upravljati kalendarom događaja | Ne | Da | Da | Ne | Ne | Ne |
+| Čitati kalendar | Ne | Ogr. | Ogr. | Ogr. | Ne | Ogr. |
 | Pregledati izvještaje organizacije | Ne | Da | Da | Ne | Ne | Ne |
+| Upravljati zahtjevima ispitanika i retencijom | Ne* | Da | Da | Ne | Ne | Ne |
 | Pregledati revizijske zapise | Ne* | Ogr. | Ogr. | Ne | Ne | Ne |
 | Upravljati postavkama platforme | Da | Ne | Ne | Ne | Ne | Ne |
 
-* Platform admin nema rutinski pristup sadržaju djece, porukama, fotografijama ili revizijskim detaljima. Break-glass je zaseban, vremenski ograničen i auditiran postupak, ne redovna dozvola.  
+* Platform admin nema rutinski pristup sadržaju djece, porukama, fotografijama ili revizijskim detaljima; zahtjeve ispitanika izvršava samo na pisani nalog vrtića (FS-15). Break-glass je zaseban, vremenski ograničen i auditiran postupak, ne redovna dozvola.  
 ** Ispravak evidencije samo uz razlog, audit i pravila vrtića; opseg treba potvrditi.  
 *** Odgojitelj samo za vlastitu skupinu, ako vrtić potvrdi potrebu.  
 **** Odgojitelj može evidentirati provjeru preuzimanja, ali ne nužno samostalno mijenjati popis ovlaštenih osoba.
@@ -113,6 +118,8 @@ Ključevi su kandidati za stabilni katalog dozvola, ne konačni API ugovor.
 | Permission key | Resurs | Radnja |
 |---|---|---|
 | `organization.read` | Organizacija | Čitanje osnovnih podataka |
+| `location.read` / `location.manage` | Objekt | Pregled / upravljanje objektima |
+| `school_year.manage` | Pedagoška godina | Kreiranje, aktivacija, zatvaranje |
 | `organization.manage` | Organizacija | Upravljanje postavkama |
 | `membership.read` / `membership.manage` | Članstvo | Pregled / upravljanje članstvima |
 | `group.read` / `group.manage` | Skupina | Pregled / upravljanje skupinama |
@@ -123,7 +130,7 @@ Ključevi su kandidati za stabilni katalog dozvola, ne konačni API ugovor.
 | `pickup_person.read` / `pickup_person.manage` | Preuzimanje | Pregled / upravljanje ovlaštenim osobama |
 | `attendance.read` / `attendance.record` / `attendance.correct` | Dolasci | Pregled / evidentiranje / ispravak |
 | `absence.read` / `absence.report` / `absence.manage` | Izostanci | Pregled / prijava / administracija |
-| `daily_report.read` / `daily_report.write` | Dnevni izvještaj | Čitanje / pisanje |
+| `daily_report.read` / `daily_report.write` | Dnevni pregled | Čitanje / pisanje |
 | `menu.read` / `menu.publish` | Jelovnik | Čitanje / objava |
 | `announcement.read` / `announcement.publish` | Obavijest | Čitanje / objava |
 | `conversation.read` / `conversation.send` / `conversation.manage` | Razgovor | Čitanje / slanje / upravljanje |
@@ -131,6 +138,9 @@ Ključevi su kandidati za stabilni katalog dozvola, ne konačni API ugovor.
 | `consent.read` / `consent.record` / `consent.withdraw` | Privola | Pregled / bilježenje / povlačenje |
 | `report.read` / `report.export` | Izvještaj | Pregled / izvoz |
 | `audit.read` | Revizija | Pregled revizijskih zapisa |
+| `event.read` / `event.manage` | Kalendar | Pregled / upravljanje događajima |
+| `dsr.manage` | Zahtjevi ispitanika | Evidencija i izvršenje zahtjeva |
+| `retention.manage` | Retencija | Postavljanje rokova čuvanja (odluka voditelja ⚖️) |
 
 Svaki ključ treba imati: opis, vlasnika, dopuštene uloge, relacijski uvjet, organizacijski opseg, osjetljivost, audit zahtjev i testne scenarije.
 

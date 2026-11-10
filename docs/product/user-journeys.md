@@ -9,7 +9,7 @@
 1. Vrtić provjeri identitet skrbnika u vlastitom službenom procesu.
 2. Ovlašteni djelatnik pokrene pozivnicu za točno određenu osobu i dijete.
 3. Skrbnik zaprimi jednokratnu poveznicu/kod s ograničenim trajanjem.
-4. Skrbnik potvrdi račun, pročita obavijest o privatnosti i postavi sigurnu prijavu.
+4. Skrbnik potvrdi račun jednokratnim kodom poslanim e-poštom (ADR-0008, DD-06) i pročita obavijest o privatnosti vrtića; potvrda čitanja nije privola (FS-01).
 5. Aplikacija prikaže samo dijete/djecu za koje postoji aktivna veza i dozvola.
 6. Ako podaci nisu točni, korisnik vidi siguran kontakt vrtića, a ne mogućnost samostalnog preuzimanja tuđeg djeteta.
 

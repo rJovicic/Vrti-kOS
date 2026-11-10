@@ -1,6 +1,6 @@
 # Status faza
 
-**Trenutna faza:** FAZA 1 — Arhitektura proizvoda → **u tijeku, dokumentacijski nacrti izrađeni**
+**Trenutna faza:** FAZA 1 — Definicija/arhitektura proizvoda → **specifikacija izrađena (nacrt); čeka validaciju s vrtićima**
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
 **Zadnje ažuriranje:** 2026-11-10
 
@@ -19,7 +19,7 @@
 - DPIA screening v0 → [privacy/dpia-screening.md](privacy/dpia-screening.md)
 
 ## 🔄 U tijeku
-- Faza 1: P1-1 do P1-6 izrađeni kao nacrti u `docs/product/`; potrebna je validacija i usklađivanje.
+- Faza 1: kompletan nacrt specifikacije (PRD, FS-01…FS-15, kriteriji prihvaćanja, inventar podataka, plan validacije) — **čeka tok V** (intervjui) za zaključavanje MVP-a.
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
 
 ## ⛔ Blokirano
@@ -43,7 +43,11 @@
 | D-11 | Uključivanje Impeccable hookova (sada ili u Fazi 4/5) | Odgoditi do UI koda | [tooling/skills.md](tooling/skills.md) |
 | D-12 | Instalacija preporučenih skillova (Supabase odmah; Expo/RN/React u F5; Trail of Bits u F5) | Supabase skill sada | [tooling/skills.md](tooling/skills.md) |
 | D-13 | Ciljna razina OWASP ASVS L2; vanjski pentest prije pilota (plaćeno) | Prihvatiti | Q-S01, Q-S02 |
-| D-14 | Odobrenje prelaska u Fazu 1 | Nastaviti dokumentacijski rad; ne započinjati implementaciju | — |
+| ~~D-14~~ | ~~Odobrenje prelaska u Fazu 1~~ | **Odobreno za dokumentacijski rad** (nalog vlasnika 2026-11-10); implementacija nije odobrena | — |
+| D-15 | Model privola graditi tek kad prva svrha temeljena na privoli (npr. fotografije) uđe u opseg; u MVP-u nema privola | Prihvatiti | [product/consistency-review.md](product/consistency-review.md) N-12 |
+| D-16 | Pregled dokumentacijskih odluka DD-01…DD-08 i pretpostavki A-01…A-09 | Pregledati i potvrditi/odbiti | [product/consistency-review.md](product/consistency-review.md), [product/prd.md](product/prd.md) §9 |
+| D-17 | Pokretanje toka V: potvrda plana validacije i popisa kontakata (ravnatelji, odgojitelji, DPO) | Pokrenuti odmah — blokira zaključavanje MVP-a | [product/validation-plan.md](product/validation-plan.md) |
+| D-18 | Prijelaz u Fazu 2 (privatnost/sigurnost) paralelno s validacijom ili tek nakon nje | Paralelno samo za dokumente neovisne o opsegu (threat model, breach plan); ostalo nakon validacije | [roadmap.md](roadmap.md) |
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost
@@ -61,6 +65,17 @@ US-matičnih procesora — vidi Q-P01…Q-P15.
 - [x] Privremeni MVP opseg — `product/mvp-scope.md` (nije zaključan)
 - [ ] V-2 Razgovori s 3–5 vrtića
 - [ ] V-3 Razgovor s DPO-om
-- [ ] P1-7 PRD i zaključavanje MVP-a nakon validacije
+- [x] Pregled dosljednosti — `product/consistency-review.md` (22 nalaza, 8 dokumentacijskih odluka)
+- [x] PRD nacrt v0.1 — `product/prd.md`
+- [x] Funkcionalne specifikacije FS-01…FS-15 — `product/functional-specs.md`
+- [x] Kriteriji prihvaćanja (Given/When/Then, uključujući negativne testove autorizacije) — `product/acceptance-criteria.md`
+- [x] Inventar podataka v0 — `privacy/data-inventory.md`
+- [x] Plan validacije i vodiči za intervjue — `product/validation-plan.md`
+- [x] Sljedivost i provjera usklađenosti — `product/traceability.md`
+- [ ] P1-7 Zaključavanje PRD-a i MVP-a nakon validacije (kriterij u `product/mvp-scope.md`)
+- [ ] P1-11 Dopuna kriterija prihvaćanja za preostale FR-ove
+- [ ] P1-13 Pregled matrice dozvola s ravnateljem/odgojiteljima/DPO-om
+
+**Kriterij završetka Faze 1 (roadmap):** nije zadovoljen — MVP opseg nije potvrđen s vrtićima, matrica dozvola nije pregledana s korisnicima/DPO-om.
 
 **Granica:** svi novonastali dokumenti su prijedlozi za pregled. Ne predstavljaju odobrenje pravnih, financijskih, hosting ili produkcijskih odluka. Nema koda proizvoda, deploya ni stvarnih podataka.

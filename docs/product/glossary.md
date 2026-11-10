@@ -1,7 +1,7 @@
 # Rječnik pojmova — VrtićOS
 
 **Status:** nacrt Faze 1 (P1-1)  
-**Verzija:** 0.1  
+**Verzija:** 0.2 (usklađeno 2026-11-10, vidi `consistency-review.md`)  
 **Jezik proizvoda:** hrvatski; talijanski jezik planiran kasnije.  
 **Pravilo:** hrvatski naziv je primarni naziv u sučelju i dokumentaciji proizvoda. Engleski identifikator služi za kod, bazu i API. Ovaj rječnik ne određuje pravni status pojma.
 
@@ -10,13 +10,13 @@
 | Hrvatski pojam | Engleski pojam / identifikator | Značenje i pravila |
 |---|---|---|
 | Vrtić | Kindergarten / `organization` | Organizacija koja koristi VrtićOS. U sustavu je granica tenant izolacije. |
-| Osnivač | Founder / `founding_authority` | Grad, općina ili druga pravna osoba koja je osnovala vrtić. Nije automatski korisnik niti administrator vrtića. |
+| Osnivač | Founder / `founding_authority` | Grad, općina ili druga pravna osoba koja je osnovala vrtić. Nije automatski korisnik niti administrator vrtića. **Nije entitet u MVP-u** (N-19). |
 | Objekt | Facility / `location` | Fizička lokacija unutar vrtića. Ne poistovjećuje se s organizacijom. |
 | Pedagoška godina | School year / `school_year` | Vremenski okvir rada vrtića. Datumi i pravila prijelaza potvrđuju se s vrtićima. |
 | Skupina | Group / `group` | Organizacijska skupina djece unutar objekta i pedagoške godine. |
 | Članstvo | Membership / `membership` | Vremenski i statusno ograničena veza korisnika s vrtićem i njegovom ulogom. |
 | Raspored djelatnika | Staff assignment / `staff_assignment` | Veza djelatnika sa skupinom ili objektom s datumom početka i završetka. |
-| Zamjena | Substitute assignment / `substitute_assignment` | Privremeno dodijeljena uloga ili raspored; ne daje pristup izvan zadanog opsega i vremena. |
+| Zamjena | Substitute assignment / `staff_assignment` s `assignment_type = substitute` | Privremeni raspored s obveznim krajem i osobom koja je odobrila; ne daje pristup izvan zadanog opsega i vremena (DD-01). |
 
 ## Osobe i odnosi
 
@@ -29,7 +29,7 @@
 | Skrbništvo | Guardianship / `guardianship` | Evidentirani odnos korisnika i djeteta, s opsegom dozvola, valjanošću i mogućim ograničenjima. Točan model potvrđuje pravnik/DPO i vrtić. |
 | Ovlaštena osoba za preuzimanje | Authorized pickup person / `pickup_person` | Osoba koju vrtić smije pustiti da preuzme dijete. Ne mora imati korisnički račun. |
 | Djelatnik | Staff member / `staff_member` | Zaposlenik ili suradnik vrtića. Pristup proizlazi iz aktivnog članstva i rasporeda, ne samo iz naziva radnog mjesta. |
-| Stručni suradnik | Specialist / `specialist` | Npr. pedagog ili psiholog. Konkretne dozvole i pristup osjetljivim bilješkama nisu potvrđeni. |
+| Stručni suradnik | Specialist / `specialist` | Npr. pedagog ili psiholog. Konkretne dozvole i pristup osjetljivim bilješkama nisu potvrđeni. **Nije uloga u MVP-u** (DD-05). |
 
 ## Evidencija i komunikacija
 
@@ -37,7 +37,7 @@
 |---|---|---|
 | Dolazak/odlazak | Attendance event / `attendance_event` | Događaj dolaska ili odlaska djeteta s vremenom i osobom koja ga je evidentirala. |
 | Izostanak | Absence report / `absence_report` | Obavijest o planiranom ili nastalom izostanku. Ne smije postati slobodno polje za zdravstvene podatke bez odobrene svrhe. |
-| Dnevni izvještaj | Daily report / `daily_report` | Sažetak dana namijenjen ovlaštenim skrbnicima; sadržaj i granularnost tek treba potvrditi. |
+| Dnevni pregled | Daily overview / `daily_report` | Sažetak dana skupine namijenjen ovlaštenim skrbnicima. Naziv "dnevni izvještaj" se ne koristi jer se sudara s modulom *Izvještaji* (DD-04). MVP prijedlog: na razini skupine (A-05). |
 | Aktivnost | Activity / `activity` | Aktivnost skupine ili djeteta. Ne znači automatski razvojno opažanje ili procjenu. |
 | Jelovnik | Menu / `menu` | Objavljeni plan obroka za objekt ili skupinu. Posebna prehrana može otkriti zdravstvene podatke i nije automatski dio MVP-a. |
 | Obavijest | Announcement / `announcement` | Jednosmjerna informacija koju objavljuje ovlašteni djelatnik određenoj publici. |

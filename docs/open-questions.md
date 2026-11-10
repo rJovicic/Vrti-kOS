@@ -22,6 +22,7 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-P13 | Opažanja o razvoju djeteta — je li to "evaluacija" u smislu DPIA kriterija? Tko ih smije vidjeti? | ⚖️ 🏫 | Utječe na DPIA i dozvole |
 | Q-P14 | Treba li VrtićOS imenovati vlastitog DPO-a (čl. 37(1)(b)/(c))? Vjerojatno ne obvezno, ali preporučljivo. | ⚖️ | Povjerenje kupaca |
 | Q-P15 | Obavijesti o povredi: rokovi i kanal između izvršitelja i voditelja (čl. 33(2) "bez nepotrebnog odgađanja") — koliko sati ugovaramo? | ⚖️ | DPA i plan odgovora |
+| Q-P16 | Je li razlog izostanka "bolest" (bez dijagnoze) podatak o zdravlju u smislu čl. 9? Treba li vrtiću razlog uopće (npr. umanjenje cijene uz liječničku potvrdu)? | ⚖️ 🏫 | MVP prijava izostanka je bez razloga (FS-06) |
 
 ## Sigurnost (Q-S)
 
@@ -32,6 +33,7 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-S03 | RPO/RTO ciljevi (preporuka pilot: RPO ≤ 15 min uz PITR, RTO ≤ 8 h)? | 👤 |
 | Q-S04 | Primjenjuje li se Zakon o kibernetičkoj sigurnosti (NIS2) na VrtićOS ili vrtiće? (preliminarno: vjerojatno ne zbog veličine — provjeriti) | ⚖️ |
 | Q-S05 | Tko ima administratorski pristup Supabase/Vercel/GitHub organizacijama? MFA obavezan? | 👤 |
+| Q-S06 | Kako se kontrolira i auditira operativni pristup platform tima bazi (konzola pružatelja) kad u proizvodu nema break-glassa (FS-09)? Četiri oka, zapis, obavijest vrtiću? | 👤 ⚖️ |
 
 ## Proizvod i tehnologija (Q-T)
 
@@ -45,3 +47,11 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-T06 | Model naplate i cijena (po djetetu/mjesečno? po vrtiću?) i tko plaća (vrtić, osnivač)? | 👤 |
 | Q-T07 | Pravna osoba koja će biti izvršitelj obrade i ugovorna strana — postoji li? | 👤 |
 | Q-T08 | Konkurencija: koji proizvodi se već koriste u Hrvatskoj/regiji? | 👤 (istraživanje) |
+| Q-T09 | Razlika između uloga `org_admin` i `director` u praksi (tko unosi djecu, tko upravlja djelatnicima)? | 🏫 |
+| Q-T10 | Primjenjuje li se zahtjev App Storea / Google Playa za brisanje računa iz aplikacije na račune kreirane pozivnicom? (MVP ga uključuje kao zahtjev, FR-01-9) | 👤 (provjera smjernica) |
+| Q-T11 | Rok valjanosti pozivnice (prijedlog 7 dana) i postupak ponovnog slanja? | 🏫 |
+| Q-T12 | Može li vrtić imati preklapanje dviju pedagoških godina (npr. ljetni program)? | 🏫 |
+| Q-T13 | Koje podatke o ovlaštenoj osobi za preuzimanje vrtić treba (telefon, odnos)? Smije li skrbnik sam predlagati/uređivati popis? | 🏫 ⚖️ |
+| Q-T14 | Do kada se javlja izostanak za isti dan i koliko unaprijed? Utječe li na prehranu/naplatu? | 🏫 |
+| Q-T15 | Trebaju li potvrde pročitanosti obavijesti? (privatnost vs. potreba vrtića) | 🏫 |
+| Q-T16 | Smije li uprava čitati razgovore skrbnika i odgojitelja (nadzor kvalitete vs. privatnost)? | 🏫 ⚖️ |

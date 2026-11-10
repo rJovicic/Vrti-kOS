@@ -11,7 +11,7 @@
 | ADR-ovi | [decisions/](decisions/) |
 | Rizici | [risks.md](risks.md) |
 | Otvorena pitanja | [open-questions.md](open-questions.md) |
-| Proizvod | [product/](product/) |
-| Privatnost i GDPR | [privacy/](privacy/) |
+| Proizvod | [product/prd.md](product/prd.md) · [functional-specs](product/functional-specs.md) · [acceptance-criteria](product/acceptance-criteria.md) · [validation-plan](product/validation-plan.md) · [traceability](product/traceability.md) · [consistency-review](product/consistency-review.md) · ostalo u [product/](product/) |
+| Privatnost i GDPR | [privacy/](privacy/) · [inventar podataka](privacy/data-inventory.md) |
 | Sigurnost | [security/](security/) (Faza 2) |
 | Alati i skillovi | [tooling/skills.md](tooling/skills.md) |

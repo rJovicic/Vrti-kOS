@@ -38,7 +38,7 @@
 2. Svaki događaj bilježi vrijeme, dijete, organizaciju, aktera, izvor i eventualni razlog ispravka.
 3. Dupli zahtjevi moraju biti idempotentni.
 4. Ispravak ne briše izvorni događaj; stvara korekciju s razlogom i audit zapisom.
-5. Prijava izostanka sadrži samo datum/razdoblje i minimalnu kategoriju/napomenu koju vrtić potvrdi.
+5. Prijava izostanka u MVP-u sadrži samo datum/razdoblje, bez razloga i slobodnog teksta (FS-06; razlog "bolest" mogao bi biti zdravstveni podatak — ⚖️ Q-P16).
 6. U MVP-u ne tražiti dijagnozu, simptome, lijekove ili druge zdravstvene detalje u slobodnom tekstu.
 7. Aplikacija ne smije biti jedini kanal za obavještavanje u hitnim situacijama.
 
@@ -51,7 +51,8 @@
 6. Jelovnik je informacija; personalizirana prehrana/alergeni mogu otkriti zdravstvene podatke i zahtijevaju zasebnu odluku.
 
 ## Fotografije i privole
-1. Fotografije se ne objavljuju javno u MVP-u.
+0. Fotografije i mediji su **izvan MVP-a** (mvp-scope). Pravila niže vrijede kad uđu u opseg (Faza 11, D-15).
+1. Fotografije se ne objavljuju javno.
 2. Svaka fotografija ima organizaciju, autora, svrhu, datum i poveznice na prikazanu djecu samo ako je nužno.
 3. Prikaz grupne fotografije zahtijeva provjeru pravila za svako identificirano dijete.
 4. Privola se ne koristi kao univerzalna pravna osnova za sve funkcije aplikacije.
