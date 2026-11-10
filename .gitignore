@@ -1,0 +1,36 @@
+# Dependencies & builds
+node_modules/
+.turbo/
+dist/
+build/
+.next/
+.expo/
+*.tsbuildinfo
+
+# Env & secrets — only .env.example is committed
+.env
+.env.*
+!.env.example
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Impeccable: platform engine binaries are fetched and checksum-verified, never tracked
+**/skills/impeccable/scripts/bin/
+**/skills/impeccable/scripts/config.json
+**/.impeccable/hook.cache.json
+**/.impeccable/hook.pending.json
+.impeccable/config.local.json
+.impeccable/live/
+.impeccable/history/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
