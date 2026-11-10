@@ -1,7 +1,7 @@
 # Status faza
 
-**Trenutna faza:** FAZA 0 — Discovery i postavljanje → **dovršeno, čeka odobrenje vlasnika**
-**Sljedeća predložena:** FAZA 1 — Arhitektura proizvoda (uz paralelni tok V — validacija s kupcima)
+**Trenutna faza:** FAZA 1 — Arhitektura proizvoda → **u tijeku, dokumentacijski nacrti izrađeni**
+**Paralelni tok:** V — validacija s kupcima → **nije započet**
 **Zadnje ažuriranje:** 2026-11-10
 
 ## ✅ Završeno
@@ -19,7 +19,8 @@
 - DPIA screening v0 → [privacy/dpia-screening.md](privacy/dpia-screening.md)
 
 ## 🔄 U tijeku
-- Ništa (stop na checkpointu).
+- Faza 1: P1-1 do P1-6 izrađeni kao nacrti u `docs/product/`; potrebna je validacija i usklađivanje.
+- Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
 
 ## ⛔ Blokirano
 - `npx impeccable install` / `update` — `impeccable.style` blokiran mrežnom politikom okruženja (zaobiđeno instalacijom iz git taga).
@@ -42,8 +43,24 @@
 | D-11 | Uključivanje Impeccable hookova (sada ili u Fazi 4/5) | Odgoditi do UI koda | [tooling/skills.md](tooling/skills.md) |
 | D-12 | Instalacija preporučenih skillova (Supabase odmah; Expo/RN/React u F5; Trail of Bits u F5) | Supabase skill sada | [tooling/skills.md](tooling/skills.md) |
 | D-13 | Ciljna razina OWASP ASVS L2; vanjski pentest prije pilota (plaćeno) | Prihvatiti | Q-S01, Q-S02 |
-| D-14 | Odobrenje prelaska u Fazu 1 | — | — |
+| D-14 | Odobrenje prelaska u Fazu 1 | Nastaviti dokumentacijski rad; ne započinjati implementaciju | — |
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost
 US-matičnih procesora — vidi Q-P01…Q-P15.
+
+
+## Napredak Faze 1 — 2026-11-10
+
+- [x] P1-1 Rječnik pojmova — `product/glossary.md` (nacrt v0.1)
+- [x] P1-2 Matrica uloga i dozvola — `product/roles-and-permissions.md` (nacrt v0)
+- [x] P1-3 Korisnička putovanja — `product/user-journeys.md` (nacrt v0.1)
+- [x] P1-4 Poslovna pravila — `product/business-rules.md` (nacrt v0.1)
+- [x] P1-5 Domenski model — `product/domain-model.md` (nacrt v0.1)
+- [x] P1-6 Nefunkcionalni zahtjevi — `product/nfr.md` (nacrt v0.1)
+- [x] Privremeni MVP opseg — `product/mvp-scope.md` (nije zaključan)
+- [ ] V-2 Razgovori s 3–5 vrtića
+- [ ] V-3 Razgovor s DPO-om
+- [ ] P1-7 PRD i zaključavanje MVP-a nakon validacije
+
+**Granica:** svi novonastali dokumenti su prijedlozi za pregled. Ne predstavljaju odobrenje pravnih, financijskih, hosting ili produkcijskih odluka. Nema koda proizvoda, deploya ni stvarnih podataka.
