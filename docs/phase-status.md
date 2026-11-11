@@ -2,6 +2,7 @@
 
 **Trenutna faza:** FAZA 4 (dizajn) ✅ i sloj D0 (tehnički temelj) ✅ — **sljedeće: D1** (prijava, MFA uprave, pozivnice, struktura vrtića)
 **Zadnja provjera:** 2026-11-11 — lint, typecheck, 74 unit testa, 56 pgTAP testova, RLS spike 14/14, admin build, Expo export, `pnpm demo`
+**CI:** GitHub Actions run #1 (commit `cd69467`) — sva 4 posla zelena: lint/typecheck/testovi, baza (migracije od nule + pgTAP + spike + tipovi), admin build + Expo bundle, gitleaks + audit
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
