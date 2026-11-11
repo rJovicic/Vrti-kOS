@@ -2,7 +2,7 @@
 
 **Trenutna faza:** sloj **D1** (prijava, MFA uprave, pozivnice, rasporedi, struktura vrtića) — **izveden, čeka pregled vlasnika**; otvoreno: provjera mobilne aplikacije na uređaju (R-44) i zaštita grane `main` (D-27)
 **Zadnja provjera:** 2026-11-11 (D1) — lint, typecheck, 99 unit testova, **105 pgTAP**, RLS spike 14/14, **20 integracijskih** (Edge Functions, kod iz Mailpita, TOTP), **8 Playwright e2e** (admin), admin build, Expo export
-**CI:** GitHub Actions run #6 (commit `c65da45`) — sva 4 posla zelena, uključujući integracijske i e2e testove u poslu baze. Kasniji runovi: vidi §D1 ispod.
+**CI:** GitHub Actions run #8 (commit `6c9a8a2`, kraj D1) — sva 4 posla zelena: lint/typecheck/unit, baza (migracije od nule, pgTAP, spike, tipovi, integracijski i Playwright e2e testovi), admin build + Expo bundle (provjera tajni), gitleaks + audit.
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
