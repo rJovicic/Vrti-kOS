@@ -14,3 +14,11 @@ export function formatLongDate(date: Date, timeZone: string = DEFAULT_TIME_ZONE)
 export function pluralCategory(n: number): 'one' | 'few' | 'other' {
   return new Intl.PluralRules('hr-HR').select(n) as 'one' | 'few' | 'other';
 }
+
+/** Short Croatian calendar date for a plain YYYY-MM-DD value (no time zone shift), e.g. 11. 11. 2026. */
+export function formatDay(isoDate: string): string {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  return new Intl.DateTimeFormat('hr-HR', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(
+    new Date(Date.UTC(y!, m! - 1, d!)),
+  );
+}

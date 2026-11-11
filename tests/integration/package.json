@@ -4,10 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "integration": "vitest run --no-file-parallelism",
-    "typecheck": "tsc --noEmit"
+    "integration": "vitest run --no-file-parallelism --exclude 'src/**/*.e2e.test.ts'",
+    "typecheck": "tsc --noEmit",
+    "e2e": "vitest run src/admin.e2e.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
   }
 }

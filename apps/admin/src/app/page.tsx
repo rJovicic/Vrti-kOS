@@ -1,31 +1,40 @@
-import { env } from '@/lib/env';
+import Link from 'next/link';
+import type { Route } from 'next';
+import { redirect } from 'next/navigation';
+import { signOut } from '@/app/actions';
+import { AuthCard } from '@/components/AuthCard';
+import { getManagedOrgs, requireUser } from '@/lib/dal';
 import { t } from '@/lib/i18n';
 
 // Personal-data pages must never be statically generated or cached (SR-WEB-04).
 export const dynamic = 'force-dynamic';
 
-async function checkApi(): Promise<'ok' | 'down'> {
-  try {
-    const res = await fetch(`${env.supabaseUrl}/auth/v1/health`, {
-      headers: { apikey: env.supabasePublishableKey },
-      cache: 'no-store',
-    });
-    return res.ok ? 'ok' : 'down';
-  } catch {
-    return 'down';
-  }
-}
-
-/** D0 shell: confirms the admin reaches the local Supabase stack. Feature routes arrive in D1+ (admin-app.md). */
+/** Entry: routes the signed-in user to MFA, their kindergarten, or an explanation (no admin role). */
 export default async function Home() {
-  const state = await checkApi();
+  const { aal } = await requireUser();
+  const orgs = await getManagedOrgs();
+  if (orgs.length === 0) {
+    return (
+      <AuthCard title={t('auth.noAdminAccess')} lede={t('auth.noAdminAccessHelp')}>
+        <form action={signOut}>
+          <button className="btn secondary" type="submit">
+            {t('auth.signOut')}
+          </button>
+        </form>
+      </AuthCard>
+    );
+  }
+  if (aal !== 'aal2') redirect('/mfa');
+  if (orgs.length === 1) redirect(`/${orgs[0]!.slug}` as Route);
   return (
-    <main className="shell">
-      <h1>{t('common.appName')}</h1>
-      <p className="muted">{t('health.title')}</p>
-      <p className="status" data-state={state} role="status">
-        {state === 'ok' ? t('health.apiOk') : t('health.apiDown')}
-      </p>
-    </main>
+    <AuthCard title={t('auth.chooseOrg')}>
+      <nav className="list" aria-label={t('auth.chooseOrg')}>
+        {orgs.map((o) => (
+          <Link key={o.id} className="row" href={`/${o.slug}` as Route}>
+            <span className="grow t">{o.name}</span>
+          </Link>
+        ))}
+      </nav>
+    </AuthCard>
   );
 }

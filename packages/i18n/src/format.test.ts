@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatLongDate, formatTime, pluralCategory } from './format.ts';
+import { formatDay, formatLongDate, formatTime, pluralCategory } from './format.ts';
 import { hr } from './locales/hr.ts';
 
 describe('Croatian formatting', () => {
@@ -15,5 +15,11 @@ describe('Croatian formatting', () => {
   it('keeps diacritics intact in the catalog', () => {
     expect(hr.attendance.present).toBe('U vrtiću');
     expect(JSON.stringify(hr)).toMatch(/[čćđšž]/);
+  });
+});
+
+describe('formatDay', () => {
+  it('formats a plain date without shifting the day', () => {
+    expect(formatDay('2026-11-30').replace(/\s/g, ' ')).toMatch(/^30\. ?11\. ?2026\.?$/);
   });
 });

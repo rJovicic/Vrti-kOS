@@ -40,9 +40,9 @@ jobs:
         run: pnpm design:sync && git diff --exit-code -- DESIGN.md design/prototype/tokens.css
 
   db:
-    name: database · migrations · RLS tests
+    name: database · migrations · RLS · integration · e2e
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -60,6 +60,20 @@ jobs:
         run: pnpm db:types && git diff --exit-code -- packages/db-types/src/database.ts
       - name: integration — e-mail code via Mailpit, TOTP MFA, invitation Edge Functions
         run: pnpm test:integration
+      - name: admin build against the local stack (public local keys only)
+        run: |
+          KEY=$(node scripts/supabase.mjs status -o json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s.slice(s.indexOf('{'))).PUBLISHABLE_KEY))")
+          printf 'NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\nNEXT_PUBLIC_APP_ENV=demo\n' "$KEY" > apps/admin/.env.local
+          pnpm --filter @vrticos/admin build
+      - name: admin e2e — sign-in, MFA, structure, staff, invitations (Playwright)
+        run: |
+          pnpm --filter @vrticos/integration-tests exec playwright install --with-deps chromium
+          (pnpm --filter @vrticos/admin start > admin.log 2>&1 &)
+          for i in $(seq 1 60); do curl -fs -o /dev/null http://localhost:3000/sign-in && break; sleep 1; done
+          pnpm --filter @vrticos/integration-tests run e2e
+      - name: admin server log (on failure)
+        if: failure()
+        run: cat admin.log || true
 
   apps:
     name: admin build · mobile bundle
