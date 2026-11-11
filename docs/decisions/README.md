@@ -13,12 +13,13 @@ Only the owner moves an ADR to **Accepted**. An accepted ADR is changed only by 
 | [0006](0006-client-applications.md) | Client apps: one Expo app + Next.js admin; hosting of admin (Phase 3 addendum) | Proposed |
 | [0007](0007-push-and-third-party-processors.md) | Push notifications, email and error monitoring providers | Proposed |
 | [0008](0008-authentication-methods.md) | Authentication methods and account onboarding | Proposed |
-| [0009](0009-local-demo-environment.md) | Local demo and development environment | Proposed (non-blocking for demo) |
+| [0009](0009-local-demo-environment.md) | Local demo and development environment | Accepted for the local demo (D-20) |
 | [0010](0010-transactional-email-provider.md) | Transactional email provider | Proposed |
 | [0011](0011-media-and-storage.md) | Media and Storage design | Proposed |
-| [0012](0012-offline-attendance.md) | Offline-tolerant attendance recording | Proposed |
+| [0012](0012-offline-attendance.md) | Offline-tolerant attendance recording | Accepted for the local demo (D-20) |
 | [0013](0013-backup-and-restore.md) | Backup and restore | Proposed |
-| [0014](0014-database-authorization-implementation.md) | Database authorization implementation pattern | Proposed |
-| [0015](0015-client-stack.md) | Client application stack and state management | Proposed |
+| [0014](0014-database-authorization-implementation.md) | Database authorization implementation pattern | Accepted for the local demo (D-20) |
+| [0015](0015-client-stack.md) | Client application stack and state management | Accepted for the local demo (D-20) |
+| [0016](0016-toolchain-versions.md) | Toolchain versions: TypeScript 6, pnpm 12 via Corepack, Expo SDK 58 | Proposed (non-blocking for demo) |
 
 Template: copy `template.md`.

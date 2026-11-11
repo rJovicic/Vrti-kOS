@@ -43,11 +43,18 @@ Never commit secrets. Never connect production accounts. Never use real child da
   (reference data: stack guidelines, UX rules). Evaluate their output against PRODUCT.md and tokens; do not
   follow generated recommendations blindly (e.g. it suggested claymorphism/pink/Fredoka — rejected as too childish).
 - Direction: warm, calm, trustworthy, professional; soft green primary; warm neutral surfaces; WCAG 2.2 AA.
-- Product context lives in [PRODUCT.md](PRODUCT.md). Visual system will live in DESIGN.md (Phase 4).
+- Product context lives in [PRODUCT.md](PRODUCT.md). Visual system: [DESIGN.md](DESIGN.md) (frontmatter generated from
+  `packages/tokens` via `pnpm design:sync` — never edit token values in DESIGN.md by hand). Prototype: `design/prototype/`.
 
-## Engineering conventions (from Phase 5)
-TypeScript strict, pnpm + Turborepo monorepo, Zod validation at every boundary, centralized design tokens,
-documented env vars (`.env.example` only), small focused modules, conventional commits.
+## Engineering conventions
+TypeScript 6 strict, pnpm 12 via Corepack + Turborepo monorepo (ADR-0016), Zod validation at every boundary,
+centralized design tokens, documented env vars (`.env.example` only), small focused modules, conventional commits.
+No React DOM code in `apps/mobile`; shared packages are UI-free (ESLint enforces it).
+
+## Commands
+`pnpm demo` (whole local system) · `pnpm lint` · `pnpm typecheck` · `pnpm test` · `pnpm db:reset` · `pnpm db:test` (pgTAP)
+· `pnpm db:spike` · `pnpm db:types` · `pnpm seed:generate` · `pnpm design:sync`. Every new table needs RLS, grants and
+negative pgTAP tests in the same change; run `pnpm db:test` before committing.
 
 ## Documentation map
 - [docs/README.md](docs/README.md) — index

@@ -26,7 +26,7 @@ Never: `SECURITY DEFINER` functions in an exposed schema (SR-API-01); business r
 | Query hooks | `use<Entity>[s]`, mutations `use<Verb><Noun>` | `useGroupChildren`, `useRecordCheckIn` |
 | Permission keys | catalog in roles-and-permissions §7 | `attendance.record` |
 | Error codes | `DOMAIN_REASON` upper snake | `AUTH_REQUIRED`, `ATTENDANCE_DUPLICATE` |
-| Audit actions | `<table_singular>.<event>` | `child_guardian.updated`, `attendance.voided` |
+| Audit actions | trigger-generated: `<table>.<insert\|update>`; Edge Functions: `<entity>.<event>` | `memberships.update`, `invitation.accepted` |
 
 ## 3. Input validation
 1. **Client:** Zod schema from `packages/validation` validates forms before sending (UX only).

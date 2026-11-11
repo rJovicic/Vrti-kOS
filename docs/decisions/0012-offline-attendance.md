@@ -1,6 +1,6 @@
 # ADR-0012: Offline-tolerant attendance recording
 
-- Status: Proposed
+- Status: **Accepted for the local demo only** (owner decision D-20, 2026-11-11); production use remains Proposed
 - Date: 2026-11-10
 - Related: FR-05-8, AC-05-5, NFR-REL-03/04, SR-MOB-02, SR-API-08, T-DEV-06
 

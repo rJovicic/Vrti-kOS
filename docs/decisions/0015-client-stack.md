@@ -1,6 +1,6 @@
 # ADR-0015: Client application stack and state management
 
-- Status: Proposed
+- Status: **Accepted for the local demo only** (owner decision D-20, 2026-11-11); production use remains Proposed
 - Date: 2026-11-10
 - Related: ADR-0006, technical-architecture.md §3, mobile-app.md, admin-app.md
 

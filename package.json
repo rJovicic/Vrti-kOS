@@ -1,0 +1,36 @@
+{
+  "name": "vrticos",
+  "private": true,
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "eslint .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:start": "node scripts/supabase.mjs start",
+    "db:stop": "node scripts/supabase.mjs stop",
+    "db:reset": "node scripts/guard-local.mjs && node scripts/supabase.mjs db reset",
+    "db:test": "node scripts/supabase.mjs test db",
+    "db:types": "node scripts/supabase.mjs gen types typescript --local --schema public --schema api > packages/db-types/src/database.ts",
+    "seed:generate": "pnpm --filter @vrticos/test-fixtures run generate",
+    "dev:admin": "pnpm --filter @vrticos/admin dev",
+    "dev:mobile": "pnpm --filter @vrticos/mobile start",
+    "demo": "node scripts/demo.mjs",
+    "db:spike": "node scripts/run-rls-spike.mjs",
+    "design:sync": "pnpm --filter @vrticos/tokens design-sync"
+  },
+  "devDependencies": {
+    "supabase": "3.1.0",
+    "turbo": "2.11.10",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0",
+    "@types/node": "22.20.5",
+    "eslint": "10.14.0",
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.72.2",
+    "globals": "17.14.0"
+  }
+}

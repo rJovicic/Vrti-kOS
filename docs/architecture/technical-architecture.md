@@ -52,9 +52,9 @@ Versions are the npm `latest` tags observed on 2026-11-10; they are **pinned in 
 
 | Area | Choice | Observed version | Notes |
 |---|---|---|---|
-| Package manager | pnpm (via Corepack, pinned in `packageManager`) | 12.18.0 (10.28 installed locally) | Expo + pnpm needs `node-linker=hoisted` or verified isolated mode — **spike P3-1** |
+| Package manager | pnpm via Corepack, pinned in `packageManager` | 12.18.0 | **Verified in D0** (ADR-0016): isolated layout works with Expo; always via Corepack |
 | Build orchestration | Turborepo | 2.11.10 | Local cache only; no remote cache (no Vercel account) |
-| Language | TypeScript `strict` + `noUncheckedIndexedAccess` | 7.0.2 latest | TS 7 is the native compiler; Expo/Next tooling compatibility **must be verified** — fall back to the newest 5.x/6.x line if not (spike P3-1) |
+| Language | TypeScript `strict` + `noUncheckedIndexedAccess` | **6.0.3** (7.0.2 rejected) | ADR-0016: typescript-eslint does not support TS 7; Expo SDK 58 template pins ~6.0.3 |
 | Mobile | Expo SDK 58, React Native 0.88, Expo Router | expo 58.0.23, RN 0.88.1, expo-router 58.0.30 | ADR-0006, ADR-0015 |
 | Web admin | Next.js App Router | 16.4.6 | ADR-0006 |
 | React | 19.x | 19.3.1 | Version dictated by Expo SDK; admin aligns |

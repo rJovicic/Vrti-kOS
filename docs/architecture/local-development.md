@@ -54,28 +54,34 @@ requirements, so the committed config overrides them (same values later mirrored
 | `[realtime] enabled` | true | false | SR-API-05 |
 | `[api] schemas` | `public, graphql_public` | `public, api` (no `graphql_public`, no `private`) | SR-API-01, SR-TEN-01 |
 
-## 4. Commands (to be implemented as root scripts in Phase 5)
-| Script | Does |
-|---|---|
-| `pnpm setup` | `corepack enable`, `pnpm install --frozen-lockfile`, copy `.env.example` → `.env.local` for both apps |
-| `pnpm db:start` | `supabase start` (with registry override if `VRTICOS_DOCKERHUB=1`) |
-| `pnpm db:reset` | drop + apply all migrations + run synthetic seed (`supabase db reset`) |
-| `pnpm db:test` | pgTAP: catalog checks, permission matrix, NEG-01…15 |
-| `pnpm db:types` | regenerate `packages/db-types` |
-| `pnpm functions:serve` | `supabase functions serve` (Edge Functions locally) |
-| `pnpm dev:admin` | Next.js dev server |
-| `pnpm dev:mobile` | `expo start` with `EXPO_PUBLIC_SUPABASE_URL=http://<LAN-IP>:54321` |
-| `pnpm demo` | db:start → db:reset → functions:serve → dev:admin + dev:mobile (Turborepo parallel) |
-| `pnpm db:stop` | stop containers (data volume kept) |
+## 4. Commands (implemented in D0, 2026-11-11)
+Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
+
+| Script | Does | Verified |
+|---|---|---|
+| `pnpm install` | installs the workspace (pnpm 12, isolated layout) | ✅ |
+| `pnpm demo` | guard → `supabase start` if needed → `db reset` (migrations + synthetic seed) → writes `apps/*/.env.local` (public local key, LAN IP) → admin + Expo dev servers. `--keep` skips the reset, `--no-apps` only prepares the database | ✅ admin served the health page, Metro served the Android bundle |
+| `pnpm db:start` / `pnpm db:stop` | local Supabase stack incl. Mailpit; `VRTICOS_DOCKERHUB=1` switches the image registry | ✅ |
+| `pnpm db:reset` | drop + all migrations + `supabase/seed.sql` (refuses linked/remote targets) | ✅ from zero |
+| `pnpm db:test` | pgTAP: `supabase/tests/database/*.test.sql` (catalog checks + tenant isolation) | ✅ 56/56 |
+| `pnpm db:spike` | Phase 3 RLS spike in a throw-away database | ✅ 14/14 |
+| `pnpm db:types` | regenerates `packages/db-types/src/database.ts` (deterministic; CI diffs it) | ✅ |
+| `pnpm seed:generate` | regenerates `supabase/seed.sql` and `docs/architecture/demo-accounts.md` | ✅ deterministic |
+| `pnpm design:sync` | regenerates `DESIGN.md` frontmatter and `design/prototype/tokens.css` from `packages/tokens` | ✅ |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` | ESLint (boundary rules), `tsc` per package, Vitest | ✅ |
+| `pnpm dev:admin` / `pnpm dev:mobile` | individual dev servers | ✅ |
+
+Edge Functions (`functions:serve`) arrive with D1 (invitations).
 
 ## 5. Demo for a kindergarten (laptop + phones)
 1. Laptop runs `pnpm demo`; phones join the same Wi-Fi (or the laptop's hotspot); mobile app points to the laptop LAN IP.
-2. Synthetic seed: kindergartens **"Vrtić Sunce (demo)"** and **"Vrtić Mjesec (demo)"**, 2 facilities, 6 groups,
-   ~120 fictional children with generated Croatian names, guardians, educators, a substitute, one access restriction,
-   attendance history, absences, announcements, daily entries, conversations. All names generated; no photos.
+2. Synthetic seed (D0): kindergartens **"Vrtić Alfa (demo)"** and **"Vrtić Beta (demo)"**, 3 facilities, 6 groups,
+   academic year 2026./2027., 29 fictional people (platform admin, managers, educators, guardians, one guardian in
+   both kindergartens). Children, attendance and messages are added to the generator with D2–D4. Accounts:
+   [demo-accounts.md](demo-accounts.md).
 3. Demo accounts use the reserved `.test` domain (e.g. `odgojiteljica.s1@demo.vrtic.test`) so mail can never be
    delivered; OTP codes are read from Mailpit. Manager accounts enroll TOTP on first login (shows the MFA story).
-4. A banner "DEMO — izmišljeni podaci" is shown in both apps when `APP_ENV=demo`.
+4. A banner "DEMO: izmišljeni podaci" is shown in both apps when `APP_ENV=demo`.
 5. After the presentation: `pnpm db:reset` restores the seed.
 
 ## 6. Safety rails
@@ -97,3 +103,6 @@ locally (technical-architecture.md §7). If the ECR CDN is unreachable from CI, 
 | Edge Runtime file-descriptor warning | harmless for local use |
 | Phone cannot reach API | use LAN IP, check firewall, same network; Expo Go must reach port 54321 |
 | OTP email missing | open Mailpit at :54324 |
+| Turborepo `Exec format error` when spawning pnpm | a global pnpm is self-switching versions in parallel; run `corepack enable` (ADR-0016) |
+| `expo install` fails with "HTTP Proxy Network Error" | the network blocks api.expo.dev; use `EXPO_OFFLINE=1 npx expo install …` |
+| `pnpm demo` says Docker is not running | start Docker Desktop / OrbStack / Colima (`dockerd` in containers) |

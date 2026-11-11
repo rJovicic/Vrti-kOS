@@ -1,0 +1,5 @@
+{
+  "name": "@vrticos/test-fixtures", "version": "0.1.0", "private": true, "type": "module",
+  "main": "src/world.ts", "types": "src/world.ts",
+  "scripts": { "generate": "node src/generate.ts", "typecheck": "tsc --noEmit", "test": "vitest run" }
+}

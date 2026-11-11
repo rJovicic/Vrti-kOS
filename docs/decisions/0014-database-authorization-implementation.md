@@ -1,6 +1,6 @@
 # ADR-0014: Database authorization implementation pattern
 
-- Status: Proposed
+- Status: **Accepted for the local demo only** (owner decision D-20, 2026-11-11); production use remains Proposed
 - Date: 2026-11-10
 - Related: ADR-0004, ADR-0005, SR-TEN-01…06, SR-AUTHZ-01…12, SR-API-01…03, R-35, docs/architecture/database-schema.md, spikes/rls-spike.sql
 

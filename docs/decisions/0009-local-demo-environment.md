@@ -1,6 +1,6 @@
 # ADR-0009: Local demo and development environment
 
-- Status: Proposed — **non-blocking for the demo build** (no cost, no external account, no real data)
+- Status: **Accepted for the local demo only** (owner decision D-20, 2026-11-11); production use remains Proposed
 - Date: 2026-11-10
 - Related: owner decision 2026-11-10 (build a functional demo before validation), R-37, local-development.md
 
@@ -18,7 +18,7 @@ The owner wants a functional demo of the whole application to present to kinderg
 ## Decision (proposed)
 Option 1. The demo is the real architecture (Postgres + RLS + Auth + Edge Functions) running locally:
 `supabase start` (CLI pinned as a dev dependency), Mailpit for all emails, synthetic seed with `.test` email domain,
-"DEMO — izmišljeni podaci" banner, seed/reset scripts that refuse non-local databases.
+"DEMO: izmišljeni podaci" banner, seed/reset scripts that refuse non-local databases.
 
 Evidence: in this repository's cloud container the stack started successfully (Docker Hub registry override needed
 because the AWS ECR CDN is blocked there) and the RLS spike passed 14/14 checks.

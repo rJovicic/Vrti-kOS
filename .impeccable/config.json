@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "design/prototype/mobile.html"
+        ],
+        "createdAt": "2026-11-11T08:03:42.336Z",
+        "reason": "Agent: native segmented control (2px inset, centred 44px labels) and full-bleed admin tables with 20px cell padding; text is never flush"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "design/prototype/admin.html"
+        ],
+        "createdAt": "2026-11-11T08:03:42.348Z",
+        "reason": "Agent: native segmented control (2px inset, centred 44px labels) and full-bleed admin tables with 20px cell padding; text is never flush"
+      }
+    ]
+  }
+}

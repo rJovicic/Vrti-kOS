@@ -1,6 +1,7 @@
 # Status faza
 
-**Trenutna faza:** FAZA 3 — Tehnička arhitektura → **dovršena (nacrt), čeka odobrenje za Fazu 4 (dizajn) i izgradnju dema**
+**Trenutna faza:** FAZA 4 (dizajn) ✅ i sloj D0 (tehnički temelj) ✅ — **sljedeće: D1** (prijava, MFA uprave, pozivnice, struktura vrtića)
+**Zadnja provjera:** 2026-11-11 — lint, typecheck, 74 unit testa, 56 pgTAP testova, RLS spike 14/14, admin build, Expo export, `pnpm demo`
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
@@ -23,11 +24,13 @@
 ## 🔄 U tijeku
 - Faza 1: kompletan nacrt specifikacije (PRD, FS-01…FS-15, kriteriji prihvaćanja, inventar podataka, plan validacije) — **čeka tok V** (intervjui) za zaključavanje MVP-a.
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
+- **Faza 4 — dizajn (2026-11-11):** ✅ [DESIGN.md](../DESIGN.md) (tokeni generirani iz `packages/tokens`), prototip 18 mobilnih i 5 admin ekrana u [design/prototype/](../design/prototype/) sa svim stanjima evidencije dolazaka; Impeccable detektor bez blokirajućih nalaza (2 savjetodavna).
+- **D0 — tehnički temelj (2026-11-11):** ✅ monorepo (pnpm 12, Turborepo, TS 6.0.3), Expo SDK 58 app, Next.js 16 admin, paketi tokens/i18n/validation/domain/db-types/test-fixtures, Supabase lokalno + Mailpit, 3 migracije (6 tablica + audit), RLS + helperi + grantovi, sintetički seed (Alfa/Beta), pgTAP testovi izolacije, GitHub Actions CI, `pnpm demo`.
 - **Faza 3 — tehnička arhitektura (2026-11-10):**
   - [x] [architecture/technical-architecture.md](architecture/technical-architecture.md), [database-schema.md](architecture/database-schema.md), [api-conventions.md](architecture/api-conventions.md), [mobile-app.md](architecture/mobile-app.md), [admin-app.md](architecture/admin-app.md), [local-development.md](architecture/local-development.md)
   - [x] ADR-0009…0015 (Proposed) + dodatak ADR-0006
   - [x] Lokalni Supabase stack pokrenut u ovom okruženju (Docker Hub registry); RLS spike 14/14 — [architecture/spikes/rls-spike.sql](architecture/spikes/rls-spike.sql)
-  - [ ] Spike Expo + pnpm + TypeScript 7 (P3-1) → prvi zadatak sloja D0
+  - [x] Spike Expo + pnpm + TypeScript 7 (P3-1) → ADR-0016 (TS 7 odbijen)
 - **Faza 2 — ograničeni opseg** (nalog vlasnika 2026-11-10: sigurnosna arhitektura i priprema za incidente; ostali privatnosni dokumenti čekaju validaciju). D-18 i dalje formalno čeka odluku vlasnika o punoj Fazi 2.
   - [x] Threat model (STRIDE) — [security/threat-model.md](security/threat-model.md)
   - [x] Sigurnosni zahtjevi (SR, Critical–Low, NEG-01…15) — [security/security-requirements.md](security/security-requirements.md)
@@ -62,9 +65,12 @@
 | D-17 | Pokretanje toka V: potvrda plana validacije i popisa kontakata (ravnatelji, odgojitelji, DPO) | Pokrenuti odmah — blokira zaključavanje MVP-a | [product/validation-plan.md](product/validation-plan.md) |
 | D-18 | Prijelaz u Fazu 2 (privatnost/sigurnost) paralelno s validacijom ili tek nakon nje | Paralelno samo za dokumente neovisne o opsegu (threat model, breach plan); ostalo nakon validacije | [roadmap.md](roadmap.md) |
 | ~~D-19~~ | ~~Demo prije validacije~~ | **Odluka vlasnika 2026-11-10:** graditi demo cijele aplikacije; MVP nepotvrđen; samo lokalno i sintetički | [roadmap.md](roadmap.md) (Izgradnja demo verzije) |
-| D-20 | Pregled ADR-0009…0015 (lokalni demo, e-pošta, mediji, offline dolasci, backup, autorizacija u bazi, klijentski stog) | Prihvatiti 0009, 0012, 0014, 0015 za izgradnju dema; 0010, 0011, 0013 tek prije staginga | [decisions/](decisions/) |
-| D-21 | Pregled dokumentacijskih odluka DD-09…DD-11 (guardians/child_guardians, pickup_authorizations, obavijesti bez uređivanja u demu) | Prihvatiti | [product/consistency-review.md](product/consistency-review.md) |
-| D-22 | Prijelaz u Fazu 4 (dizajn) i zatim sloj D0 izgradnje | Odobriti | [roadmap.md](roadmap.md), [backlog.md](backlog.md) |
+| ~~D-20~~ | ~~ADR-0009…0015~~ | **Odobreno 2026-11-11 samo za lokalni demo:** ADR 0009, 0012, 0014, 0015. ADR 0010, 0011, 0013 ostaju Proposed | [decisions/](decisions/) |
+| ~~D-21~~ | ~~DD-09…DD-11~~ | **Odobreno 2026-11-11** kao privremena pravila demo verzije | [product/consistency-review.md](product/consistency-review.md) |
+| ~~D-22~~ | ~~Faza 4 i D0~~ | **Odobreno 2026-11-11**; oboje izvedeno | [roadmap.md](roadmap.md) |
+| D-23 | ADR-0016: TypeScript 6.0.3 umjesto 7, pnpm 12 kroz Corepack, izolirani node_modules | Prihvatiti za demo (dokazi u ADR-u) | [decisions/0016-toolchain-versions.md](decisions/0016-toolchain-versions.md) |
+| D-24 | Pregled dizajn sustava (DESIGN.md, smjer „zid garderobe”) i prototipa | Pregledati prototip; potvrditi smjer prije D3 (ekran dolazaka u kodu) | [../DESIGN.md](../DESIGN.md), [../design/prototype/](../design/prototype/) |
+| D-25 | Početak sloja D1 | Odobriti | [backlog.md](backlog.md) |
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost

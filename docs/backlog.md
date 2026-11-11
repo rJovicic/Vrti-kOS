@@ -41,25 +41,36 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] [P2-26] Odluke Q-S10, Q-S11, Q-S12 (sesije, kod za povezivanje, zaključavanje aplikacije) prije Faze 6
 
 ## Faza 3
-- [ ] [P3-1] Spike: Expo + pnpm + Turborepo monorepo (+ kompatibilnost TypeScript 7, R-39) — **premješteno u D0 (Faza 5), prvi zadatak**
+- [x] [P3-1] Spike: Expo + pnpm + Turborepo + TypeScript 7 → ADR-0016
 - [x] [P3-2a] Spike: RLS helperi, kompozitni FK, exclusion, opoziv — `architecture/spikes/rls-spike.sql` (14/14)
 - [ ] [P3-2b] Mjerenje performansi RLS-a s 10 vrtića / 1.000 djece — D0
 - [x] [P3-3] ADR-ovi 0009–0015 (lokalni demo, e-pošta, mediji, offline, backup, autorizacija u bazi, klijentski stog) + dodatak ADR-0006 (hosting admina)
 - [x] [P3-4] Tehnička arhitektura, shema baze, API konvencije, mobilna i admin aplikacija, lokalno okruženje — `architecture/`
 
 ## Faza 4 — Dizajn (sljedeće)
-- [ ] [P4-1] `/impeccable shape` za ključne ekrane: odgojitelj — evidencija dolazaka; roditelj — početna; uprava — pregled vrtića
-- [ ] [P4-2] DESIGN.md: paleta (mekana zelena + topli neutralni, provjera kontrasta WCAG 2.2 AA), tipografija s hrvatskim dijakriticima, razmaci, radijusi, stanja
-- [ ] [P4-3] `packages/tokens` izvorni JSON iz DESIGN.md
-- [ ] [P4-4] Ključni ekrani (Figma ili kodni prototip) — 6 mobilnih + 4 admin ekrana
-- [ ] [P4-5] Test prototipa s odgojiteljima (validation-plan §5) — može se spojiti s intervjuima
+- [x] [P4-1] Impeccable: context, concept-seed (degradirano), surface brief za evidenciju dolazaka
+- [x] [P4-2] DESIGN.md (frontmatter generiran iz tokena; `pnpm design:sync`)
+- [x] [P4-3] `packages/tokens` (TS izvor + CSS) s testom kontrasta (60 provjera)
+- [x] [P4-4] HTML prototip: 18 mobilnih okvira (10 stanja evidencije), 5 admin ekrana — `design/prototype/`
+- [ ] [P4-5] Test prototipa s odgojiteljima (validation-plan §5) — spojiti s intervjuima (D-17)
+- [ ] [P4-6] Provjera nativnog izgleda na iOS simulatoru / Android emulatoru (R-41) — u D3
+- [ ] [P4-7] Impeccable finish-reviewer i documenter subagenti nisu pokrenuti — pokrenuti nakon D3 nad stvarnim ekranom
 
 ## Demo izgradnja (vidi roadmap)
-- [ ] [D0-1] Monorepo skeleton (pnpm, Turborepo, TS strict, ESLint granice), P3-1 spike
-- [ ] [D0-2] `supabase/` config (sigurne postavke — local-development §3a), prve migracije: organizations, facilities, academic_years, groups, profiles, memberships, private helperi, grantovi
-- [ ] [D0-3] pgTAP: ST-RLS-00 katalog + prvi NEG testovi; CI `quality`, `db`, `security`
-- [ ] [D0-4] Sintetički seed generator (`packages/test-fixtures`) + sigurnosne ograde skripti
-- [ ] [D1…D5] prema roadmapu (vertikalni slojevi)
+- [x] [D0-1] Monorepo (pnpm 12, Turborepo, TS 6.0.3 strict, ESLint s pravilima granica)
+- [x] [D0-2] `supabase/` config (sigurne postavke) + 3 migracije (6 tablica, audit, helperi, RLS, grantovi)
+- [x] [D0-3] pgTAP: 12 kataloških + 44 testa izolacije; CI jobovi `quality`, `db`, `apps`, `security`
+- [x] [D0-4] Sintetički seed generator + `guard-local` i `pnpm demo`
+
+### D1 — identitet i struktura (sljedeće)
+- [ ] [D1-1] Edge Functions: `create-organization`, `create-invitation`, `accept-invitation`, `revoke-invitation` (service key samo u funkciji, audit, NEG testovi)
+- [ ] [D1-2] `invitations` tablica + trigger `on_auth_user_created` (profil iz pozivnice, ne iz `user_metadata`)
+- [ ] [D1-3] Mobilna i admin prijava e-mail OTP-om (Mailpit), TOTP MFA za upravu (AAL2), odjava/brisanje lokalnih podataka
+- [ ] [D1-4] `staff_assignments` (regular/substitute) + politike za odgojitelje (grupe danas), proširenje `visible_profile_ids`
+- [ ] [D1-5] Admin: objekti, pedagoške godine, skupine, djelatnici i rasporedi (FS-02, FS-03) prema prototipu
+- [ ] [D1-6] Seed: rasporedi i zamjena; pgTAP NEG-07/08 za rasporede
+- [ ] [D1-7] Provjera prve sinkronizacije CI-a na GitHubu i branch protection za `main` (radnja vlasnika)
+- [ ] [D2…D5] prema roadmapu
 
 ## Faza 5 (unaprijed zabilježeno)
 - [P5-1] CI provjera: tablica bez RLS-a ruši build

@@ -34,3 +34,13 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Monorepo
+.pnpm-store/
+apps/mobile/dist/
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/admin/.next/
+apps/admin/next-env.d.ts
+coverage/

@@ -1,0 +1,5 @@
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAgeExclude:
+  - i18next@27.1.1

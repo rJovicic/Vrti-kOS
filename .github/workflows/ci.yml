@@ -1,0 +1,97 @@
+# VrtićOS CI (technical-architecture.md §7). No deploy job exists until D-3/D-6 are approved.
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+  NEXT_TELEMETRY_DISABLED: '1'
+  EXPO_NO_TELEMETRY: '1'
+  APP_ENV: test
+
+jobs:
+  quality:
+    name: lint · typecheck · unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: seed generator is deterministic and committed
+        run: pnpm seed:generate && git diff --exit-code -- supabase/seed.sql docs/architecture/demo-accounts.md
+      - name: DESIGN.md frontmatter and prototype tokens match packages/tokens
+        run: pnpm design:sync && git diff --exit-code -- DESIGN.md design/prototype/tokens.css
+
+  db:
+    name: database · migrations · RLS tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: start local Supabase (migrations + synthetic seed applied from zero)
+        run: pnpm db:start
+      - name: pgTAP — catalog checks (ST-RLS-00) and tenant isolation (NEG tests)
+        run: pnpm db:test
+      - name: Phase 3 RLS spike
+        run: pnpm db:spike
+      - name: generated DB types are up to date
+        run: pnpm db:types && git diff --exit-code -- packages/db-types/src/database.ts
+
+  apps:
+    name: admin build · mobile bundle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @vrticos/admin build
+      - name: export Expo JS bundles (no EAS account needed)
+        run: pnpm --filter @vrticos/mobile export
+        env:
+          EXPO_OFFLINE: '1'
+      - name: no secret keys in client bundles (SR-SUP-04)
+        run: "! grep -rlE 'sb_secret_|service_role' apps/mobile/dist apps/admin/.next/static"
+
+  security:
+    name: secrets · dependencies
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: gitleaks (full history)
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.0 git /repo --redact --no-banner
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: dependency audit (high and critical)
+        run: pnpm audit --audit-level high

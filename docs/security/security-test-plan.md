@@ -168,3 +168,12 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 ## 5. Izvještavanje
 Rezultati se čuvaju kao CI artefakti (bez osobnih podataka — sintetički svijet). Svaki neuspjeh sigurnosnog testa koji se
 pojavi nakon releasea tretira se kao potencijalni incident (vidi [incident-response-plan.md](incident-response-plan.md) §2).
+
+## 6. Implementation status (D0, 2026-11-11)
+| Test set | File | Status |
+|---|---|---|
+| ST-RLS-00 catalog checks (12 checks: RLS, anon privileges, DELETE grants, definer placement and `search_path`, private EXECUTE, views `security_invoker`, `user_metadata`, `true` policies, `organization_id NOT NULL`, public buckets) | `supabase/tests/database/00_catalog.test.sql` | ✅ passing |
+| Tenant isolation for D0 tables (44 assertions: NEG-01, NEG-02, NEG-09, NEG-10, NEG-11, NEG-13, NEG-15; AAL2 gate; suspended/expired memberships; audit append-only) | `supabase/tests/database/01_tenant_isolation.test.sql` | ✅ passing |
+| Phase 3 RLS spike (children/enrollments/attendance patterns) | `docs/architecture/spikes/rls-spike.sql` via `pnpm db:spike` | ✅ 14/14 |
+| Mutation check | weakening `facilities_select` to `USING (true)` made 4 tests fail | ✅ tests are not vacuous |
+| NEG-03…08, NEG-12, NEG-14; generated permission matrix (ST-RLS-01) | — | ⏳ with D1–D4 tables |

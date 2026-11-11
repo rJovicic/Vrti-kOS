@@ -313,3 +313,21 @@ alter default privileges in schema public revoke all on tables from anon, authen
 | Educator visibility of historical attendance of children who left the group | Currently tied to today's enrollment; validate with educators |
 | `audit_events` integrity (hash chain) | SR-AUD-03, Phase 5 decision |
 | Push tokens table | when push is implemented (needs D-7) |
+
+## 10. Implementation status (D0, 2026-11-11)
+Migrations in `supabase/migrations/` (apply from zero with `pnpm db:reset`):
+
+| Migration | Contents |
+|---|---|
+| `20261111000100_foundation.sql` | extensions (`btree_gist`, `citext`), schemas `api`/`private`, default-privilege lock-down, enums, generic guards |
+| `20261111000200_organization_structure.sql` | `organizations`, `facilities`, `academic_years`, `groups`, `profiles`, `memberships`, `private.platform_admins`, `audit_events`, composite FKs, partial unique index (one active year) |
+| `20261111000300_authorization.sql` | helpers (`org_today`, `is_aal2`, `is_platform_admin`, `has_org_role`, `is_org_manager`, `member_org_ids`, `managed_org_ids`, `visible_profile_ids`), RLS policies, column-level grants, membership guard trigger, audit trigger |
+
+Deliberate D0 limits (deny by default until the relationship tables exist):
+- `groups` are visible to managers only; educator (staff assignments, D1) and guardian (enrollments, D2) policies follow.
+- `profiles` are visible to the owner and to managers of their kindergartens only.
+- Audit actions from triggers are named `<table>.<insert|update>` with changed **column names** only.
+
+Finding during D0 (fixed): per-schema `ALTER DEFAULT PRIVILEGES … REVOKE` cannot remove PostgreSQL's global
+`EXECUTE` default for `PUBLIC`, so a trigger function in `private` was executable by `anon`. Caught by catalog check
+ST-RLS-00; fixed by a global default-privilege revoke and an explicit final revoke in the authorization migration.

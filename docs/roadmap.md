@@ -24,6 +24,8 @@ Vlasnik je odlučio izgraditi funkcionalni demo cijele aplikacije prije završet
 Demo radi **samo lokalno** sa sintetičkim podacima (ADR-0009). Faze 5–12 izvode se kao **vertikalni slojevi**;
 svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin aplikaciju:
 
+**Stanje 2026-11-11:** Faza 4 ✅ · D0 ✅ · sljedeće D1.
+
 | Sloj | Sadržaj | Faze | Gotovo kada |
 |---|---|---|---|
 | D0 Temelj | monorepo, CI, lokalni stack, migracije osnovnih tablica i helpera, seed, ST-RLS-00 | 5 | `pnpm demo` pokreće sve; CI zelen |
