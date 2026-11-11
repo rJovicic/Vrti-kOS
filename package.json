@@ -20,7 +20,8 @@
     "dev:mobile": "pnpm --filter @vrticos/mobile start",
     "demo": "node scripts/demo.mjs",
     "db:spike": "node scripts/run-rls-spike.mjs",
-    "design:sync": "pnpm --filter @vrticos/tokens design-sync"
+    "design:sync": "pnpm --filter @vrticos/tokens design-sync",
+    "test:integration": "pnpm --filter @vrticos/integration-tests run integration"
   },
   "devDependencies": {
     "supabase": "3.1.0",

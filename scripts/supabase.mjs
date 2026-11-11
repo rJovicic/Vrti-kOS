@@ -4,7 +4,8 @@ import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
-const env = { ...process.env };
+// No CLI telemetry (privacy rule: no data to third parties without assessment).
+const env = { ...process.env, SUPABASE_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1' };
 if (process.env.VRTICOS_DOCKERHUB === '1') env.SUPABASE_INTERNAL_IMAGE_REGISTRY = 'docker.io';
 const args = process.argv.slice(2);
 if (args.includes('--linked') || args.some((a) => a.startsWith('--db-url'))) {

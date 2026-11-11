@@ -44,3 +44,6 @@ apps/mobile/android/
 apps/admin/.next/
 apps/admin/next-env.d.ts
 coverage/
+
+# Sandbox-only TLS trust for the local Edge Runtime behind an intercepting proxy (never committed)
+supabase/functions/.sandbox/

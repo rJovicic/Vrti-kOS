@@ -163,7 +163,7 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["http://localhost:3000"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 900  # SR-SESS-02 proposal (Q-S10)
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -199,7 +199,7 @@ password_requirements = ""
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
-email_sent = 2
+email_sent = 60  # LOCAL DEMO ONLY (presentations, tests); production value decided with the e-mail provider (ADR-0010)
 # Number of SMS messages that can be sent per hour. Requires auth.sms to be enabled.
 sms_sent = 30
 # Number of anonymous sign-ins that can be made per hour per IP address. Requires enable_anonymous_sign_ins = true.
@@ -250,10 +250,15 @@ otp_expiry = 600  # SR-AUTHN-02
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# Uncomment to customize email template
-# [auth.email.template.invite]
-# subject = "You have been invited"
-# content_path = "./supabase/templates/invite.html"
+# VrtićOS: sign-in is by a 6-digit code typed into the app. Templates contain the code only — no link that
+# authenticates by itself (SR-AUTHN-01) and no child data (SR-AUTHN-04). OTP shares the magic link template.
+[auth.email.template.magic_link]
+subject = "Kod za prijavu u VrtićOS"
+content_path = "./supabase/templates/login-code.html"
+
+[auth.email.template.confirmation]
+subject = "Kod za prijavu u VrtićOS"
+content_path = "./supabase/templates/login-code.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
@@ -395,8 +400,17 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+# Non-secret local settings for Edge Functions (no keys here; SUPABASE_* keys are injected by the CLI).
+[edge_runtime.secrets]
+EMAIL_TRANSPORT = "mailpit"
+MAILPIT_URL = "http://supabase_inbucket_vrticos:8025"
+ALLOWED_ORIGINS = "http://localhost:3000"
+
+[functions.invite-member]
+verify_jwt = true
+
+[functions.accept-invitations]
+verify_jwt = true
 
 [analytics]
 enabled = false  # not needed locally; keeps the demo stack light
