@@ -202,12 +202,16 @@ Columns: `id`, `name` (≤120), `slug` (UQ), `timezone` (default `Europe/Zagreb`
 - **RLS** S: manager, educators (`group_id in educator_group_ids()`), guardians (`child_id in guardian_child_ids('can_view')`) · I/U: manager; transfer via `api.transfer_child()` (invoker, one transaction) · D: none
 - **Sens.** R3
 
-### 5.13 `staff_assignments`
-`id`, `organization_id`, `membership_id`, `group_id`, `assignment_type` (`regular|substitute`), `valid_during`, `approved_by`, `created_at`.
+### 5.13 `staff_assignments` — implemented in D1 (`20261111100000_staff_assignments.sql`)
+`id`, `organization_id`, `membership_id`, `group_id`, `assignment_type` (`regular|substitute`), `valid_during daterange`, `approved_by`, `created_by`, `created_at`, `updated_at`.
 - **FK** `(organization_id, membership_id) → memberships`, `(organization_id, group_id) → groups` RESTRICT
-- **Check** substitute ⇒ `upper(valid_during) is not null and approved_by is not null` (FR-03-3); trigger: membership role must be `educator`
+- **Check** not empty; substitute ⇒ finite end (FR-03-3). **Exclusion** no overlapping ranges for the same membership + group.
+- **Guard trigger** caller must be a manager (AAL2) before anything else; membership role must be `educator`; `created_by` and
+  (for substitutes) `approved_by` = caller; after insert only `valid_during` may change.
 - **IX** `(membership_id)`, `(group_id)`
-- **RLS** S: manager; own (via membership.profile_id) · I/U: manager · D: none
+- **RLS** S: manager; own (via `private.own_membership_ids()`) · I/U: manager · D: none (end an assignment by shortening it)
+- Educator group access: `private.educator_group_ids()` = active educator membership valid today **and** assignment valid today
+  (kindergarten time zone); `groups_select` = manager or that set.
 - **Sens.** R2
 
 ### 5.14 `attendance_records`
@@ -270,10 +274,15 @@ PK `(profile_id, type)`, `push_enabled bool`.
 - **FK** `profile_id → profiles` **CASCADE** (pure preference, no evidentiary value)
 - **RLS** S/I/U: `profile_id = auth.uid()` · **Sens.** R2
 
-### 5.23 `invitations`
-`id`, `organization_id`, `email citext`, `role org_role`, `guardian_id null` (for guardian invitations), `token_hash bytea`, `status` (`pending|accepted|revoked|expired`), `expires_at`, `created_by`, `accepted_by`, `accepted_at`, `created_at`.
-- **FK** `(organization_id, guardian_id) → guardians` RESTRICT · **UQ** `token_hash`; partial unique `(organization_id, lower(email), role) where status='pending'`
-- **RLS** S: manager (column grant **excludes `token_hash`**) · I/U: none from clients — Edge Functions `create-invitation`, `revoke-invitation`, `accept-invitation` · D: none
+### 5.23 `invitations` — implemented in D1 (`20261111100100_invitations.sql`, ADR-0017)
+`id`, `organization_id`, `email citext`, `role org_role`, `first_name`, `last_name`, `status` (`pending|accepted|revoked`),
+`expires_at` (default +7 days, max 30), `created_by`, `accepted_by/at`, `revoked_by/at`, `created_at`, `updated_at`.
+**Deviation from the Phase 3 sketch:** no `token_hash` (no secret in e-mail — possession is proven by the sign-in code),
+`expired` is derived from `expires_at`, `guardian_id` follows in D2.
+- **UQ** partial `(organization_id, email, role) where status = 'pending'`; **IX** `lower(email::text) where pending`
+- **Guard trigger** client insert: `created_by` = caller, `status` = pending, `org_admin` only by an `org_admin`;
+  client update: only pending → revoked (`revoked_by/at` set by the database)
+- **RLS** S/I/U: manager (AAL2) · D: none · acceptance only via `api.accept_invitations` (service_role)
 - **Sens.** R2
 
 ### 5.24 `private.platform_admins`

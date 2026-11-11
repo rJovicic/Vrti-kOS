@@ -73,6 +73,15 @@ Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
 
 Edge Functions (`functions:serve`) arrive with D1 (invitations).
 
+## 4a. D1 test commands
+- `pnpm test:integration` — Edge Functions, e-mail codes from Mailpit, TOTP MFA, RLS through the API (needs `pnpm db:start`).
+- `pnpm --filter @vrticos/integration-tests run e2e` — Playwright against a running admin (`ADMIN_URL`, default
+  `http://localhost:3000`; build and `pnpm --filter @vrticos/admin start` first). Each run creates its own synthetic kindergarten.
+- Both refuse any non-localhost Supabase URL.
+- Behind a TLS-intercepting proxy (e.g. the Claude Code cloud sandbox) the Edge Runtime container cannot fetch npm modules
+  until the proxy CA is appended to `/etc/ssl/certs/ca-certificates.crt` inside `supabase_edge_runtime_vrticos` and the
+  container is restarted. Not needed on normal machines or in CI. Never commit the CA.
+
 ## 5. Demo for a kindergarten (laptop + phones)
 1. Laptop runs `pnpm demo`; phones join the same Wi-Fi (or the laptop's hotspot); mobile app points to the laptop LAN IP.
 2. Synthetic seed (D0): kindergartens **"Vrtić Alfa (demo)"** and **"Vrtić Beta (demo)"**, 3 facilities, 6 groups,

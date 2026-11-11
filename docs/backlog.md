@@ -62,14 +62,17 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [x] [D0-3] pgTAP: 12 kataloških + 44 testa izolacije; CI jobovi `quality`, `db`, `apps`, `security`
 - [x] [D0-4] Sintetički seed generator + `guard-local` i `pnpm demo`
 
-### D1 — identitet i struktura (sljedeće)
-- [ ] [D1-1] Edge Functions: `create-organization`, `create-invitation`, `accept-invitation`, `revoke-invitation` (service key samo u funkciji, audit, NEG testovi)
-- [ ] [D1-2] `invitations` tablica + trigger `on_auth_user_created` (profil iz pozivnice, ne iz `user_metadata`)
-- [ ] [D1-3] Mobilna i admin prijava e-mail OTP-om (Mailpit), TOTP MFA za upravu (AAL2), odjava/brisanje lokalnih podataka
-- [ ] [D1-4] `staff_assignments` (regular/substitute) + politike za odgojitelje (grupe danas), proširenje `visible_profile_ids`
-- [ ] [D1-5] Admin: objekti, pedagoške godine, skupine, djelatnici i rasporedi (FS-02, FS-03) prema prototipu
-- [ ] [D1-6] Seed: rasporedi i zamjena; pgTAP NEG-07/08 za rasporede
-- [ ] [D1-7] Provjera prve sinkronizacije CI-a na GitHubu i branch protection za `main` (radnja vlasnika)
+### D1 — identitet i struktura (izvedeno 2026-11-11, vidi architecture/d1-implementation.md §4)
+- [x] [D1-1] Edge Functions `invite-member`, `accept-invitations`; opoziv kroz RLS (ADR-0017). `create-organization` (platform admin) → D2
+- [x] [D1-2] `invitations` + `api.accept_invitations` (profil i članstvo iz pozivnice, nikad iz `user_metadata`; umjesto triggera, ADR-0017)
+- [x] [D1-3] Mobilna i admin prijava kodom (Mailpit), TOTP MFA za upravu (AAL2), odjava — ⚠️ mobilna nije pokrenuta na uređaju (R-44)
+- [x] [D1-4] `staff_assignments` (regular/substitute) + politike za odgojitelje (grupe danas), proširenje `visible_profile_ids`
+- [x] [D1-5] Admin: objekti, pedagoške godine, skupine, djelatnici i rasporedi (FS-02, FS-03) prema prototipu
+- [x] [D1-6] Seed: rasporedi i zamjena; pgTAP NEG-07/08 za rasporede
+- [x] [D1-7a] CI na GitHubu zelen (run #6: integracijski i e2e testovi)
+- [ ] [D1-7b] Branch protection za `main` — **radnja vlasnika (D-27)**, `main` trenutačno nije zaštićen
+- [ ] [D1-8] Pokretanje mobilne aplikacije na iOS simulatoru / Android emulatoru (R-44)
+- [ ] [D1-9] Ponovno slanje pozivnice (FR-01-2), ekran platform admina za novi vrtić (FR-02-1), potvrda obavijesti o privatnosti (FR-01-5)
 - [ ] [D2…D5] prema roadmapu
 
 ## Faza 5 (unaprijed zabilježeno)

@@ -1,7 +1,7 @@
 # Plan sigurnosnog testiranja — VrtićOS (MVP)
 
 **Verzija:** 0.1 (nacrt) · **Datum:** 2026-11-10 · **Faza:** 2 (ograničeni opseg); izvedba od Faze 5
-**Status:** plan; nijedan test još nije implementiran ni pokrenut (nema koda). Pretpostavlja predloženu arhitekturu
+**Status (2026-11-11, D1):** dio testova implementiran i pokreće se u CI-ju — pgTAP 105 (izolacija vrtića, rasporedi, pozivnice, eskalacija, AAL1), integracijski 20 (Edge Functions, kod iz e-pošte, MFA), Playwright e2e 8 (admin). Ostatak plana i dalje je plan. Pretpostavlja predloženu arhitekturu
 (SA-01…SA-08, [threat-model.md](threat-model.md)).
 **Veze:** [security-requirements.md](security-requirements.md) · [../product/acceptance-criteria.md](../product/acceptance-criteria.md) ·
 [../product/roles-and-permissions.md](../product/roles-and-permissions.md)
