@@ -90,7 +90,7 @@ select pg_temp.login('a0000000-0000-4000-8000-0000000000e1');
 select results_eq('select slug from public.organizations', array['test-alfa'], 'E1 sees own kindergarten');
 select is((select count(*)::int from public.groups), 0, 'E1 sees no groups before assignments exist (deny by default)');
 select is((select count(*)::int from public.memberships), 1, 'E1 sees only own membership');
-select is((select count(*)::int from public.profiles), 1, 'E1 sees only own profile');
+select results_eq($$select split_part(last_name, '@', 1) from public.profiles order by 1$$, array['ea', 'ua'], 'E1 sees own profile and active staff colleagues only (no guardians, no suspended/expired staff)');
 select throws_ok($$insert into public.facilities (organization_id, name) values ('a0000000-0000-4000-8000-00000000000a', 'X')$$, '42501', null, 'E1 cannot create facilities');
 select throws_ok($$update public.memberships set status = 'ended' where id = 'a0000000-0000-4000-8000-0000000001e1'$$, '42501', null, 'E1 cannot change own membership status (NEG-11)');
 select lives_ok($$update public.memberships set notice_ack_version = 'v1', notice_ack_at = now() where id = 'a0000000-0000-4000-8000-0000000001e1'$$, 'E1 can acknowledge the privacy notice');
