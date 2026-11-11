@@ -58,6 +58,8 @@ jobs:
         run: pnpm db:spike
       - name: generated DB types are up to date
         run: pnpm db:types && git diff --exit-code -- packages/db-types/src/database.ts
+      - name: integration — e-mail code via Mailpit, TOTP MFA, invitation Edge Functions
+        run: pnpm test:integration
 
   apps:
     name: admin build · mobile bundle

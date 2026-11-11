@@ -10,7 +10,7 @@ export interface Person {
   firstName: string;
   lastName: string;
   email: string;
-  memberships: { orgKey: OrgKey; role: Role }[];
+  memberships: { orgKey: OrgKey; role: Role; id?: string }[];
   platformAdmin?: boolean;
 }
 
@@ -26,9 +26,33 @@ export interface Org {
   groups: { id: string; name: string; facilityIndex: number; capacity: number }[];
 }
 
+export interface Assignment {
+  id: string;
+  orgKey: OrgKey;
+  membershipId: string;
+  groupId: string;
+  type: 'regular' | 'substitute';
+  /** Substitutes are relative to the day the seed is loaded, so the demo always shows one in effect. */
+  days?: { fromToday: number; toToday: number };
+  approvedBy?: string;
+}
+
+export interface Invitation {
+  id: string;
+  orgKey: OrgKey;
+  email: string;
+  role: Role;
+  firstName: string;
+  lastName: string;
+  state: 'pending' | 'expired' | 'revoked';
+  createdBy: string;
+}
+
 export interface World {
   orgs: Org[];
   people: Person[];
+  assignments: Assignment[];
+  invitations: Invitation[];
 }
 
 /** Builds the synthetic demo world (kindergartens Alfa and Beta). Same seed → same world. */
@@ -85,5 +109,30 @@ export function buildWorld(seed = 20261111): World {
   }
   // A guardian with children in both kindergartens (multi-tenant user, NEG-02).
   person('roditelj.oba', [{ orgKey: 'alfa', role: 'guardian' }, { orgKey: 'beta', role: 'guardian' }]);
-  return { orgs, people };
+
+  // D1 additions — generated after all D0 entities so existing ids stay stable.
+  for (const p of people) for (const m of p.memberships) m.id = r.uuid();
+  const membership = (local: string, orgKey: OrgKey) =>
+    people.find((p) => p.email === `${local}@${EMAIL_DOMAIN}`)!.memberships.find((m) => m.orgKey === orgKey)!.id!;
+  const manager = (orgKey: OrgKey) => people.find((p) => p.email === `uprava.${orgKey}@${EMAIL_DOMAIN}`)!.id;
+
+  const assignments: Assignment[] = [];
+  for (const org of orgs) {
+    org.groups.forEach((g, i) => {
+      assignments.push({ id: r.uuid(), orgKey: org.key, membershipId: membership(`odgojitelj.${org.key}.${i + 1}`, org.key), groupId: g.id, type: 'regular' });
+    });
+  }
+  // Odgojitelj Alfa 1 covers Sunčice this week as an approved substitute (FR-03-3).
+  const alfa = orgs[0]!;
+  assignments.push({
+    id: r.uuid(), orgKey: 'alfa', membershipId: membership('odgojitelj.alfa.1', 'alfa'), groupId: alfa.groups[3]!.id,
+    type: 'substitute', days: { fromToday: 0, toToday: 5 }, approvedBy: manager('alfa'),
+  });
+
+  const invitations: Invitation[] = (['pending', 'expired', 'revoked'] as const).map((state, i) => {
+    const firstName = r.pick(givenNames);
+    const lastName = r.pick(surnames);
+    return { id: r.uuid(), orgKey: 'alfa', email: `pozvan.alfa.${i + 1}@${EMAIL_DOMAIN}`, role: i === 0 ? 'educator' : 'guardian', firstName, lastName, state, createdBy: manager('alfa') };
+  });
+  return { orgs, people, assignments, invitations };
 }

@@ -32,8 +32,21 @@ export function toSeedSql(world: World): string {
   const orgId = (key: string) => world.orgs.find((o) => o.key === key)!.id;
   for (const p of world.people) {
     for (const m of p.memberships) {
-      out.push(`insert into public.memberships (organization_id, profile_id, role, valid_during) values (${q(orgId(m.orgKey))}, ${q(p.id)}, '${m.role}', daterange('2026-09-01', null));`);
+      out.push(`insert into public.memberships (id, organization_id, profile_id, role, valid_during) values (${q(m.id!)}, ${q(orgId(m.orgKey))}, ${q(p.id)}, '${m.role}', daterange('2026-09-01', null));`);
     }
+  }
+  for (const a of world.assignments) {
+    const during = a.days ? `daterange(current_date + ${a.days.fromToday}, current_date + ${a.days.toToday})` : `daterange('2026-09-01', null)`;
+    out.push(
+      `insert into public.staff_assignments (id, organization_id, membership_id, group_id, assignment_type, valid_during, approved_by) values (${q(a.id)}, ${q(orgId(a.orgKey))}, ${q(a.membershipId)}, ${q(a.groupId)}, '${a.type}', ${during}, ${a.approvedBy ? q(a.approvedBy) : 'null'});`,
+    );
+  }
+  for (const i of world.invitations) {
+    const times = i.state === 'expired' ? `now() - interval '10 days', now() - interval '3 days'` : `now(), now() + interval '7 days'`;
+    const revoked = i.state === 'revoked' ? `'revoked', ${q(i.createdBy)}, now()` : `'pending', null, null`;
+    out.push(
+      `insert into public.invitations (id, organization_id, email, role, first_name, last_name, created_by, created_at, expires_at, status, revoked_by, revoked_at) values (${q(i.id)}, ${q(orgId(i.orgKey))}, ${q(i.email)}, '${i.role}', ${q(i.firstName)}, ${q(i.lastName)}, ${q(i.createdBy)}, ${times}, ${revoked});`,
+    );
   }
   out.push('commit;', '');
   return out.join('\n');

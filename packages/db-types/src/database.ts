@@ -11,7 +11,11 @@ export type Database = {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "accept_invitations":
+{ Args: { "p_email": string,"p_user_id": string }; Returns: {
+              "invitation_id": string,"organization_id": string,"role": Database["public"]['Enums']["org_role"]
+            }[]
+                           }
           }
           Enums: {
             [_ in never]: never
@@ -113,6 +117,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"invitations": {
+                  Row: {
+                    "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"created_by": string,"email": string,"expires_at": string,"first_name": string,"id": string,"last_name": string,"organization_id": string,"revoked_at": string | null,"revoked_by": string | null,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["invitation_status"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email": string,"expires_at"?: string,"first_name": string,"id"?: string,"last_name": string,"organization_id": string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role": Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
+                  }
+                  Update: {
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email"?: string,"expires_at"?: string,"first_name"?: string,"id"?: string,"last_name"?: string,"organization_id"?: string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role"?: Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "invitations_accepted_by_fkey"
+      columns: ["accepted_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_revoked_by_fkey"
+      columns: ["revoked_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"memberships": {
                   Row: {
                     "created_at": string,"created_by": string | null,"id": string,"notice_ack_at": string | null,"notice_ack_version": string | null,"organization_id": string,"profile_id": string,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["membership_status"],"updated_at": string,"valid_during": unknown
@@ -173,6 +215,50 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"staff_assignments": {
+                  Row: {
+                    "approved_by": string | null,"assignment_type": Database["public"]['Enums']["assignment_type"],"created_at": string,"created_by": string | null,"group_id": string,"id": string,"membership_id": string,"organization_id": string,"updated_at": string,"valid_during": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "approved_by"?: string | null,"assignment_type"?: Database["public"]['Enums']["assignment_type"],"created_at"?: string,"created_by"?: string | null,"group_id": string,"id"?: string,"membership_id": string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
+                  }
+                  Update: {
+                    "approved_by"?: string | null,"assignment_type"?: Database["public"]['Enums']["assignment_type"],"created_at"?: string,"created_by"?: string | null,"group_id"?: string,"id"?: string,"membership_id"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "staff_assignments_approved_by_fkey"
+      columns: ["approved_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_assignments_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_assignments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "staff_assignments_organization_id_group_id_fkey"
+      columns: ["organization_id","group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "staff_assignments_organization_id_membership_id_fkey"
+      columns: ["organization_id","membership_id"]
+isOneToOne: false
+      referencedRelation: "memberships"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -182,7 +268,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -302,7 +388,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"]
           }
         }
 } as const
