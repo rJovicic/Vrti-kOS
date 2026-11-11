@@ -69,6 +69,21 @@ export const hr = {
     noAdminAccessHelp: 'Administracija je namijenjena upravi vrtića. Odgojitelji i roditelji koriste mobilnu aplikaciju VrtićOS.',
     chooseOrg: 'Odaberite vrtić',
   },
+  mobile: {
+    signInLede: 'Upišite e-adresu koju ste dali vrtiću. Poslat ćemo vam jednokratni kod.',
+    codeSentTo: 'Ako je adresa prijavljena u VrtićOS, poslali smo kod. Vrijedi 10 minuta.',
+    myGroups: 'Moje skupine danas',
+    myGroupsHelp: 'Prikazane su skupine na koje ste danas raspoređeni.',
+    substituteUntil: 'Zamjena do {{date}}',
+    myChildren: 'Moja djeca',
+    noData: 'Trenutačno nema podataka dostupnih za ovaj račun.',
+    noDataHelp: 'Ako očekujete drugačiji prikaz, obratite se vrtiću.',
+    managersUseWeb: 'Uprava vrtića radi u web administraciji.',
+    profile: 'Profil',
+    signedInAs: 'Prijavljeni ste kao {{email}}',
+    loadError: 'Početnu nije moguće učitati.',
+    loadErrorHelp: 'Provjerite vezu i pokušajte ponovno.',
+  },
   admin: {
     mfaConfirmed: 'MFA potvrđen',
     nav: {
