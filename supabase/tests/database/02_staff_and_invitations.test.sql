@@ -2,7 +2,7 @@
 -- Own synthetic fixtures, rolled back. Covers NEG-01, NEG-07, NEG-08, NEG-09, NEG-11 for the new tables.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(46);
+select plan(49);
 
 -- Fixtures ------------------------------------------------------------------------------------------
 insert into auth.users (id, email, aud, role, email_confirmed_at) values
@@ -94,6 +94,15 @@ select lives_ok($$update public.staff_assignments set valid_during = daterange(l
 reset role;
 select pg_temp.login('a1000000-0000-4000-8000-0000000000e1');
 select results_eq('select name from public.groups order by name', array['S2'], 'E1 immediately loses S1');
+reset role;
+
+-- Memberships: director vs org_admin ----------------------------------------------------------------------
+select pg_temp.login('a1000000-0000-4000-8000-0000000000d1');
+select throws_ok($$update public.memberships set status = 'suspended' where id = 'a1000000-0000-4000-8000-0000000001a1'$$, '42501', null, 'a director cannot suspend an org_admin (privilege escalation)');
+select lives_ok($$update public.memberships set status = 'suspended' where id = 'a1000000-0000-4000-8000-0000000001e3'$$, 'a director can suspend an educator');
+reset role;
+select pg_temp.login('a1000000-0000-4000-8000-0000000000a1');
+select lives_ok($$update public.memberships set status = 'active' where id = 'a1000000-0000-4000-8000-0000000001e3'$$, 'an org_admin can re-activate the educator');
 reset role;
 
 -- Invitations -------------------------------------------------------------------------------------------

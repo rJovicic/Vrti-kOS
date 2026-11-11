@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function Staff({ params, searchParams }: { params: Promise<{ orgSlug: string }>; searchParams: SearchParams }) {
   const [{ orgSlug }, flash] = await Promise.all([params, searchParams]);
   const ctx = await getOrgContext(orgSlug);
-  const { org, userId, today } = ctx;
+  const { org, userId, today, isOrgAdmin } = ctx;
   const { staff, groups, assignments } = await loadStaff(ctx);
   const { data: own } = await ctx.supabase.from('memberships').select('id').eq('organization_id', org.id).eq('profile_id', userId);
   const ownIds = new Set((own ?? []).map((m) => m.id));
@@ -83,7 +83,7 @@ export default async function Staff({ params, searchParams }: { params: Promise<
                       </td>
                       <td className="actions">
                         <span className={`pill ${s.status === 'active' ? 'present' : 'absent'}`}>{t(`admin.staff.statusLabel.${s.status}`)}</span>
-                        {ownIds.has(s.membershipId) || s.status === 'ended' ? null : (
+                        {ownIds.has(s.membershipId) || s.status === 'ended' || (s.role === 'org_admin' && !isOrgAdmin) ? null : (
                           <form action={setMembershipStatus}>
                             <input type="hidden" name="slug" value={org.slug} />
                             <input type="hidden" name="id" value={s.membershipId} />
