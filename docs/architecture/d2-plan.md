@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
 - Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
-  D-27 precondition for work on the working branch the same day. **D2-A and D2-B are implemented** (2026-11-12); C–I are not.
+  D-27 precondition for work on the working branch the same day. **D2-A, D2-B and D2-C are implemented** (2026-11-12); D–I are not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -28,7 +28,7 @@
 | Q-P03 minimum child data | `children` holds first name, last name and optional `internal_ref` only | **Assumed** (FR-04-1). Any extra field needs owner + legal decision |
 | Q-P05 identity check before inviting a guardian | The system cannot verify identity; the kindergarten checks it before entering the e-mail | **Open ⚖️**. D2 records who invited (`created_by`) and requires AAL2; no eID |
 | FR-04-8 / Q-T13 pickup persons | Name + validity only; no phone or relationship; edited by managers only | **Assumed**; guardian editing stays out of D2 |
-| FR-04-5 restriction scopes | Only `full` scope in D2 (blocks the guardian link completely) | **Assumed**; partial scopes later |
+| FR-04-5 restriction scopes | Only `full` scope in D2 (blocks the guardian link completely) | **Implemented in D2-C as specified here**; partial scopes (single rights) stay a later decision — FR-04-5 allows them |
 | Educator view of guardians (handover, FR-05-3) | Educators see guardian **names and flags** of children in their groups today; no contact data | **D-31 accepted 2026-11-12**; implemented in D2-B (RLS + column grants: `profile_id`/`created_by` of guardians are readable by no client) |
 | Q-T04 CSV import | Out of D2 | Should; later |
 | Guardian across kindergartens | One `guardians` row per kindergarten, linked to the same `profile_id`; no cross-tenant join | **Decided by model** (tenant isolation) |
@@ -36,7 +36,9 @@
 | Guardian invitation timing | Manager creates guardian + link first, then invites; acceptance attaches `profile_id` | **D-32 accepted 2026-11-12**: a link needs no enrolment, a linked child without a group is visible. Attaching on acceptance = D2-F; until then an accepted invitation gives no child (tested) |
 | Suspension rule | Unchanged: suspension is per membership (kindergarten + person + role), ADR-0017 | **Accepted** (D-26) |
 
-Owner decisions D-31 and D-32 were confirmed on 2026-11-12 (see the table above).
+Owner decisions D-31 and D-32 were confirmed on 2026-11-12 (see the table above). **Open: D-33** — what an educator
+sees for a link with an active restriction (today: name and stored rights, no restriction marker; proposal: show the
+link marked "restricted" without the reference, needed for handover in D3).
 
 ## 3. Data model (one migration per work package)
 | Table | Columns (beyond `id`, `organization_id`, `created_by`, `created_at`, `updated_at`) | Key constraints |
@@ -132,7 +134,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 |---|---|---|
 | D2-A | `children` + `enrollments` + helpers `educator_child_ids()` | migrations from zero; pgTAP NEG-01/07/08/10 green; seed has synthetic children | **Done 2026-11-12:** `20261112101000_children_enrollments.sql`, pgTAP 09 (46), integration `children.test.ts` (6), 30 synthetic children. |
 | D2-B | `guardians` + `child_guardians` + `guardian_child_ids()` | pgTAP NEG-03/04/06/11 green | **Done 2026-11-12:** `20261112102000_guardians.sql`, pgTAP 10 (50), integration `guardians.test.ts` (7). |
-| D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately |
+| D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately | **Done 2026-11-12:** `20261112113000_access_restrictions.sql`, pgTAP 11 (47), integration `access-restrictions.test.ts` (7). Open: D-33. |
 | D2-D | `pickup_authorizations` | pgTAP read matrix green |
 | D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green |
 | D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green |

@@ -194,11 +194,16 @@ grant), `created_at`.
   extends `children`, `enrollments` (current only) and `groups` (current group) select policies. No enrolment needed
   (D-32). An accepted invitation or a guardian membership alone gives no child.
 
-### 5.10 `access_restrictions`
+### 5.10 `access_restrictions` — implemented in D2-C (`20261112113000_access_restrictions.sql`)
 `id`, `organization_id`, `child_guardian_id`, `scope` (`full`; more scopes later), `valid_during`, `reference` (≤100, internal case reference — **no reason, no court text**), `created_by`, `created_at`.
 - **FK** `(organization_id, child_guardian_id) → child_guardians` RESTRICT · **IX** `(child_guardian_id)`
 - **RLS** S/I/U: **manager only** · D: none · Audit: every change
 - **Sens.** **R4**
+- **As implemented (D2-C):** active = `valid_during @> org_today()`. `private.restricted_link_ids()` (definer) feeds
+  `private.guardian_child_ids(flag)` — the single source of guardian access to children, enrolments, groups and, later,
+  absences and messages — and the guardian's own-link branch of `child_guardians_select` (a restricted guardian does not
+  see that link). Clients write only `organization_id, child_guardian_id, valid_during, reference`; `scope` and the link
+  never change. Several restrictions may overlap. The D-31 educator view is unchanged (open decision D-33).
 
 ### 5.11 `pickup_authorizations`
 `id`, `organization_id`, `child_id`, `first_name`, `last_name`, `valid_during`, `created_by`, `created_at`. Phone/relationship: Q-T13 (not stored).
