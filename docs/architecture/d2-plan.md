@@ -88,7 +88,12 @@ children or group size (FR-04-9).
     validates. A failure at any step rolls back the whole call (tested with injected failures);
   - after withdrawal the trigger `guard_child_lifecycle` refuses any enrolment, link or pickup authorization valid after
     the last day (`CHILD_WITHDRAWN`); a withdrawn child is not transferred or withdrawn again;
-  - refused instead of guessed (open D-37): records that start after the operation date are not cancelled.
+  - records that start after the operation date are not cancelled automatically; a manager cancels them explicitly:
+  - `api.cancel_future_record(kind, id, reason)` (**D-37**): enrolment, guardian link or pickup authorization whose start
+    is strictly after today; managers with MFA; deleted together with an audit event (`record.cancel`: id, type, actor,
+    time, reason code) in one transaction; refused for records in effect (`RECORD_ALREADY_EFFECTIVE`) and for a future
+    link with an access restriction (`CANCEL_RECORD_REFERENCED`). The reason is a fixed code (technical decision: no free
+    text in the audit). Clients still have no DELETE grant.
 - **Guardian invitation** (FR-01-1): `invite-member` gets an optional `guardianId`. The guard checks:
   - the guardian belongs to the same kindergarten;
   - the role is `guardian`;
@@ -150,7 +155,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 | D2-B | `guardians` + `child_guardians` + `guardian_child_ids()` | pgTAP NEG-03/04/06/11 green | **Done 2026-11-12:** `20261112102000_guardians.sql`, pgTAP 10 (50), integration `guardians.test.ts` (7). |
 | D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately | **Done 2026-11-12:** `20261112113000_access_restrictions.sql`, pgTAP 11 (47), integration `access-restrictions.test.ts` (7). D-33 decided and implemented (`20261112115000_link_restriction_flag.sql`, pgTAP 12). |
 | D2-D | `pickup_authorizations` | pgTAP read matrix green | **Done 2026-11-12:** `20261112120000_pickup_authorizations.sql`, pgTAP 13 (42), integration `pickup-authorizations.test.ts` (6), 4 synthetic persons in the seed. Not a handover rule (D3). |
-| D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green | **Done 2026-11-12:** `20261112130000_transfer_and_withdrawal.sql`, pgTAP 14 (91), integration `transfer-withdrawal.test.ts` (7). D-35, D-36 applied; D-37 open. |
+| D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green | **Done 2026-11-12:** `20261112130000_transfer_and_withdrawal.sql`, pgTAP 14 (91), integration `transfer-withdrawal.test.ts` (7). D-35, D-36 applied; D-37 implemented (`20261112140000_cancel_future_records.sql`, pgTAP 15 (42), integration `cancel-future-records.test.ts` (5)). |
 | D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green |
 | D2-G | Admin screens | e2e green; build green |
 | D2-H | Mobile Parent Home with real data, child detail, educator group list | render tests green; Expo export green; R-44 check on a device still required |
