@@ -70,6 +70,12 @@ isOneToOne: false
       foreignKeyName: "access_restrictions_organization_id_child_guardian_id_fkey"
       columns: ["organization_id","child_guardian_id"]
 isOneToOne: false
+      referencedRelation: "child_guardian_overview"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "access_restrictions_organization_id_child_guardian_id_fkey"
+      columns: ["organization_id","child_guardian_id"]
+isOneToOne: false
       referencedRelation: "child_guardians"
       referencedColumns: ["organization_id","id"]
     },{
@@ -455,6 +461,38 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"child_guardian_overview": {
+                  Row: {
+                    "can_report_absence": boolean,"can_view": boolean,"child_id": string,"guardian_id": string,"id": string,"is_restricted": boolean | null,"organization_id": string,"receives_messages": boolean,"valid_during": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "can_report_absence"?: boolean | null,"can_view"?: boolean | null,"child_id"?: string | null,"guardian_id"?: string | null,"id"?: string | null,"is_restricted"?: never,"organization_id"?: string | null,"receives_messages"?: boolean | null,"valid_during"?: unknown
+                         }
+                        Update: {
+                           "can_report_absence"?: boolean | null,"can_view"?: boolean | null,"child_id"?: string | null,"guardian_id"?: string | null,"id"?: string | null,"is_restricted"?: never,"organization_id"?: string | null,"receives_messages"?: boolean | null,"valid_during"?: unknown
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "child_guardians_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "child_guardians_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "child_guardians_organization_id_guardian_id_fkey"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
+      referencedRelation: "guardians"
+      referencedColumns: ["organization_id","id"]
     }
                   ]
                 }

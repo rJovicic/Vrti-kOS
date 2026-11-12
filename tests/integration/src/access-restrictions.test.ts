@@ -83,6 +83,28 @@ describe('D2-C: access restrictions through the API', () => {
     expect([bruno.links, bruno.enrollments, bruno.groups, bruno.restrictions]).toEqual([1, 1, 1, 0]);
   });
 
+  it('D-33: the educator of the group sees the link marked restricted, without reference, author or a write path', async () => {
+    await manager
+      .from('staff_assignments')
+      .insert({ organization_id: alfa.orgId, membership_id: alfa.educatorMembershipId, group_id: alfa.groupId, valid_during: '[2026-01-01,)' })
+      .throwOnError();
+    const edu = await signInWithCode(alfa.educatorEmail);
+    const { data } = await edu.client.from('child_guardian_overview').select('*').order('is_restricted');
+    expect(data!.map((r) => [r.guardian_id, r.is_restricted])).toEqual([
+      [ids.bruno, false],
+      [ids.ana, true],
+    ]);
+    expect(Object.keys(data![0]!).sort()).toEqual(
+      ['can_report_absence', 'can_view', 'child_id', 'guardian_id', 'id', 'is_restricted', 'organization_id', 'receives_messages', 'valid_during'].sort(),
+    );
+    expect(JSON.stringify(data)).not.toMatch(/INT-/);
+    expect((await edu.client.from('access_restrictions').select('id')).data).toEqual([]);
+    expect((await edu.client.from('child_guardian_overview').update({ can_view: false }).eq('id', ids.anaLea)).error).not.toBeNull();
+    // the restricted guardian and the other guardian learn nothing about the restriction
+    expect((await (await reach('ana')).client.from('child_guardian_overview').select('id, is_restricted')).data).toEqual([{ id: ids.anaMia, is_restricted: false }]);
+    expect((await (await reach('bruno')).client.from('child_guardian_overview').select('id, is_restricted')).data).toEqual([{ id: ids.brunoLea, is_restricted: false }]);
+  });
+
   it('only managers read or write restrictions', async () => {
     const ana = await reach('ana');
     expect((await ana.client.from('access_restrictions').insert({ organization_id: alfa.orgId, child_guardian_id: ids.brunoLea, valid_during: `[${today},)` })).error).not.toBeNull();

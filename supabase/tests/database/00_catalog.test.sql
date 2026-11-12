@@ -57,7 +57,7 @@ select is(
 select is(
   (select count(*)::int from information_schema.columns c
    join pg_class t on t.relname = c.table_name join pg_namespace n on n.oid = t.relnamespace and n.nspname = c.table_schema
-   where c.table_schema = 'public' and c.column_name = 'organization_id' and c.is_nullable = 'YES'
+   where c.table_schema = 'public' and t.relkind in ('r', 'p') and c.column_name = 'organization_id' and c.is_nullable = 'YES'
      and c.table_name <> 'audit_events'),
   0, 'organization_id is NOT NULL on tenant tables');
 
