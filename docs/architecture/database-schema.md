@@ -203,7 +203,10 @@ grant), `created_at`.
   `private.guardian_child_ids(flag)` — the single source of guardian access to children, enrolments, groups and, later,
   absences and messages — and the guardian's own-link branch of `child_guardians_select` (a restricted guardian does not
   see that link). Clients write only `organization_id, child_guardian_id, valid_during, reference`; `scope` and the link
-  never change. Several restrictions may overlap. The D-31 educator view is unchanged (open decision D-33).
+  never change. Several restrictions may overlap. The D-31 educator view of `child_guardians` is unchanged; D-33 (confirmed) adds
+  `public.child_guardian_overview` — read-only security_invoker view with `is_restricted` from
+  `private.link_is_restricted()` (answers only for links the caller can see: managers and D-31 educators). No reason,
+  reference or author is exposed. A restriction is not a pickup ban.
 
 ### 5.11 `pickup_authorizations`
 `id`, `organization_id`, `child_id`, `first_name`, `last_name`, `valid_during`, `created_by`, `created_at`. Phone/relationship: Q-T13 (not stored).
