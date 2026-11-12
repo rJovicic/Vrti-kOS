@@ -42,6 +42,17 @@ app/
     audit/                      Revizijski zapis (FS-09)
 ```
 
+**Implemented in D2-G (2026-11-12):** `children/` (list with today's group and state, create form) and
+`children/[childId]` (one page instead of the separate guardians/pickup sub-routes sketched above): basic data and edit;
+enrolment history with first enrolment, transfer (`api.transfer_child`), withdrawal (`api.withdraw_child`, explicit
+confirmation) and cancellation of planned records (D-37, reason code); guardians table with rights, account state
+(`guardian_directory.has_account`: Aktivan / Pozivnica poslana / Bez računa / Bez pristupa) and restriction mark with the
+internal reference; per guardian a "Upravljanje vezom" block: rights, invitation (D2-F, e-mail used only for the
+invitation), restriction with confirmation and no free-text reason, end of link; pickup persons (names and validity
+only, D-34). Technical decisions: secondary forms sit behind native `<details>` disclosures instead of modal dialogs (no
+client JavaScript, keyboard accessible, the effect text is shown before the confirmation checkbox); a separate guardian
+directory route is not built (guardians are managed from the child, which is where links and rights live).
+
 Organization context comes from the URL slug; every server call still filters by `organization_id` and RLS decides.
 A manager of two kindergartens sees an org switcher; caches are keyed by org.
 
@@ -71,5 +82,8 @@ success toasts. Destructive or sensitive actions (withdraw child, access restric
 confirmation dialog stating the effect ("Skrbnik odmah gubi pristup").
 
 ## 6. Testing
+D2-G e2e (`admin.e2e.test.ts`): create child → enrol → new guardian with rights → invitation (Mailpit, no link, no
+child name) → pickup person → restriction with confirmation (row shows "Bez pristupa" and the reference) → transfer in
+the past refused (D-36) → transfer from today → withdrawal with confirmation → record read-only.
 Vitest for actions/helpers; Playwright e2e against local stack + seed: manager flows (create child → link guardian →
 invite → verify invitation email in Mailpit), negative checks (U1 cannot open Beta URLs), CSP header presence (ST-WEB-01).

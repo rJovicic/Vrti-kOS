@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
 - Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
-  D-27 precondition for work on the working branch the same day. **D2-A…D2-F are implemented** (2026-11-12); G–I are not.
+  D-27 precondition for work on the working branch the same day. **D2-A…D2-G are implemented** (2026-11-12); H–I are not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -157,7 +157,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 | D2-D | `pickup_authorizations` | pgTAP read matrix green | **Done 2026-11-12:** `20261112120000_pickup_authorizations.sql`, pgTAP 13 (42), integration `pickup-authorizations.test.ts` (6), 4 synthetic persons in the seed. Not a handover rule (D3). |
 | D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green | **Done 2026-11-12:** `20261112130000_transfer_and_withdrawal.sql`, pgTAP 14 (91), integration `transfer-withdrawal.test.ts` (7). D-35, D-36 applied; D-37 implemented (`20261112140000_cancel_future_records.sql`, pgTAP 15 (42), integration `cancel-future-records.test.ts` (5)). |
 | D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green | **Done 2026-11-12:** `20261112150000_guardian_invitations.sql`, pgTAP 16 (33), integration `guardian-invitations.test.ts` (8, full flow through the Edge Functions). |
-| D2-G | Admin screens | e2e green; build green |
+| D2-G | Admin screens | e2e green; build green | **Done 2026-11-12:** `children/`, `children/[childId]`, `20261112160000_guardian_directory.sql` (pgTAP 17), e2e flow (9/9). See admin-app.md §2. |
 | D2-H | Mobile Parent Home with real data, child detail, educator group list | render tests green; Expo export green; R-44 check on a device still required |
 | D2-I | Docs, risks (NEG coverage), privacy inventory (DI rows for children, guardians, restrictions, pickup) | docs updated; CI green |
 
