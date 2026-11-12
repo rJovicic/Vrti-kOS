@@ -208,10 +208,11 @@ grant), `created_at`.
   `private.link_is_restricted()` (answers only for links the caller can see: managers and D-31 educators). No reason,
   reference or author is exposed. A restriction is not a pickup ban.
 
-### 5.11 `pickup_authorizations`
-`id`, `organization_id`, `child_id`, `first_name`, `last_name`, `valid_during`, `created_by`, `created_at`. Phone/relationship: Q-T13 (not stored).
+### 5.11 `pickup_authorizations` — implemented in D2-D (`20261112120000_pickup_authorizations.sql`)
+`id`, `organization_id`, `child_id`, `first_name` (1–60), `last_name` (1–60), `valid_during` (not empty), `created_by`, `created_at`, `updated_at`. Phone/relationship: Q-T13 (not stored). No account link.
 - **FK** `(organization_id, child_id) → children` RESTRICT · **IX** `(child_id)`
-- **RLS** S: manager, educators (`educator_child_ids()`), guardians (`guardian_child_ids('can_view')`) · I/U: manager (SR-AUTHZ-09) · D: none
+- **RLS** S: manager (all, incl. past/future); educators (`educator_child_ids()`) and guardians (`guardian_child_ids('can_view')`, so an active restriction hides the list) only for rows with `valid_during @> org_today()` · I/U: manager AAL2 (SR-AUTHZ-09, FR-04-8) · D: none
+- **As implemented (D2-D):** guard trigger authorizes first, sets `created_by` server-side and keeps `child_id` immutable (`PICKUP_IMMUTABLE_COLUMNS`); clients write `organization_id, child_id, first_name, last_name, valid_during` and update only names and validity; `created_by` is readable by no client. Tenant guard, `updated_at` and audit (no names in details). The list is not a handover rule: guardian pickup and how restrictions affect pickup are D3.
 - **Sens.** R3
 
 ### 5.12 `enrollments` — implemented in D2-A (`20261112101000_children_enrollments.sql`)
