@@ -24,7 +24,23 @@ export interface Org {
   facilities: { id: string; name: string; address: string }[];
   academicYear: { id: string; name: string; startsOn: string; endsOn: string };
   groups: { id: string; name: string; facilityIndex: number; capacity: number }[];
+  /** Synthetic privacy notice published by this kindergarten (FR-01-5 demo). Never a real legal text. */
+  privacyNotice?: { version: string; title: string; body: string };
 }
+
+/**
+ * Demo notice text: says plainly that it is not a legal notice and makes no statement about real processing.
+ * The real notice is written and published by each kindergarten as the controller (FR-01-5, ⚖️).
+ */
+export const DEMO_PRIVACY_NOTICE = {
+  version: 'demo-2026-11',
+  title: 'Obavijest o privatnosti (DEMO)',
+  body: [
+    'OVO NIJE PRAVNA OBAVIJEST. Tekst je izmišljen za demonstraciju aplikacije VrtićOS i ne opisuje stvarnu obradu osobnih podataka.',
+    'Stvarnu obavijest o privatnosti piše i objavljuje vrtić kao voditelj obrade. Aplikacija je prikazuje prije prvog prikaza podataka i bilježi da ste je pročitali, zajedno s verzijom teksta.',
+    'Potvrda čitanja nije privola.',
+  ].join('\n\n'),
+};
 
 export interface Assignment {
   id: string;
@@ -76,6 +92,7 @@ export function buildWorld(seed = 20261111): World {
     },
     {
       key: 'beta', id: r.uuid(), name: 'Vrtić Beta (demo)', slug: 'beta-demo',
+      privacyNotice: DEMO_PRIVACY_NOTICE,
       facilities: [{ id: r.uuid(), name: 'Objekt Bura', address: 'Trg izmišljeni 3, Demo selo' }],
       academicYear: { id: r.uuid(), ...year },
       groups: [

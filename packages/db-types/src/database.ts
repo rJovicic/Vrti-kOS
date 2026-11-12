@@ -182,7 +182,33 @@ isOneToOne: false
                     "absence_cutoff_local"?: string | null,"created_at"?: string,"id"?: string,"invitation_limit_per_hour"?: number,"locale"?: string,"name"?: string,"privacy_notice_version"?: string | null,"quiet_hours_end"?: string,"quiet_hours_start"?: string,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "organizations_privacy_notice_fk"
+      columns: ["id","privacy_notice_version"]
+isOneToOne: false
+      referencedRelation: "privacy_notices"
+      referencedColumns: ["organization_id","version"]
+    }
+                  ]
+                },"privacy_notices": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"is_demo": boolean,"organization_id": string,"title": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"organization_id": string,"title": string,"version": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"organization_id"?: string,"title"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "privacy_notices_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profiles": {
                   Row: {

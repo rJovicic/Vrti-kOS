@@ -68,7 +68,8 @@ select is((select coalesce(actor_id::text, 'null') || ' ' || actor_role from pg_
 select pg_temp.login('e5100000-0000-4000-8000-0000000000c1');
 update public.organizations set name = 'Test Audit A' where id = 'e5100000-0000-4000-8000-00000000000a';
 reset role;
-select is((select actor_role from pg_temp.last_audit('organizations')), null, 'a platform admin has no update right on a kindergarten (no row written)');
+select is((select count(*)::int from audit.audit_events where target_table = 'organizations' and organization_id = 'e5100000-0000-4000-8000-00000000000a'),
+  0, 'a platform admin has no update right on a kindergarten (no row written)');
 insert into audit.audit_events (organization_id, actor_id, action, target_table) values
   (null, 'e5100000-0000-4000-8000-0000000000c1', 'organization.config_viewed', 'organizations');
 select is((select actor_role from pg_temp.last_audit('organizations')), 'platform_admin', 'a platform operator is recorded as platform_admin');

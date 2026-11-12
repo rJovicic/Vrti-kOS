@@ -21,6 +21,10 @@ insert into private.platform_admins (profile_id) values ('f0000000-0000-4000-800
 insert into public.organizations (id, name, slug) values
   ('a0000000-0000-4000-8000-00000000000a', 'Test Alfa', 'test-alfa'),
   ('b0000000-0000-4000-8000-00000000000b', 'Test Beta', 'test-beta');
+-- Alfa publishes privacy notice v1 (FR-01-5); acknowledging it is tested below, its rules in 08_privacy_notice.
+insert into public.privacy_notices (organization_id, version, title, body, is_demo) values
+  ('a0000000-0000-4000-8000-00000000000a', 'v1', 'Obavijest (test)', 'Sintetički tekst za test.', true);
+update public.organizations set privacy_notice_version = 'v1' where id = 'a0000000-0000-4000-8000-00000000000a';
 insert into public.facilities (id, organization_id, name) values
   ('a0000000-0000-4000-8000-0000000000fa', 'a0000000-0000-4000-8000-00000000000a', 'Objekt A'),
   ('b0000000-0000-4000-8000-0000000000fb', 'b0000000-0000-4000-8000-00000000000b', 'Objekt B');

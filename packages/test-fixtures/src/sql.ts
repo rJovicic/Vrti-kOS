@@ -25,6 +25,13 @@ export function toSeedSql(world: World): string {
     }
     const y = o.academicYear;
     out.push(`insert into public.academic_years (id, organization_id, name, starts_on, ends_on, status) values (${q(y.id)}, ${q(o.id)}, ${q(y.name)}, ${q(y.startsOn)}, ${q(y.endsOn)}, 'active');`);
+    if (o.privacyNotice) {
+      const n = o.privacyNotice;
+      out.push(
+        `insert into public.privacy_notices (organization_id, version, title, body, is_demo) values (${q(o.id)}, ${q(n.version)}, ${q(n.title)}, ${q(n.body)}, true);`,
+        `update public.organizations set privacy_notice_version = ${q(n.version)} where id = ${q(o.id)};`,
+      );
+    }
     for (const g of o.groups) {
       out.push(`insert into public.groups (id, organization_id, facility_id, academic_year_id, name, capacity) values (${q(g.id)}, ${q(o.id)}, ${q(o.facilities[g.facilityIndex]!.id)}, ${q(y.id)}, ${q(g.name)}, ${g.capacity});`);
     }

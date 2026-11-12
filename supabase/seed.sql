@@ -101,6 +101,12 @@ insert into public.groups (id, organization_id, facility_id, academic_year_id, n
 insert into public.organizations (id, name, slug) values ('12154562-5d0a-4fb4-9293-daf33d161a4a', 'Vrtić Beta (demo)', 'beta-demo');
 insert into public.facilities (id, organization_id, name, address) values ('54fbbdc0-3b8d-4fc6-8894-45703238840d', '12154562-5d0a-4fb4-9293-daf33d161a4a', 'Objekt Bura', 'Trg izmišljeni 3, Demo selo');
 insert into public.academic_years (id, organization_id, name, starts_on, ends_on, status) values ('948f68b7-fd11-445d-8c74-f56c478ba015', '12154562-5d0a-4fb4-9293-daf33d161a4a', '2026./2027.', '2026-09-01', '2027-08-31', 'active');
+insert into public.privacy_notices (organization_id, version, title, body, is_demo) values ('12154562-5d0a-4fb4-9293-daf33d161a4a', 'demo-2026-11', 'Obavijest o privatnosti (DEMO)', 'OVO NIJE PRAVNA OBAVIJEST. Tekst je izmišljen za demonstraciju aplikacije VrtićOS i ne opisuje stvarnu obradu osobnih podataka.
+
+Stvarnu obavijest o privatnosti piše i objavljuje vrtić kao voditelj obrade. Aplikacija je prikazuje prije prvog prikaza podataka i bilježi da ste je pročitali, zajedno s verzijom teksta.
+
+Potvrda čitanja nije privola.', true);
+update public.organizations set privacy_notice_version = 'demo-2026-11' where id = '12154562-5d0a-4fb4-9293-daf33d161a4a';
 insert into public.groups (id, organization_id, facility_id, academic_year_id, name, capacity) values ('5dd947ff-6982-453c-93bc-f18261115228', '12154562-5d0a-4fb4-9293-daf33d161a4a', '54fbbdc0-3b8d-4fc6-8894-45703238840d', '948f68b7-fd11-445d-8c74-f56c478ba015', 'Borovi', 20);
 insert into public.groups (id, organization_id, facility_id, academic_year_id, name, capacity) values ('3236d4cc-dab9-4c8b-b3b3-d2ab4d4b5090', '12154562-5d0a-4fb4-9293-daf33d161a4a', '54fbbdc0-3b8d-4fc6-8894-45703238840d', '948f68b7-fd11-445d-8c74-f56c478ba015', 'Kamenčići', 15);
 insert into public.memberships (id, organization_id, profile_id, role, valid_during) values ('4089ec43-3510-4ea3-b0f4-bdfd1e1fa02b', '9eaa0538-add6-4613-9fce-74acec86c07f', '384ab53f-dc69-4db5-91d9-60739b6f9086', 'org_admin', daterange('2026-09-01', null));
