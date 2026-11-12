@@ -177,6 +177,7 @@ grant), `created_at`.
 **No email or phone** — the address used for invitations lives only in `invitations` (and in `auth.users` after acceptance); educators therefore never see contact data (data minimization).
 - **FK** `profile_id → profiles` RESTRICT · **UQ** `(organization_id, id)`; `(organization_id, profile_id) where profile_id is not null`
 - **RLS** S: manager; own record (`profile_id = auth.uid()`); educators for guardians linked to `educator_child_ids()` (handover list, FR-05-3) · I/U: manager · D: none
+- **As implemented (D2-F):** `profile_id` is set only by `api.accept_invitations` (service role) from an invitation that names the record (`invitations.guardian_id`, composite FK, role `guardian` only) and only while the record is active and free; otherwise the refusal is audited (`guardian.link_refused`). Attachment audited as `guardian.account_linked`.
 - **Sens.** R2
 - **As implemented (D2-B):** own record = `own_guardian_ids()` (active record + active guardian membership today). Column
   grants: clients read only `id, organization_id, first_name, last_name, status, created_at, updated_at` (D-31);

@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
 - Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
-  D-27 precondition for work on the working branch the same day. **D2-A…D2-E are implemented** (2026-11-12); F–I are not.
+  D-27 precondition for work on the working branch the same day. **D2-A…D2-F are implemented** (2026-11-12); G–I are not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -106,7 +106,7 @@ children or group size (FR-04-9).
 - **New error codes:** D2-E added `EFFECTIVE_DATE_IN_PAST` (400), `HISTORY_IMMUTABLE`, `CHILD_WITHDRAWN`,
   `CHILD_NOT_ENROLLED`, `TRANSFER_SAME_GROUP`, `TRANSFER_ON_ENROLLMENT_START`, `GROUP_ARCHIVED`, `ENROLLMENT_OVERLAP`,
   `WITHDRAWAL_HAS_FUTURE_RECORDS` (409), each with a Croatian message; raised only after authorization, so they are
-  exposed (`exposedDbErrors`). `GUARDIAN_ALREADY_LINKED` (409) comes with D2-F.
+  exposed (`exposedDbErrors`). `GUARDIAN_ALREADY_LINKED` (409) added in D2-F (invitation time; at acceptance the refusal is audited, not raised).
 
 ## 6. App flows
 **Admin (web, managers, AAL2):**
@@ -156,7 +156,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 | D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately | **Done 2026-11-12:** `20261112113000_access_restrictions.sql`, pgTAP 11 (47), integration `access-restrictions.test.ts` (7). D-33 decided and implemented (`20261112115000_link_restriction_flag.sql`, pgTAP 12). |
 | D2-D | `pickup_authorizations` | pgTAP read matrix green | **Done 2026-11-12:** `20261112120000_pickup_authorizations.sql`, pgTAP 13 (42), integration `pickup-authorizations.test.ts` (6), 4 synthetic persons in the seed. Not a handover rule (D3). |
 | D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green | **Done 2026-11-12:** `20261112130000_transfer_and_withdrawal.sql`, pgTAP 14 (91), integration `transfer-withdrawal.test.ts` (7). D-35, D-36 applied; D-37 implemented (`20261112140000_cancel_future_records.sql`, pgTAP 15 (42), integration `cancel-future-records.test.ts` (5)). |
-| D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green |
+| D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green | **Done 2026-11-12:** `20261112150000_guardian_invitations.sql`, pgTAP 16 (33), integration `guardian-invitations.test.ts` (8, full flow through the Edge Functions). |
 | D2-G | Admin screens | e2e green; build green |
 | D2-H | Mobile Parent Home with real data, child detail, educator group list | render tests green; Expo export green; R-44 check on a device still required |
 | D2-I | Docs, risks (NEG coverage), privacy inventory (DI rows for children, guardians, restrictions, pickup) | docs updated; CI green |

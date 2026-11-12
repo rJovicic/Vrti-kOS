@@ -64,7 +64,7 @@ All non-PostgREST endpoints (RPC raises, Edge Functions) map to one envelope:
 `AUTH_REQUIRED`, `AUTH_SESSION_EXPIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `CONFLICT`,
 `INVITATION_PENDING_EXISTS`, `MEMBERSHIP_SUSPENDED`, `INVITATION_LIMIT_REACHED` (429), `RATE_LIMITED`, `INTERNAL`.
 `dbErrorCatalog` maps every `raise exception` name to a public code; only `exposedDbErrors` (`MEMBERSHIP_SUSPENDED`) pass
-through, plus the D2-E business codes (`EFFECTIVE_DATE_IN_PAST`, `HISTORY_IMMUTABLE`, `CHILD_WITHDRAWN`, `CHILD_NOT_ENROLLED`, `TRANSFER_SAME_GROUP`, `TRANSFER_ON_ENROLLMENT_START`, `GROUP_ARCHIVED`, `ENROLLMENT_OVERLAP`, `WITHDRAWAL_HAS_FUTURE_RECORDS`) and D-37 (`RECORD_ALREADY_EFFECTIVE`, `CANCEL_RECORD_REFERENCED`), which are raised only after authorization. Edge Functions call `error(req, code, correlationId)` and the status comes from the catalog. Admin flash
+through, plus the D2-E business codes (`EFFECTIVE_DATE_IN_PAST`, `HISTORY_IMMUTABLE`, `CHILD_WITHDRAWN`, `CHILD_NOT_ENROLLED`, `TRANSFER_SAME_GROUP`, `TRANSFER_ON_ENROLLMENT_START`, `GROUP_ARCHIVED`, `ENROLLMENT_OVERLAP`, `WITHDRAWAL_HAS_FUTURE_RECORDS`) D-37 (`RECORD_ALREADY_EFFECTIVE`, `CANCEL_RECORD_REFERENCED`) and D2-F (`GUARDIAN_ALREADY_LINKED`), which are raised only after authorization. Edge Functions call `error(req, code, correlationId)` and the status comes from the catalog. Admin flash
 messages and the mobile app use `errors.<CODE>`. `catalog.test.ts` scans migrations, functions, admin and mobile so
 an uncatalogued code or a code without a Croatian message fails CI. Unused codes (`INVITATION_ALREADY_USED`,
 `ATTENDANCE_DUPLICATE`, `ENROLLMENT_OVERLAP`, `MFA_REQUIRED`) were removed; they come back with the feature that
