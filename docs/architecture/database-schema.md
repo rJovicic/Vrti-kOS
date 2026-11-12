@@ -274,14 +274,22 @@ PK `(profile_id, type)`, `push_enabled bool`.
 - **FK** `profile_id → profiles` **CASCADE** (pure preference, no evidentiary value)
 - **RLS** S/I/U: `profile_id = auth.uid()` · **Sens.** R2
 
-### 5.23 `invitations` — implemented in D1 (`20261111100100_invitations.sql`, ADR-0017)
+### 5.23 `invitations` — implemented in D1 (`20261111100100_invitations.sql`, ADR-0017; R-48 fix `20261112075500_suspension_blocks_invitations.sql`)
 `id`, `organization_id`, `email citext`, `role org_role`, `first_name`, `last_name`, `status` (`pending|accepted|revoked`),
 `expires_at` (default +7 days, max 30), `created_by`, `accepted_by/at`, `revoked_by/at`, `created_at`, `updated_at`.
 **Deviation from the Phase 3 sketch:** no `token_hash` (no secret in e-mail — possession is proven by the sign-in code),
 `expired` is derived from `expires_at`, `guardian_id` follows in D2.
 - **UQ** partial `(organization_id, email, role) where status = 'pending'`; **IX** `lower(email::text) where pending`
 - **Guard trigger** client insert: `created_by` = caller, `status` = pending, `org_admin` only by an `org_admin`;
-  client update: only pending → revoked (`revoked_by/at` set by the database)
+  client update: only pending → revoked (`revoked_by/at` set by the database). Since R-48 the insert path first requires
+  `is_org_manager` (callers without rights always get `PERMISSION_DENIED`), then refuses an invitation whose e-mail holds a
+  **suspended** membership with the same role in that kindergarten (`MEMBERSHIP_SUSPENDED`; lookup
+  `private.has_suspended_membership`, answers only for a kindergarten the caller manages)
+- **Suspension** (`memberships_suspension_revokes_invitations`, AFTER UPDATE OF status → `suspended`): revokes pending
+  invitations for the same kindergarten, role and e-mail
+- **Acceptance** (`api.accept_invitations`): a suspended membership is never re-activated — the invitation is revoked and
+  audited `invitation.accept_refused` (`denied`); an ended or expired membership is re-activated from today; an active one
+  is left unchanged
 - **RLS** S/I/U: manager (AAL2) · D: none · acceptance only via `api.accept_invitations` (service_role)
 - **Sens.** R2
 

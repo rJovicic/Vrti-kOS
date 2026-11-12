@@ -60,8 +60,9 @@ All non-PostgREST endpoints (RPC raises, Edge Functions) map to one envelope:
 | 500 | `INTERNAL` (with correlation ID) |
 
 **Implementation status after D1 (2026-11-11) — known deviations, to be corrected in a technical task (backlog D1-13):**
-- The Edge Functions return codes that are **not in the `errorCodes` catalog**: `METHOD_NOT_ALLOWED` (405) and
-  `INVITATION_PENDING_EXISTS` (409). `INVITATION_PENDING_EXISTS` has a Croatian message; `METHOD_NOT_ALLOWED` has none.
+- The Edge Functions return codes that are **not in the `errorCodes` catalog**: `METHOD_NOT_ALLOWED` (405),
+  `INVITATION_PENDING_EXISTS` (409) and `MEMBERSHIP_SUSPENDED` (409, R-48). The two 409 codes have Croatian messages;
+  `METHOD_NOT_ALLOWED` has none.
 - `INVITATION_ALREADY_USED` is in the catalog but no code path returns it (accepting an already used invitation simply
   accepts nothing, ADR-0017).
 - `invite-member` answers a denied insert with **403 `PERMISSION_DENIED`**, not `NOT_FOUND`. The answer is the

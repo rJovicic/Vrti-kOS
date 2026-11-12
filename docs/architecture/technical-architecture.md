@@ -51,8 +51,8 @@ Clients are created where they are used: `apps/admin/src/lib/supabase/server.ts`
 **Boundary rules (root `eslint.config.js`):** `packages/**` must not import `react`, `react-native` or `react-dom`;
 `apps/mobile` must not import `next` or `react-dom`; `apps/admin` must not import `react-native`; string literals
 naming the service/secret key are rejected in `apps/`, `packages/` and `scripts/` (SR-SUP-04). There is no rule yet
-that stops `packages/*` from importing `apps/*`. **`supabase/**` is excluded from ESLint and no Deno type check runs**,
-so Edge Functions are covered only by the integration tests (open finding, see risks R-47).
+that stops `packages/*` from importing `apps/*`. `supabase/**` is excluded from ESLint; Edge Functions are checked by Deno instead (`pnpm functions:check`,
+`pnpm functions:lint`, one canonical `supabase/functions/deno.json` + `deno.lock`, R-47 closed 2026-11-12).
 
 ## 3. Technology choices
 Versions are pinned in `pnpm-lock.yaml` (ADR-0016). The column **Status** separates what is installed after D1
@@ -144,12 +144,12 @@ Runs on every push and pull request. **No deploy job exists until production dec
 
 | Job (display name) | Steps |
 |---|---|
-| `quality` (lint · typecheck · unit tests) | frozen install → `pnpm lint` → `pnpm typecheck` → `pnpm test` (Vitest) → seed generator determinism diff → `pnpm design:sync` diff |
+| `quality` (lint · typecheck · unit tests) | frozen install → `pnpm lint` → `pnpm typecheck` → `pnpm test` (Vitest) → seed generator determinism diff → `pnpm design:sync` diff → Deno 2.1.4 `pnpm functions:check` (`--frozen`) → `pnpm functions:lint` |
 | `db` (database · migrations · RLS · integration · e2e) | `pnpm db:start` (migrations + seed from zero) → `pnpm db:test` (pgTAP) → `pnpm db:spike` → `pnpm db:types` diff → `pnpm test:integration` → admin build against the local stack → Playwright e2e (admin) |
 | `apps` (admin build · mobile bundle) | `next build` → `expo export` (iOS + Android JS bundles) → no secret keys in client bundles |
 | `security` (secrets · dependencies) | gitleaks (full history) → `pnpm audit --audit-level high` |
 
-Not implemented from the Phase 3 plan: license check, i18n key check, Deno check/lint for Edge Functions, nightly
+Not implemented from the Phase 3 plan: license check, i18n key check, nightly
 e2e (e2e runs in every `db` job instead). Whether jobs block merges depends on branch protection, which is **not set**
 on `main` (owner action D-27, risk R-45).
 

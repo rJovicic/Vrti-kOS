@@ -142,8 +142,8 @@ svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin apl
 > **Stanje 2026-11-11:** demo sloj D1 pokriva dio ove faze (organizacijska struktura, članstva, pozivnice, prijava kodom,
 > MFA uprave, audit zapisi). **Namjerno odgođeno** jer nije bilo u D1 nalogu vlasnika: upravljanje sesijama/uređajima,
 > break-glass za platform admina, testovi rate limitinga i isteka sesije — popis u [backlog.md](backlog.md) (D1).
-> Kriterij prihvaćanja ispod još nije u potpunosti dokazan: nedostaju cross-tenant testovi čitanja za `academic_years`
-> i `audit_events` (R-52). Faza 6 se ne smatra završenom.
+> Cross-tenant testovi čitanja za `academic_years` i `audit_events` dodani su 2026-11-12 (R-52 zatvoren, CI run #12).
+> Faza 6 se i dalje ne smatra završenom zbog namjerno odgođenih stavki iznad.
 - **Cilj:** sigurna osnova identiteta i pristupa.
 - **Opseg:** organizacije, objekti, pedagoška godina, članstva, uloge, pozivnice, prijava (OTP), MFA za upravu,
   upravljanje sesijama/uređajima, break-glass za platform admina, audit zapisi.

@@ -101,14 +101,20 @@ Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
 | `pnpm dev:admin` / `pnpm dev:mobile` | individual dev servers | ✅ |
 
 Edge Functions (`invite-member`, `accept-invitations`) are served automatically by `pnpm db:start` / `supabase start`
-(Edge Runtime container, `verify_jwt` on); there is no separate `functions:serve` script. They are not linted or
-type-checked yet (risk R-47); the integration tests exercise them.
+(Edge Runtime container, `verify_jwt` on); there is no separate `functions:serve` script. Both use the one canonical `supabase/functions/deno.json` (imports;
+`config.toml` → `import_map`) and the committed `supabase/functions/deno.lock`. `pnpm functions:check` (`deno check --frozen`)
+and `pnpm functions:lint` need a local Deno 2.1.x (CI installs 2.1.4, the Edge Runtime's version); the integration tests
+exercise the functions end to end.
 
 ## 4a. D1 test commands
 - R-49 (passwords disabled): `pnpm db:test` runs `supabase/tests/database/03_auth_password_policy.test.sql` (19 checks:
   trigger, grants, hook decisions); `pnpm test:integration` runs `tests/integration/src/auth-password.test.ts` (7 tests:
   T3 set password, T4 password sign-in, T6 weak/strong passwords, T7 educator, managers at AAL2, refresh of a code session,
   recovery flow). Local result 2026-11-11: pgTAP 124/124, integration 27/27 (twice), admin e2e 8/8.
+- R-48 (suspension survives sign-in): `supabase/tests/database/04_membership_suspension.test.sql` (34 checks) and
+  `tests/integration/src/membership-suspension.test.ts` (6 tests). R-52 (cross-tenant reads of `academic_years` and
+  `audit_events`): `supabase/tests/database/05_cross_tenant_reads.test.sql` (16 checks). Local result 2026-11-12:
+  pgTAP 174/174, integration 33/33, admin e2e 8/8.
 - `pnpm test:integration` — Edge Functions, e-mail codes from Mailpit, TOTP MFA, RLS through the API (needs `pnpm db:start`).
 - `pnpm --filter @vrticos/integration-tests run e2e` — Playwright against a running admin (`ADMIN_URL`, default
   `http://localhost:3000`; build and `pnpm --filter @vrticos/admin start` first). Each run creates its own synthetic kindergarten.

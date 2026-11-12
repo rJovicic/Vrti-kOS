@@ -34,6 +34,7 @@ sequenceDiagram
   AF->>A: getUser(JWT) → verified id + e-mail (never user_metadata)
   AF->>DB: api.accept_invitations(id, e-mail) as service_role, one transaction:
   Note over DB: pending + not expired + same e-mail → profile + membership → status accepted (single use) → audit
+  Note over DB: since R-48 (2026-11-12): a suspended membership stays suspended — invitation revoked, audited as denied
 ```
 
 ## 3. Work packages and acceptance criteria
