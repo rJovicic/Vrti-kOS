@@ -75,3 +75,15 @@ Unit tests: 99 (tokens 60, validation 16, domain 11, test-fixtures 7, i18n 5).
 ### Not done in D1 (carried forward)
 - Re-sending an invitation notice (FR-01-2), platform-admin organization creation screen (FR-02-1), session/device list (FR-01-8).
 - Privacy notice acknowledgement on first sign-in (FR-01-5) — content comes from the kindergarten ⚖️.
+
+## 5. Parent Home UI (after D1, owner-approved frontend task; visual check on a device pending)
+- Presentational screen `apps/mobile/src/features/guardian-home/` per `docs/design/parent-home-spec.md`; props only, no data
+  access. The real guardian route (`app/home.tsx`) is unchanged and still shows the §8 empty state.
+- Development-only preview `app/dev/parent-home.tsx` with synthetic fixtures behind `__DEV__`; verified that the production
+  export contains neither the preview module nor fixture data, and that a development export does.
+- Absence actions ("Prijavi izostanak", "Pregledaj izostanak") stay disabled until their destination screens exist (D2+).
+- **Visual check on an iOS simulator / Android emulator has NOT been done** (no simulator in the cloud environment; R-44).
+  Layout at 320–768 px, large text (130–200 %), VoiceOver/TalkBack and touch targets are reasoned from the code and the
+  unit-tested layout rules, not observed.
+- Component render tests need an approved test library (`@testing-library/react-native` + `jest-expo`); until then the
+  view-model rules are covered by Vitest.
