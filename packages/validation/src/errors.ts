@@ -38,6 +38,8 @@ export const errorCatalog = {
   /** D-37: only records that start after today can be cancelled; a restricted link is not cancelled. */
   RECORD_ALREADY_EFFECTIVE: { status: 409 },
   CANCEL_RECORD_REFERENCED: { status: 409 },
+  /** D2-F: the guardian record is ended or already attached to an account. */
+  GUARDIAN_ALREADY_LINKED: { status: 409 },
   RATE_LIMITED: { status: 429 },
   INTERNAL: { status: 500 },
 } as const satisfies Record<string, { status: number }>;
@@ -91,6 +93,7 @@ export const dbErrorCatalog = {
   WITHDRAWAL_HAS_FUTURE_RECORDS: 'WITHDRAWAL_HAS_FUTURE_RECORDS',
   RECORD_ALREADY_EFFECTIVE: 'RECORD_ALREADY_EFFECTIVE',
   CANCEL_RECORD_REFERENCED: 'CANCEL_RECORD_REFERENCED',
+  GUARDIAN_ALREADY_LINKED: 'GUARDIAN_ALREADY_LINKED',
 } as const satisfies Record<string, ErrorCode>;
 export type DbErrorName = keyof typeof dbErrorCatalog;
 
@@ -108,6 +111,7 @@ export const exposedDbErrors = [
   'WITHDRAWAL_HAS_FUTURE_RECORDS',
   'RECORD_ALREADY_EFFECTIVE',
   'CANCEL_RECORD_REFERENCED',
+  'GUARDIAN_ALREADY_LINKED',
 ] as const satisfies readonly DbErrorName[];
 
 export interface ApiError {
@@ -158,7 +162,8 @@ export function fromPostgrestError(err: PgError, correlationId?: string): ApiErr
  * only possible after the guard authorized the caller.
  * - 23505: one pending invitation per person, role and kindergarten;
  * - no error but no row returned: the guard skipped the insert because the limit was reached (R-50);
- * - P0001 MEMBERSHIP_SUSPENDED (R-48).
+ * - P0001 MEMBERSHIP_SUSPENDED (R-48), P0001 GUARDIAN_ALREADY_LINKED (D2-F);
+ * - 23503 for a guardian record of another kindergarten: PERMISSION_DENIED (no existence oracle).
  */
 export function fromInvitationInsertError(err: PgError | null): ErrorCode {
   if (!err) return 'INVITATION_LIMIT_REACHED';

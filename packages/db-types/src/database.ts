@@ -283,14 +283,14 @@ isOneToOne: false
                   ]
                 },"invitations": {
                   Row: {
-                    "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"created_by": string,"email": string,"expires_at": string,"first_name": string,"id": string,"last_name": string,"organization_id": string,"revoked_at": string | null,"revoked_by": string | null,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["invitation_status"],"updated_at": string
+                    "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"created_by": string,"email": string,"expires_at": string,"first_name": string,"guardian_id": string | null,"id": string,"last_name": string,"organization_id": string,"revoked_at": string | null,"revoked_by": string | null,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["invitation_status"],"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email": string,"expires_at"?: string,"first_name": string,"id"?: string,"last_name": string,"organization_id": string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role": Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email": string,"expires_at"?: string,"first_name": string,"guardian_id"?: string | null,"id"?: string,"last_name": string,"organization_id": string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role": Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
                   }
                   Update: {
-                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email"?: string,"expires_at"?: string,"first_name"?: string,"id"?: string,"last_name"?: string,"organization_id"?: string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role"?: Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
+                    "accepted_at"?: string | null,"accepted_by"?: string | null,"created_at"?: string,"created_by"?: string,"email"?: string,"expires_at"?: string,"first_name"?: string,"guardian_id"?: string | null,"id"?: string,"last_name"?: string,"organization_id"?: string,"revoked_at"?: string | null,"revoked_by"?: string | null,"role"?: Database["public"]['Enums']["org_role"],"status"?: Database["public"]['Enums']["invitation_status"],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -305,6 +305,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_guardian_fk"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
+      referencedRelation: "guardians"
+      referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "invitations_organization_id_fkey"
       columns: ["organization_id"]

@@ -28,6 +28,13 @@ describe('invitation validation', () => {
     expect(() => zInviteMemberInput.parse({ ...base, firstName: '   ' })).toThrow();
     expect(() => zInviteMemberInput.parse({ ...base, lastName: 'a\u0000b' })).toThrow();
   });
+  it('a guardian record id is allowed only for a guardian invitation (D2-F)', () => {
+    const guardianId = '0b1f6f6e-0000-4000-8000-0000000000aa';
+    expect(zInviteMemberInput.parse({ ...base, role: 'guardian', guardianId }).guardianId).toBe(guardianId);
+    expect(zInviteMemberInput.parse({ ...base, role: 'guardian' }).guardianId).toBeUndefined();
+    expect(() => zInviteMemberInput.parse({ ...base, role: 'educator', guardianId })).toThrow();
+    expect(() => zInviteMemberInput.parse({ ...base, role: 'guardian', guardianId: 'nije-uuid' })).toThrow();
+  });
   it('accepts only six-digit codes', () => {
     expect(zOtpInput.parse({ email: 'a@b.hr', code: '012345' }).code).toBe('012345');
     for (const code of ['12345', '1234567', '12a456', ' 123456']) {

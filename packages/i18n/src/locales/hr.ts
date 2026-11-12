@@ -269,6 +269,7 @@ export const hr = {
     WITHDRAWAL_HAS_FUTURE_RECORDS: 'Za dijete postoje upis, veza ili ovlaštena osoba koji počinju nakon zadnjeg dana, pa ispis s tim datumom nije moguć.',
     RECORD_ALREADY_EFFECTIVE: 'Zapis je već počeo vrijediti i ne može se poništiti. Može mu se samo odrediti kraj.',
     CANCEL_RECORD_REFERENCED: 'Na ovu vezu odnosi se ograničenje pristupa, pa se ne može poništiti.',
+    GUARDIAN_ALREADY_LINKED: 'Ovaj skrbnik već ima korisnički račun ili više nije aktivan, pa mu se ne može poslati pozivnica.',
     RATE_LIMITED: 'Previše pokušaja. Pričekajte trenutak.',
     INTERNAL: 'Došlo je do pogreške. Oznaka: {{correlationId}}',
   },

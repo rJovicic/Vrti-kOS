@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       role: input.role,
       first_name: input.firstName,
       last_name: input.lastName,
+      guardian_id: input.guardianId ?? null,
     })
     .select('id, expires_at, organization:organizations(name)');
   const invitation = rows?.[0];
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
     const code = fromInvitationInsertError(insertErr);
     log(FN, correlationId, 'denied', { reason: code });
     // The limit refusal is audited by the database in its own transaction (R-50); a duplicate is not a security event.
-    if (code === 'PERMISSION_DENIED' || code === 'MEMBERSHIP_SUSPENDED') await audit('denied', code);
+    if (code === 'PERMISSION_DENIED' || code === 'MEMBERSHIP_SUSPENDED' || code === 'GUARDIAN_ALREADY_LINKED') await audit('denied', code);
     return error(req, code, correlationId);
   }
 

@@ -26,8 +26,11 @@ export const zInviteMemberInput = z
     role: z.enum(invitableRoles),
     firstName: name,
     lastName: name,
+    /** D2-F: the guardian record the account is attached to on acceptance (only with role `guardian`). */
+    guardianId: z.uuid().optional(),
   })
-  .strict();
+  .strict()
+  .refine((v) => v.guardianId === undefined || v.role === 'guardian', { message: 'guardian_id_requires_guardian_role', path: ['guardianId'] });
 
 export type InviteMemberInput = z.infer<typeof zInviteMemberInput>;
 
