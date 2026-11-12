@@ -161,13 +161,16 @@ grant), `created_at`.
 - **RLS** S: own rows, manager · I: none (Edge Function on invitation acceptance) · U: manager for others' rows (`status`, `valid_during`); self only `notice_ack_*` — enforced by guard trigger `private.guard_memberships()` (a user can never change own `role/status`, SR-AUTHZ-07) · D: none
 - **Sens.** R2
 
-### 5.7 `children`
+### 5.7 `children` — implemented in D2-A (`20261112101000_children_enrollments.sql`)
 `id`, `organization_id`, `first_name` (≤60), `last_name` (≤60), `internal_ref` (≤40, null), `status` (`active|withdrawn`), `withdrawn_on date null`, `created_by`, `created_at`.
 **Not present (D-9, Q-P03):** date of birth, OIB, address, photo, health fields.
 - **UQ** `(organization_id, id)`; `(organization_id, internal_ref) where internal_ref is not null`
 - **IX** `(organization_id, last_name, first_name)`
 - **RLS** S: manager, `id in educator_child_ids()`, `id in guardian_child_ids('can_view')` · I/U: manager · D: none
 - **Del** RESTRICT; anonymization via retention job (Phase 12) · **Sens.** R3
+- **As implemented (D2-A):** S for managers and `educator_child_ids()`; the guardian branch arrives with D2-B. Clients
+  write only names and `internal_ref`; `status`/`withdrawn_on` change only through `api.withdraw_child` (D2-E).
+  `enrollments`: educators see only enrolments valid today in their groups; clients may change only `valid_during`.
 
 ### 5.8 `guardians`
 `id`, `organization_id`, `profile_id null`, `first_name`, `last_name`, `status` (`active|ended`), `created_by`, `created_at`.
@@ -196,7 +199,7 @@ grant), `created_at`.
 - **RLS** S: manager, educators (`educator_child_ids()`), guardians (`guardian_child_ids('can_view')`) · I/U: manager (SR-AUTHZ-09) · D: none
 - **Sens.** R3
 
-### 5.12 `enrollments`
+### 5.12 `enrollments` — implemented in D2-A (`20261112101000_children_enrollments.sql`)
 `id`, `organization_id`, `child_id`, `group_id`, `valid_during`, `created_by`, `created_at`.
 - **FK** composite to `children`, `groups` RESTRICT · **EXCLUDE** `(child_id with =, valid_during with &&)` (one active group per child; validated)
 - **IX** `(group_id)`, `(child_id)`

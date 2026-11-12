@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
-- Version: 0.1 · Date: 2026-11-12 · Status: **ready to implement after D-27 is confirmed** (D-28 approved by the owner on
-  2026-11-12 on that condition). Nothing in this document is implemented yet.
+- Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
+  D-27 precondition for work on the working branch the same day. **D2-A is implemented** (2026-11-12); B–I are not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -133,7 +133,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 ## 8. Work packages (order, acceptance)
 | ID | Package | Done when |
 |---|---|---|
-| D2-A | `children` + `enrollments` + helpers `educator_child_ids()` | migrations from zero; pgTAP NEG-01/07/08/10 green; seed has synthetic children |
+| D2-A | `children` + `enrollments` + helpers `educator_child_ids()` | migrations from zero; pgTAP NEG-01/07/08/10 green; seed has synthetic children | **Done 2026-11-12:** `20261112101000_children_enrollments.sql`, pgTAP 09 (46), integration `children.test.ts` (6), 30 synthetic children. |
 | D2-B | `guardians` + `child_guardians` + `guardian_child_ids()` | pgTAP NEG-03/04/06/11 green |
 | D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately |
 | D2-D | `pickup_authorizations` | pgTAP read matrix green |

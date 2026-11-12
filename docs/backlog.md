@@ -99,7 +99,7 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] Break-glass pristup platform admina s razlogom, rokom i auditom vidljivim vrtiću (ADR-0005)
 - [ ] Testovi rate limita prijave i provjere koda (SR-AUTHN-02) i isteka sesije (Faza 6 „Testovi”)
 - [ ] Ponovno slanje pozivnice, ekran platform admina za novi vrtić, potvrda obavijesti o privatnosti (vidi D1-9)
-- [ ] [D2] Djeca, upisi, skrbnici — specifikacija i plan: [architecture/d2-plan.md](architecture/d2-plan.md) (paketi D2-A…D2-I); D-28 odobren uz uvjet D-27
+- [ ] [D2] Djeca, upisi, skrbnici — plan: [architecture/d2-plan.md](architecture/d2-plan.md). **D2-A izveden 2026-11-12** (djeca, upisi, pristup odgojitelja, testovi, seed); slijede D2-B…D2-I
 - [ ] [D3…D5] prema roadmapu
 
 ## Faza 5 (unaprijed zabilježeno)
