@@ -27,7 +27,7 @@ Lokacija: **DB** = baza (Supabase EU, ADR-0003 — prijedlog), **Auth** = Supaba
 |---|---|---|---|---|---|---|---|---|---|
 | DI-01 | Korisnički račun i autentikacija | skrbnici, djelatnici, admini | e-pošta, ID računa, MFA faktor, vrijeme prijave | identifikacija i sigurna prijava | osoba, pozivnica | Sam, Sys; U vidi e-poštu članova | R2 | Auth, Mail | Da |
 | DI-02 | Profil korisnika | isto | ime, prezime, prikazno ime, jezik | prikaz u komunikaciji | uprava, osoba | Sam, U; O/S vide ime druge strane u kontekstu | R2 | DB | Da |
-| DI-03 | Članstvo i uloga | isto | organizacija, uloga, status, valjanost | kontrola pristupa | uprava | Sam, U | R2 | DB | Da |
+| DI-03 | Članstvo i uloga | isto | organizacija, uloga, status, valjanost; verzija i vrijeme potvrde čitanja obavijesti o privatnosti (FR-01-5, nije privola) | kontrola pristupa; dokaz da je obavijest prikazana | uprava | Sam, U | R2 | DB | Da |
 | DI-04 | Raspored djelatnika | djelatnici | skupina, vrsta (redovni/zamjena), od–do, odobrio | kontrola pristupa, organizacija rada | uprava | Sam, U | R2 | DB | Da |
 | DI-05 | Pozivnica | budući korisnici | e-pošta, ime, prezime, uloga, rok, status, tko je pozvao/opozvao; [D2] veza sa skrbnikom. Pozivnica unaprijed stvara Auth račun bez članstva (ADR-0017, R-43); obavijest e-poštom bez poveznice i bez podataka o djeci | kreiranje računa | uprava | U, Sys | R2 | DB, Auth, Mail | Da |
 | DI-06 | Sesije i uređaji | korisnici | ID sesije, tip uređaja/OS, zadnja aktivnost, IP u auth logu | sigurnost računa | Sys | Sam, Sys | R2 | Auth | Da |

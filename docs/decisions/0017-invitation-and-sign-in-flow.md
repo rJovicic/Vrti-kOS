@@ -1,6 +1,7 @@
 # ADR-0017: Invitation and sign-in flow (code-only e-mail, invitation bound to a verified address)
 
-- Status: Proposed (implemented for the local demo in D1; owner acceptance needed — D-26)
+- Status: **Accepted** — owner decision D-26 on 2026-11-12 (accepts the decision and both 2026-11-12 amendments).
+  History: Proposed 2026-11-11 (implemented for the local demo in D1); amended 2026-11-12 (R-48, R-50); accepted 2026-11-12.
 - Date: 2026-11-11
 - Deciders: owner
 - Related: ADR-0008, ADR-0010, ADR-0014 · SR-AUTHN-01…07, SR-AUTHZ-07, SR-EF-01…03 · risks R-42, R-43 · FS-01
@@ -44,7 +45,7 @@ invited-but-unconfirmed user **cannot request a sign-in code** while sign-up is 
 Added after the original decision, when a code review found that a pending invitation could lift a suspension
 (risk R-48). Implemented in migration `20261112075500_suspension_blocks_invitations.sql`, proven by pgTAP
 `04_membership_suspension.test.sql` and `tests/integration/src/membership-suspension.test.ts` (CI run #12). It formalises
-behaviour that now exists; like the rest of this ADR it is **Proposed** and part of the owner acceptance D-26.
+behaviour that now exists; it was Proposed when written and was accepted together with this ADR (D-26, 2026-11-12).
 - **Scope of a suspension:** one membership = kindergarten + person + role. Suspending a person as educator does not
   touch their guardian membership or their memberships in other kindergartens.
 - **Suspension revokes matching pending invitations:** same kindergarten, same role, same e-mail (case-insensitive);
@@ -64,7 +65,8 @@ path: `invite-member`, a manager's direct REST insert, the service key) counts a
 `organizations.invitation_limit_per_hour` (rolling hour, every created invitation counts whatever its later status).
 Over the limit the insert is skipped and the refusal is written to the audit log in the same transaction;
 `invite-member` answers 429 `INVITATION_LIMIT_REACHED`. The check runs after authorization and is serialised per
-kindergarten. **The default of 50 per hour is a provisional operator setting, not an owner decision** (open point below).
+kindergarten. When written, the default of 50 per hour was a provisional operator setting; the owner **approved 50 per
+kindergarten per hour as the initial limit on 2026-11-12 (D-29)**. The value stays configurable per kindergarten.
 
 ## Consequences
 - Positive: no bearer secrets in e-mail; one proof of possession (the code); authorization stays in Postgres; acceptance
@@ -83,8 +85,8 @@ kindergarten. **The default of 50 per hour is a provisional operator setting, no
 Two small Edge Functions, one RPC, two tables' worth of RLS — implemented and tested in D1 (pgTAP 105, integration 20, e2e 8).
 
 ## Open points / approval needed
-- D-26: accept this ADR, including the org_admin-only rule for administrator rights and the 2026-11-12 amendments
-  (suspension scope per membership; invitation limit).
-- Invitation limit value (R-50): 50 per kindergarten per rolling hour is provisional; confirm or change before a pilot.
+- ~~D-26: accept this ADR, including the org_admin-only rule for administrator rights and the 2026-11-12 amendments.~~
+  **Accepted 2026-11-12.**
+- ~~Invitation limit value (R-50).~~ **Approved 2026-11-12 (D-29):** initial 50 per kindergarten per rolling hour, configurable.
 - Production e-mail provider and rate limits (ADR-0010); GoTrue enumeration mitigation (R-42) before any pilot.
 - Re-sending a notice for an existing pending invitation (FR-01-2 "ponovno poslati") is not implemented yet.

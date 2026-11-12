@@ -21,6 +21,6 @@ Only the owner moves an ADR to **Accepted**. An accepted ADR is changed only by 
 | [0014](0014-database-authorization-implementation.md) | Database authorization implementation pattern | Accepted for the local demo (D-20) |
 | [0015](0015-client-stack.md) | Client application stack and state management | Accepted for the local demo (D-20) |
 | [0016](0016-toolchain-versions.md) | Toolchain versions: TypeScript 6, pnpm 12 via Corepack, Expo SDK 58 | Accepted for the local demo (D-23) |
-| [0017](0017-invitation-and-sign-in-flow.md) | Invitation and sign-in flow (code-only e-mail, invitation bound to a verified address) | Proposed (implemented for the local demo, D-26) |
+| [0017](0017-invitation-and-sign-in-flow.md) | Invitation and sign-in flow (code-only e-mail, invitation bound to a verified address) | **Accepted** 2026-11-12 (D-26, incl. amendments for suspension and the invitation limit) |
 
 Template: copy `template.md`.

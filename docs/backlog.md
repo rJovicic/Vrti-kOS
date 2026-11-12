@@ -72,7 +72,7 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [x] [D1-7a] CI na GitHubu zelen (run #6 prvi s integracijskim i e2e testovima; zadnji run #10, commit `4c7f599`)
 - [ ] [D1-7b] Branch protection za `main` — **radnja vlasnika (D-27)**, `main` nije zaštićen (ponovno provjereno 2026-11-12); ruleset za uvoz `.github/rulesets/main-protection.json`, koraci u [security/branch-protection.md](security/branch-protection.md)
 - [ ] [D1-8] Pokretanje mobilne aplikacije na iOS simulatoru / Android emulatoru (R-44)
-- [ ] [D1-9] Ponovno slanje pozivnice (FR-01-2), ekran platform admina za novi vrtić (FR-02-1), potvrda obavijesti o privatnosti (FR-01-5)
+- [ ] [D1-9] Ponovno slanje pozivnice (FR-01-2), ekran platform admina za novi vrtić (FR-02-1). Potvrda obavijesti o privatnosti (FR-01-5) **izvedena 2026-11-12**: tablica `privacy_notices`, prikaz i potvrda u mobilnoj aplikaciji, demo tekst označen; uređivanje teksta u adminu još ne postoji (unos zasad operater/service)
 - [x] [D1-10] Aplikacijska ljuska mobilne aplikacije — **izvedeno 2026-11-12** (GitHub CI [run #16](https://github.com/rJovicic/Vrti-kOS/actions/runs/43188757221), commit `b549c64`):
   - grupe ruta s guardovima, redom: sesija (`Stack.Protected`) → aktivno članstvo → obavijest o privatnosti FR-01-5 (fail-closed poruka dok se tekst ne može prikazati) → kartice po načinu rada (`Tabs.Protected`);
   - donja traka na telefonu, bočna od 600 dp (Material rail na Androidu); prebacivanje odgojitelj ↔ roditelj u Profilu;
@@ -81,8 +81,7 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
   - istek sesije briše sesiju s uređaja i prikazuje `AUTH_SESSION_EXPIRED`;
   - testovi: `shell.test.ts` (18).
 
-  Otvoreno:
-  - render i router testovi trebaju nove dev-ovisnosti (D-30);
+  Render i router testovi dodani 2026-11-12 (Jest, 19 testova; D-30 odobren). Otvoreno:
   - vizualna provjera na uređaju (R-44, D1-8);
   - ikone kartica.
 - [ ] [D1-11] Parent Home UI (`apps/mobile/src/features/guardian-home/`, dev preview `vrticos://dev/parent-home`) — izvedeno i lokalno provjereno (mobilni Vitest, typecheck, Expo export); čeka vizualnu provjeru na simulatoru ili uređaju (R-44)
@@ -100,7 +99,8 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] Break-glass pristup platform admina s razlogom, rokom i auditom vidljivim vrtiću (ADR-0005)
 - [ ] Testovi rate limita prijave i provjere koda (SR-AUTHN-02) i isteka sesije (Faza 6 „Testovi”)
 - [ ] Ponovno slanje pozivnice, ekran platform admina za novi vrtić, potvrda obavijesti o privatnosti (vidi D1-9)
-- [ ] [D2…D5] prema roadmapu
+- [ ] [D2] Djeca, upisi, skrbnici — specifikacija i plan: [architecture/d2-plan.md](architecture/d2-plan.md) (paketi D2-A…D2-I); D-28 odobren uz uvjet D-27
+- [ ] [D3…D5] prema roadmapu
 
 ## Faza 5 (unaprijed zabilježeno)
 - [P5-1] CI provjera: tablica bez RLS-a ruši build

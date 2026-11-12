@@ -1,7 +1,7 @@
 # Status faza
 
 **Trenutna faza:** sloj **D1** (prijava, MFA uprave, pozivnice, rasporedi, struktura vrtića) — **izveden; tehnički preduvjeti za D2 dovršeni 2026-11-12**, čeka pregled vlasnika; otvoreno: provjera mobilne aplikacije na uređaju (R-44) i zaštita grane `main` (D-27)
-**Zadnja provjera:** 2026-11-12 — lint, typecheck, 146 unit testova, **227 pgTAP**, RLS spike 14/14, **45 integracijskih**, **8 Playwright e2e** (admin), Deno check/lint, admin build, Expo export (iOS + Android), provjera tajni u bundleima
+**Zadnja provjera:** 2026-11-12 — lint, typecheck, 151 unit test (Vitest) + **19 render testova (Jest)**, **253 pgTAP**, RLS spike 14/14, **45 integracijskih**, **8 Playwright e2e** (admin), Deno check/lint, admin build, Expo export (iOS + Android), provjera tajni u bundleima
 **CI:** GitHub Actions [run #14](https://github.com/rJovicic/Vrti-kOS/actions/runs/43187718245) (commit `c685dee`: R-50, R-51, D1-13, ADR-0017 dopune) — sva 4 posla zelena; [run #12](https://github.com/rJovicic/Vrti-kOS/actions/runs/43180178518) (R-47, R-48, R-52); [run #10](https://github.com/rJovicic/Vrti-kOS/actions/runs/43173757352) (commit `4c7f599`: Parent Home UI, R-49 zabrana lozinki, usklađena dokumentacija) — sva 4 posla zelena; prethodno run #8 (commit `6c9a8a2`, kraj D1) — sva 4 posla zelena: lint/typecheck/unit, baza (migracije od nule, pgTAP, spike, tipovi, integracijski i Playwright e2e testovi), admin build + Expo bundle (provjera tajni), gitleaks + audit.
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
@@ -27,6 +27,13 @@
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
 - **Faza 4 — dizajn (2026-11-11):** ✅ [DESIGN.md](../DESIGN.md) (tokeni generirani iz `packages/tokens`), prototip 18 mobilnih i 5 admin ekrana u [design/prototype/](../design/prototype/) sa svim stanjima evidencije dolazaka; Impeccable detektor bez blokirajućih nalaza (2 savjetodavna).
 - **Parent Home UI (2026-11-11, nakon D1):** izveden kao prezentacijski ekran + dev preview sa sintetičkim podacima; lokalno provjeren (mobilni Vitest, typecheck, Expo export); vizualna provjera na simulatoru još nije obavljena (R-44). Backlog D1-11, [architecture/mobile-app.md](architecture/mobile-app.md) §1.
+- **Završni D1 checkpoint (2026-11-12, popodne):**
+  - prihvaćeni ADR-0017 (D-26) i limit 50/sat (D-29);
+  - mobilni render i router testovi (D-30, Jest + expo-router testing-library, 19 testova); pronađena i popravljena greška u testovima (neawaitani događaji);
+  - obavijest o privatnosti (FR-01-5): tablica `privacy_notices`, prikaz i potvrda verzije, demo tekst označen;
+  - `correlation_id` iz mobilne aplikacije;
+  - specifikacija D2: [architecture/d2-plan.md](architecture/d2-plan.md);
+  - otvoreno: D-27/R-45 (čeka vlasnika), D-31, D-32, R-44, R-49, R-53.
 - **D1 preduvjeti za D2 (2026-11-12):**
   - zatvoreni R-50 (limit pozivnica) i R-51 (audit prema SR-AUD-01/02), D1-13 (katalog kodova grešaka) i D1-10 (aplikacijska ljuska mobilne aplikacije);
   - ADR-0017 dopunjen opisom suspenzije i limita;
@@ -82,11 +89,13 @@
 | ~~D-23~~ | ~~ADR-0016: TypeScript 6.0.3 umjesto 7, pnpm 12 kroz Corepack, izolirani node_modules~~ | **Potvrđeno 2026-11-11** u nalogu vlasnika za D1 („Potvrđene odluke: D-23: zadržati postojeći tehnološki stack.”); ADR-0016 prihvaćen za lokalni demo | [decisions/0016-toolchain-versions.md](decisions/0016-toolchain-versions.md) |
 | ~~D-24~~ | ~~Pregled dizajn sustava (DESIGN.md, smjer „zid garderobe”) i prototipa~~ | **Potvrđeno 2026-11-11** u nalogu vlasnika za D1 („D-24: potvrđen dizajnerski smjer „zid garderobe”.”). Potvrđen je smjer; nativni izgled još nije provjeren na uređaju (R-44) | [../DESIGN.md](../DESIGN.md), [../design/prototype/](../design/prototype/) |
 | ~~D-25~~ | ~~Početak sloja D1~~ | **Odobreno 2026-11-11**; izvedeno (vidi gore) | [backlog.md](backlog.md) |
-| D-26 | ADR-0017: tok pozivnica i prijave (bez tokena u e-pošti, pozivnica vezana uz potvrđenu adresu); **samo `org_admin` dodjeljuje i mijenja `org_admin` prava** (strože od „Ogr.” u matrici za ravnatelja); dopune 2026-11-12: suspenzija po članstvu (R-48) i limit pozivnica (R-50) | Prihvatiti za demo; pravilo o ravnatelju potvrditi s vrtićima | [decisions/0017-invitation-and-sign-in-flow.md](decisions/0017-invitation-and-sign-in-flow.md) |
+| ~~D-26~~ | ~~ADR-0017: tok pozivnica i prijave; samo `org_admin` dodjeljuje i mijenja `org_admin` prava; dopune 2026-11-12 (suspenzija po članstvu R-48, limit pozivnica R-50)~~ | **Prihvaćeno 2026-11-12** (odluka vlasnika); ADR-0017 → Accepted. Poslovno pravilo suspenzije po članstvu nepromijenjeno | [decisions/0017-invitation-and-sign-in-flow.md](decisions/0017-invitation-and-sign-in-flow.md) |
 | D-27 | **Zaštita grane `main`** (model iz naloga vlasnika 2026-11-12): samo PR; obvezne provjere `lint · typecheck · unit tests`, `database · migrations · RLS · integration · e2e`, `admin build · mobile bundle`, `secrets · dependencies`; zabranjeni force push i brisanje; razriješeni razgovori; **bez** obveznog drugog odobrenja. Sesija ga ne može postaviti (nema API za rulesetove); uvesti `.github/rulesets/main-protection.json` | Radnja vlasnika (R-45) | [security/branch-protection.md](security/branch-protection.md) |
-| D-28 | Prijelaz na D2 (djeca, upisi, skrbnici, pozivnice roditelja) | Nakon pregleda D1 i D-27 | [backlog.md](backlog.md) |
-| D-29 | Vrijednost limita pozivnica (R-50): privremeno 50 po vrtiću na klizni sat, mijenja se po vrtiću (`organizations.invitation_limit_per_hour`) | Potvrditi ili promijeniti prije pilota | [decisions/0017-invitation-and-sign-in-flow.md](decisions/0017-invitation-and-sign-in-flow.md) |
-| D-30 | Dev-ovisnosti za render i router testove mobilne aplikacije (`jest-expo`, `@testing-library/react-native`, `jest`; za `expo-router/testing-library`); instalacija je 2026-11-12 odbijena politikom dozvola sesije | Odobriti ili odbiti | [architecture/mobile-app.md](architecture/mobile-app.md) §8 |
+| D-28 | Prijelaz na D2 (djeca, upisi, skrbnici, pozivnice roditelja) | **Odobreno 2026-11-12 uz uvjet: nakon aktiviranja D-27.** Specifikacija i plan: [architecture/d2-plan.md](architecture/d2-plan.md); izvedba počinje kad je zaštita `main` potvrđena | [backlog.md](backlog.md) |
+| ~~D-29~~ | ~~Vrijednost limita pozivnica (R-50)~~ | **Odobreno 2026-11-12:** početni limit 50 pozivnica po vrtiću na sat; ostaje konfigurabilan (`organizations.invitation_limit_per_hour`) | [decisions/0017-invitation-and-sign-in-flow.md](decisions/0017-invitation-and-sign-in-flow.md) |
+| ~~D-30~~ | ~~Dev-ovisnosti za render i router testove mobilne aplikacije~~ | **Odobreno 2026-11-12**; instalirano: `jest-expo ~58.0.14`, `jest 30.5.1`, `@testing-library/react-native 14.1.0`, uz potrebne peer ovisnosti `test-renderer 1.3.0`, `@react-native/jest-preset 0.88.1` i `@jest/globals 30.5.1` | [architecture/mobile-app.md](architecture/mobile-app.md) §8 |
+| D-31 | Odgojitelj vidi imena i zastavice skrbnika djece svojih skupina (primopredaja, FR-05-3), bez kontakata | Potvrditi s vrtićima prije D2-B | [architecture/d2-plan.md](architecture/d2-plan.md) §2 |
+| D-32 | Smije li se pozivnica skrbniku poslati prije upisa djeteta u skupinu (prijedlog: da; skrbnik vidi dijete bez skupine) | Prije D2-F | [architecture/d2-plan.md](architecture/d2-plan.md) §2 |
 
 ## Pravne/privatnosne odluke koje NE donosim umjesto vlasnika ⚖️
 Uloge voditelj/izvršitelj po tokovima, pravne osnove, rokovi čuvanja, obveznost DPIA, prihvatljivost

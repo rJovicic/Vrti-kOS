@@ -109,7 +109,8 @@ Remaining deviations:
   `set_config('app.correlation_id', …)` and stored in `audit_events.correlation_id`.
   **Implemented (2026-11-12, R-51):** the audit trigger reads `app.correlation_id` or the `x-correlation-id` request
   header (validated). Edge Functions accept the caller's id (or create one) and forward it on every PostgREST call. The
-  admin server client sends one per server request. The mobile app does not send one yet.
+  admin server client sends one per server request. The mobile app creates one per user action and sends it on every
+  request of that action (`apps/mobile/src/lib/correlation.ts`, 2026-11-12).
 
 ## 10. Audit events
 - Written by `private.write_audit(action, target_table, target_id, outcome, details)` — called from triggers and

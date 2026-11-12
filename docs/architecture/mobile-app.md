@@ -23,11 +23,10 @@ src/app/
   _layout.tsx          providers; root Stack: signed out → only sign-in, signed in → only (app) (Stack.Protected)
   sign-in.tsx          e-mail → 6-digit code (no magic link, SR-AUTHN-01); after verification calls the
                        accept-invitations Edge Function, then returns to `/`; shows AUTH_SESSION_EXPIRED after an expiry
-  (app)/_layout.tsx    ShellProvider → gate (fail closed) → Tabs per mode
-  (app)/index.tsx      redirects to the landing tab of the current mode
+  (app)/_layout.tsx    ShellProvider → gate (fail closed) → Tabs; the other mode's tabs are not offered (href: null)
+  (app)/index.tsx      `/` — guardian "Početna": Parent Home (GuardianHomeScreen), empty state until D2 links children
   (app)/today.tsx      educator "Danas": groups assigned today (RLS; substitute end date)
   (app)/attendance.tsx educator "Dolasci": labelled placeholder until D3
-  (app)/home.tsx       guardian "Početna": Parent Home (GuardianHomeScreen), empty state until D2 links children
   (app)/messages.tsx   guardian "Poruke": labelled placeholder until D4
   (app)/info.tsx       no mobile role (managers): pointer to the web admin
   (app)/profile.tsx    e-mail, kindergartens, mode switch (educator ↔ guardian), sign-out (FR-01-10)
@@ -37,9 +36,16 @@ src/app/
 ### App shell gates (D1-10, `src/shell/`)
 Order of precedence, all fail closed: session (root guard) → memberships loaded (`loading`/`error`; a 401 or JWT error
 signs out with reason `expired`) → at least one active membership (`noMembership`) → privacy notice acknowledged for every
-kindergarten that published one (`noticeRequired`, FR-01-5) → tabs. The notice text itself cannot be shown yet, so a
-published notice blocks with a message to contact the kindergarten (no kindergarten has published one in the demo).
-Tabs per mode: educator `today, attendance, profile`; guardian `home, messages, profile`; none `info, profile`.
+kindergarten that published one (`noticeRequired`, FR-01-5) → tabs. The notice gate shows the kindergarten's text
+(`public.privacy_notices`, readable by its active members) in full, one kindergarten at a time. A demo text is labelled
+"DEMO: ovo nije pravna obavijest". "Pročitao/la sam obavijest" records the published version on all the person's
+memberships there (the database refuses any other version and sets the time). The acknowledgement is not consent. A
+published version whose text cannot be read blocks the app (fail closed). In the demo seed only Vrtić Beta publishes a
+synthetic notice. Each role screen wraps itself in `ModeGuard` (redirect to the current mode's landing tab).
+Correlation ids: `src/lib/correlation.ts` creates one id per user action (`mob-<time>-<random>`) and the shell load, the
+acknowledgement, the educator groups load and the invitation acceptance send it as `x-correlation-id` on every request
+of that action.
+Tabs per mode: educator `today, attendance, profile`; guardian `home` (route `index`), `messages, profile`; none `info, profile`.
 Kindergarten switching is not needed: every list shows the kindergarten per item (multi-kindergarten views).
 
 ### Parent Home UI and development preview (implemented; visual check on a device pending)
@@ -118,9 +124,17 @@ These follow the module table below and arrive with D2–D4.
   `tests/integration`.
 - **App shell (D1-10):** `src/shell/shell.test.ts` (18 tests) covers the gates, role access, tabs per mode, layout per
   width, session end handling and that the route files match the shell definition (protected groups, no fixtures).
-- **Not set up:** component render and router tests. They need `@testing-library/react-native` + `jest-expo` (for
-  `expo-router/testing-library`). Installing them was refused by the session's permission policy on 2026-11-12;
-  owner approval required (D-30). Until then components are checked by typecheck, `expo export` and manual review.
+- **Render and router tests (D-30 approved 2026-11-12):** Jest with `jest-expo ~58.0.14`, `@testing-library/react-native
+  14.1.0` (+ peers `test-renderer 1.3.0`, `@react-native/jest-preset 0.88.1`, `@jest/globals 30.5.1`).
+  - `src/shell/shell.render.test.tsx` (19 tests) renders the real `src/app` with `expo-router/testing-library` and an
+    in-memory Supabase client (`src/test/fakeSupabase.ts`, records request headers; it does not model RLS).
+  - It covers the signed-out and signed-in views, Parent Home, educator tabs, managers, no membership, session expiry,
+    blocking the other role's destinations, the mode switch, the privacy notice and correlation ids.
+  - Jest picks up `*.render.test.tsx`; Vitest the `*.test.ts` files (`vitest.config.ts`). `pnpm --filter
+    @vrticos/mobile test` runs both, so CI runs them in the `quality` job.
+  - RNTL 14 events are asynchronous: always `await fireEvent.press(...)`.
+  - The `@parcel/watcher` build script is denied (`allowBuilds` in `pnpm-workspace.yaml`); Jest falls back to its own
+    watcher.
 - **Planned:** Maestro flows for sign-in, educator attendance, guardian absence report (needs an emulator).
 - **Not done yet:** running the app on an iOS simulator / Android emulator / device (R-44).
 - Accessibility: VoiceOver/TalkBack labels on every interactive element; dynamic type up to 200 % without loss of

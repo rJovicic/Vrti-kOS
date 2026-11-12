@@ -117,7 +117,9 @@ exercise the functions end to end.
   pgTAP 174/174, integration 33/33, admin e2e 8/8.
 - R-51 (audit): `06_audit_log.test.sql` (33) and `tests/integration/src/audit.test.ts` (8). R-50 (invitation limit):
   `07_invitation_quota.test.sql` (20) and `tests/integration/src/invitation-limit.test.ts` (4, parallel requests).
-  D1-13: `packages/validation/src/catalog.test.ts`. D1-10: `apps/mobile/src/shell/shell.test.ts`. Local result
+  D1-13: `packages/validation/src/catalog.test.ts`. D1-10: `apps/mobile/src/shell/shell.test.ts`; render and router
+  tests `pnpm --filter @vrticos/mobile test:render` (Jest, `shell.render.test.tsx`). FR-01-5: `08_privacy_notice.test.sql`
+  (26). Local result 2026-11-12 (second run): pgTAP 253/253, integration 45/45, e2e 8/8, Vitest 151, Jest 19. Local result
   2026-11-12: pgTAP 227/227, integration 45/45, admin e2e 8/8, unit tests 146.
 - `pnpm test:integration` — Edge Functions, e-mail codes from Mailpit, TOTP MFA, RLS through the API (needs `pnpm db:start`).
 - `pnpm --filter @vrticos/integration-tests run e2e` — Playwright against a running admin (`ADMIN_URL`, default

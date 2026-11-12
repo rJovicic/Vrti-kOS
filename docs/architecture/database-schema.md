@@ -306,6 +306,16 @@ PK `(profile_id, type)`, `push_enabled bool`.
   service key
 - **Sens.** R2
 
+### 5.25 `privacy_notices` — implemented (`20261112093000_privacy_notices.sql`, FR-01-5)
+`id`, `organization_id`, `version` (1–40), `title` (1–120), `body` (1–20,000), `is_demo bool`, `created_at`. UQ
+`(organization_id, version)`. `organizations (id, privacy_notice_version)` → FK to `(organization_id, version)`: only an
+existing own version can be published. Versions are immutable (trigger `PRIVACY_NOTICE_IMMUTABLE`); the published one
+cannot be deleted (FK).
+- **RLS** S: active members of that kindergarten (`member_org_ids()`) · I/U/D: no client grant (operators / service)
+- **Acknowledgement** (`memberships.notice_ack_version/at`): only by the person themselves, only the currently published
+  version (`NOTICE_VERSION_MISMATCH`), time set by the database; audited as `memberships.update` (column names only).
+- **Sens.** R1 (the kindergarten's document; no personal data)
+
 ### 5.24 `private.platform_admins`
 `profile_id` PK → `profiles`. No grants; read only by `private.is_platform_admin()`. Populated by an operator procedure (SR-OPS-04).
 
