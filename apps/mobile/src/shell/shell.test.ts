@@ -1,7 +1,5 @@
 // D1-10: mobile app shell — auth/role guards, navigation per mode and screen width, session end handling.
 // Pure logic plus a structural check of the expo-router route files (no renderer is installed for React Native).
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deriveAccess, shellGate, type MembershipRow } from './access';
 import {
@@ -117,11 +115,24 @@ describe('session end', () => {
   });
 });
 
+// Route sources as raw text, collected by Vitest/Vite at transform time (the mobile project has no Node typings).
+declare global {
+  interface ImportMeta {
+    glob<T>(pattern: string, options: { query: '?raw'; import: 'default'; eager: true }): Record<string, T>;
+  }
+}
+const sources = import.meta.glob<string>('../app/**/*.tsx', { query: '?raw', import: 'default', eager: true });
+const groupFiles = Object.keys(sources).filter((k) => k.startsWith('../app/(app)/'));
+const source = (path: string): string => {
+  const text = sources[path];
+  if (text === undefined) throw new Error(`missing route file ${path}`);
+  return text;
+};
+
 describe('route files match the shell definition', () => {
-  const appDir = join(import.meta.dirname, '..', 'app', '(app)');
-  const files = readdirSync(appDir).map((f) => f.replace(/\.tsx$/, ''));
-  const layout = readFileSync(join(appDir, '_layout.tsx'), 'utf8');
-  const rootLayout = readFileSync(join(import.meta.dirname, '..', 'app', '_layout.tsx'), 'utf8');
+  const files = groupFiles.map((k) => k.slice('../app/(app)/'.length).replace(/\.tsx$/, ''));
+  const layout = source('../app/(app)/_layout.tsx');
+  const rootLayout = source('../app/_layout.tsx');
 
   it('every destination has exactly one route file, and there are no unlisted screens', () => {
     expect(files.sort()).toEqual(['_layout', 'index', ...ALL_TABS].sort());
@@ -138,7 +149,7 @@ describe('route files match the shell definition', () => {
   });
   it('placeholders do not import sample data or fixtures', () => {
     for (const f of ['attendance', 'messages', 'home', 'info']) {
-      expect(readFileSync(join(appDir, `${f}.tsx`), 'utf8')).not.toMatch(/fixtures|preview|synthetic/i);
+      expect(source(`../app/(app)/${f}.tsx`)).not.toMatch(/fixtures|preview|synthetic/i);
     }
   });
 });
