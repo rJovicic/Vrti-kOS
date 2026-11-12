@@ -76,7 +76,7 @@ stack restart (`pnpm db:stop && pnpm db:start`); the migration applies on `pnpm 
 **Local requirements:** none beyond the normal stack; the hook runs inside the local Postgres as `supabase_auth_admin`.
 
 **Limitations of the local verification:** verified only against the local stack (Supabase CLI 3.1.0, GoTrue v2.197.0)
-— not on hosted Supabase and not yet in GitHub CI. A trigger that raises an error on `auth.users` is not a documented
+and in GitHub CI (run #10, commit `4c7f599`) — not on hosted Supabase. A trigger that raises an error on `auth.users` is not a documented
 Supabase pattern; a GoTrue upgrade could change its behaviour, so the tests below must stay in CI. Access tokens issued
 by password before the migration stay valid until they expire (≤ 15 min). The hook is a single point of failure for all
 token issuance (covered by every integration and e2e test).

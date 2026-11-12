@@ -48,8 +48,8 @@ no setting or hook that stops a password from being set (`secure_password_change
 2. Auth hook `auth_hooks.custom_access_token` — no access token for a password-based session, at sign-in or refresh;
 3. defence in depth in `config.toml`: `secure_password_change = true`, `minimum_password_length = 12`, required
    character classes (on their own these would not block R-49).
-Verified locally: pgTAP 124/124, integration 27/27 (twice), admin e2e 8/8. Not yet verified in GitHub CI or on hosted
-Supabase; R-49 stays open until CI evidence exists. Details: `docs/architecture/local-development.md` §3b.
+Verified locally (pgTAP 124/124, integration 27/27 twice, admin e2e 8/8) and in GitHub CI run #10 on commit `4c7f599`
+(https://github.com/rJovicic/Vrti-kOS/actions/runs/43173757352). Not yet verified on hosted Supabase; R-49 stays open until that re-assessment before staging. Details: `docs/architecture/local-development.md` §3b.
 
 **Consequences of the amendment:** the admin API cannot set passwords either, and `inviteUserByEmail` would fail
 (not used, ADR-0017). Losing access to the mailbox remains a support case handled by the kindergarten.
