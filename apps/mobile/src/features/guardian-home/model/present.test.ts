@@ -157,6 +157,11 @@ describe('accessibility label', () => {
     const label = childAccessibilityLabel(c, attendanceView('absent', undefined, t), formatAbsenceRange('2026-11-11', '2026-11-13'), t);
     expect(label).toBe('Šime Đurić. Javljen izostanak. Izostanak 11.–13. studenoga. Vrtić Alfa, Objekt Maslina. Skupina Galebovi');
   });
+  it('a linked child without a group (D-32) reads without a facility and with the not-placed text', () => {
+    const c = child({ groupName: null, locationName: null, attendance: { status: 'unavailable' } });
+    const label = childAccessibilityLabel(c, attendanceView('unavailable', undefined, t), null, t);
+    expect(label).toBe('Šime Đurić. Status trenutačno nije dostupan. Vrtić Alfa. Još nije raspoređeno u skupinu');
+  });
 });
 
 describe('synthetic preview fixtures', () => {

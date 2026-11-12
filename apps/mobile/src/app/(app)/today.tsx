@@ -12,7 +12,7 @@ import { Notice } from '../../ui/Notice';
 import { useColors } from '../../ui/theme';
 import { ModeGuard } from '../../shell/ModeGuard';
 
-/** Educator: "Moje skupine danas" — groups assigned today, decided by RLS (ADR-0005). Attendance follows in D3. */
+/** Educator: "Moje skupine danas" — groups assigned today and their children (names only), decided by RLS (ADR-0005). Attendance follows in D3. */
 function TodayScreen() {
   const { t } = useTranslation();
   const c = useColors();
@@ -70,6 +70,20 @@ function TodayScreen() {
                     {t('mobile.substituteUntil', { date: formatDay(g.substituteUntil) })}
                   </Text>
                 ) : null}
+                <View style={[styles.children, { borderTopColor: c.borderSubtle }]} accessibilityLabel={t('mobile.groupChildren')}>
+                  <Text style={[shellStyles.meta, styles.childrenTitle, { color: c.textSecondary }]}>
+                    {t('mobile.groupChildren')} · {g.children.length}
+                  </Text>
+                  {g.children.length ? (
+                    g.children.map((name) => (
+                      <Text key={name} style={[styles.child, { color: c.textPrimary }]}>
+                        {name}
+                      </Text>
+                    ))
+                  ) : (
+                    <Text style={[shellStyles.meta, { color: c.textSecondary }]}>{t('mobile.groupEmpty')}</Text>
+                  )}
+                </View>
               </View>
             ))}
           </View>
@@ -84,6 +98,9 @@ function TodayScreen() {
 const styles = StyleSheet.create({
   card: { borderWidth: 1, borderRadius: radius.lg, padding: space[4], gap: space[1] },
   cardTitle: { fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
+  children: { borderTopWidth: StyleSheet.hairlineWidth, marginTop: space[3], paddingTop: space[3], gap: space[1] },
+  childrenTitle: { fontWeight: '600' },
+  child: { fontSize: type.body.size, lineHeight: type.body.lineHeight },
   pill: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space[3], paddingVertical: 2, fontSize: type.caption.size, fontWeight: '600', overflow: 'hidden' },
 });
 

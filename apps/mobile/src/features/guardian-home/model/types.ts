@@ -17,8 +17,10 @@ export interface ChildSummary {
   firstName: string;
   lastName: string;
   kindergartenName: string;
-  locationName: string;
-  groupName: string;
+  /** Facility of today's group; null while the child is not placed in a group (D-32). */
+  locationName: string | null;
+  /** Today's group; null while the child is not placed in a group (D-32). */
+  groupName: string | null;
   attendance: ChildAttendance;
   /** Guardian holds an active can_report_absence permission for this child (spec §4). */
   canReportAbsence: boolean;

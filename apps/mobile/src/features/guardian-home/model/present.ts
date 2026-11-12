@@ -120,14 +120,24 @@ export function sectionPlan(state: HomeScreenState, data: GuardianHomeData | nul
   }
 }
 
+/** Kindergarten and facility; the facility is unknown while the child has no group (D-32). */
+export function placeLine(child: ChildSummary, separator = ' · '): string {
+  return child.locationName ? `${child.kindergartenName}${separator}${child.locationName}` : child.kindergartenName;
+}
+
+/** "Skupina X", or the not-yet-placed text for a linked child without a group (D-32). */
+export function groupLine(child: ChildSummary, t: Translate): string {
+  return child.groupName ? t('guardianHome.groupLabel', { group: child.groupName }) : t('guardianHome.noGroup');
+}
+
 /** One spoken summary for the card's information block (VoiceOver/TalkBack). */
 export function childAccessibilityLabel(child: ChildSummary, status: StatusView, absence: string | null, t: Translate): string {
   return [
     `${child.firstName} ${child.lastName}`,
     status.text,
     absence ? t('guardianHome.absenceRange', { range: absence }) : null,
-    `${child.kindergartenName}, ${child.locationName}`,
-    t('guardianHome.groupLabel', { group: child.groupName }),
+    placeLine(child, ', '),
+    groupLine(child, t),
   ]
     .filter(Boolean)
     .join('. ');

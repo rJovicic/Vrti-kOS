@@ -81,6 +81,20 @@ export const hr = {
     signedInAs: 'Prijavljeni ste kao {{email}}',
     loadError: 'Početnu nije moguće učitati.',
     loadErrorHelp: 'Provjerite vezu i pokušajte ponovno.',
+    groupChildren: 'Djeca u skupini danas',
+    groupEmpty: 'Danas u skupini nema upisane djece.',
+  },
+  // D2-H: child detail for guardians (read-only).
+  childDetail: {
+    back: 'Natrag',
+    kindergarten: 'Vrtić',
+    facility: 'Objekt',
+    group: 'Skupina',
+    noGroup: 'Još nije raspoređeno u skupinu',
+    pickups: 'Ovlaštene osobe za preuzimanje',
+    pickupsNote: 'Popis vodi vrtić. Za promjenu se obratite vrtiću.',
+    pickupsEmpty: 'Vrtić nije unio ovlaštene osobe.',
+    notFound: 'Ovo dijete nije dostupno za vaš račun.',
   },
   // Mobile app shell (D1-10): navigation destinations and states of the signed-in app.
   nav: {
@@ -117,6 +131,7 @@ export const hr = {
     greetingEvening: 'Dobra večer',
     today: 'Danas',
     groupLabel: 'Skupina {{group}}',
+    noGroup: 'Još nije raspoređeno u skupinu',
     presentSince: 'U vrtiću od {{time}}',
     statusUnavailable: 'Status trenutačno nije dostupan',
     absenceRange: 'Izostanak {{range}}',

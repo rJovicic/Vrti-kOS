@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { radius, space, type } from '@vrticos/tokens';
 import { Button } from '../../../ui/Button';
 import { useColors } from '../../../ui/theme';
-import { actionAvailability, attendanceView, cardAction, childAccessibilityLabel, formatAbsenceRange } from '../model/present';
+import { actionAvailability, attendanceView, cardAction, childAccessibilityLabel, formatAbsenceRange, groupLine, placeLine } from '../model/present';
 import type { ChildSummary, Translate } from '../model/types';
 import { AttendanceStatus } from './AttendanceStatus';
 import { raised } from './surface';
@@ -48,9 +48,9 @@ export function ChildSummaryCard({ child, today, onOpen, onReportAbsence, onRevi
       <AttendanceStatus view={status} />
       {absence ? <Text style={[styles.meta, { color: c.textSecondary }]}>{t('guardianHome.absenceRange', { range: absence })}</Text> : null}
       <Text style={[styles.meta, { color: c.textSecondary }]}>
-        {child.kindergartenName} · {child.locationName}
+        {placeLine(child)}
       </Text>
-      <Text style={[styles.meta, { color: c.textSecondary }]}>{t('guardianHome.groupLabel', { group: child.groupName })}</Text>
+      <Text style={[styles.meta, { color: c.textSecondary }]}>{groupLine(child, t)}</Text>
     </>
   );
   const label = childAccessibilityLabel(child, status, absence, t);
