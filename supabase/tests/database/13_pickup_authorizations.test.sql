@@ -80,7 +80,7 @@ select ok((select relrowsecurity from pg_class where oid = 'public.pickup_author
 select ok(not has_table_privilege('anon', 'public.pickup_authorizations', 'SELECT'), 'anon reads nothing');
 select ok(not has_table_privilege('authenticated', 'public.pickup_authorizations', 'DELETE,TRUNCATE'), 'an authorization is ended, never deleted');
 select is((select count(*)::int from information_schema.columns where table_schema = 'public' and table_name = 'pickup_authorizations'
-  and column_name ~* 'phone|telefon|mail|address|adres|relation|odnos|oib|document|dokument|photo'), 0, 'no contact data, relationship or documents are stored (Q-T13 open)');
+  and column_name ~* 'phone|telefon|mail|address|adres|relation|odnos|oib|document|dokument|photo'), 0, 'no contact data, relationship or documents are stored (D-34)');
 select ok(not has_column_privilege('authenticated', 'public.pickup_authorizations', 'created_by', 'SELECT'), 'no client reads who entered an authorization');
 select ok(not has_column_privilege('authenticated', 'public.pickup_authorizations', 'child_id', 'UPDATE'), 'an authorization cannot be moved to another child');
 

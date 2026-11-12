@@ -110,8 +110,8 @@
 | FR-04-4 | Skrbnička veza: dijete ↔ osoba (s računom ili čeka pozivnicu) sa zastavicama `can_view`, `can_report_absence`, `receives_messages` i valjanošću. Jedno dijete može imati više skrbnika s različitim zastavicama. |
 | FR-04-5 | **Ograničenje pristupa** (`access_restriction`) se unosi na skrbničku vezu s opsegom (potpuna blokada ili pojedine zastavice), valjanošću i internom referencom vrtića na dokument — **bez sadržaja sudske odluke ili razloga** u sustavu. Ograničenje ima prednost nad zastavicama i djeluje odmah. |
 | FR-04-6 | Unos i promjenu ograničenja smije samo uprava; svaka promjena je auditirana; skrbnik ne vidi ograničenja drugih skrbnika. |
-| FR-04-7 | Ovlaštena osoba za preuzimanje: ime, prezime, valjanost ovlaštenja po djetetu. Kontakt telefon i odnos prema djetetu [otvoreno Q-T13]. Ne mora imati račun. |
-| FR-04-8 | Skrbnik vidi svoje dijete, njegovu trenutnu skupinu i objekt, te popis ovlaštenih osoba za preuzimanje tog djeteta (samo pregled). U MVP-u popis uređuje samo uprava; smije li skrbnik predlagati/uređivati osobe [otvoreno — matrica "Ogr.", Q-T13]. |
+| FR-04-7 | Ovlaštena osoba za preuzimanje: ime, prezime, valjanost ovlaštenja po djetetu. Kontakt telefon i odnos prema djetetu **zasad se ne prikupljaju niti pohranjuju** (Q-T13 zatvoren, D-34). Ne mora imati račun. |
+| FR-04-8 | Skrbnik vidi svoje dijete, njegovu trenutnu skupinu i objekt, te popis ovlaštenih osoba za preuzimanje tog djeteta (samo pregled). Popis odobrava i uređuje **isključivo uprava uz MFA**; skrbnik ne može sam dodavati, mijenjati ni brisati osobe (D-34). Prijedlog osobe od strane skrbnika moguća je buduća funkcionalnost izvan trenutačnog opsega; predložena osoba nema ovlaštenje dok je uprava izričito ne odobri. |
 | FR-04-9 | Skrbnik **ne vidi** drugu djecu skupine, njihove skrbnike ni broj djece u skupini. |
 | FR-04-10 | Unos djece i skrbnika moguć je ručno; **uvoz iz CSV-a** je Should [otvoreno Q-T04], uz validaciju i izvještaj grešaka bez slanja pozivnica automatski. |
 

@@ -27,7 +27,7 @@
 |---|---|---|
 | Q-P03 minimum child data | `children` holds first name, last name and optional `internal_ref` only | **Assumed** (FR-04-1). Any extra field needs owner + legal decision |
 | Q-P05 identity check before inviting a guardian | The system cannot verify identity; the kindergarten checks it before entering the e-mail | **Open ⚖️**. D2 records who invited (`created_by`) and requires AAL2; no eID |
-| FR-04-8 / Q-T13 pickup persons | Name + validity only; no phone or relationship; edited by managers only | **Assumed and implemented in D2-D**; guardian proposing/editing stays out of D2 (Q-T13 open, owner decision) |
+| FR-04-8 / Q-T13 pickup persons | Name + validity only; no phone or relationship; edited by managers only | **Confirmed (D-34, owner 2026-11-12) and implemented in D2-D**: no phone or relationship; guardians cannot add, change or delete; managers with MFA only. Guardian proposals are a possible future feature, out of scope; a proposed person has no authorization until a manager approves it |
 | FR-04-5 restriction scopes | Only `full` scope in D2 (blocks the guardian link completely) | **Implemented in D2-C as specified here**; partial scopes (single rights) stay a later decision — FR-04-5 allows them |
 | Educator view of guardians (handover, FR-05-3) | Educators see guardian **names and flags** of children in their groups today; no contact data | **D-31 accepted 2026-11-12**; implemented in D2-B (RLS + column grants: `profile_id`/`created_by` of guardians are readable by no client). D-33 adds the "Ograničeno" flag (view `child_guardian_overview`) |
 | Q-T04 CSV import | Out of D2 | Should; later |

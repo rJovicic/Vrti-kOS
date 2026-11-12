@@ -58,7 +58,7 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-T10 | Primjenjuje li se zahtjev App Storea / Google Playa za brisanje računa iz aplikacije na račune kreirane pozivnicom? (MVP ga uključuje kao zahtjev, FR-01-9) | 👤 (provjera smjernica) |
 | Q-T11 | Rok valjanosti pozivnice (prijedlog 7 dana) i postupak ponovnog slanja? | 🏫 |
 | Q-T12 | Može li vrtić imati preklapanje dviju pedagoških godina (npr. ljetni program)? | 🏫 |
-| Q-T13 | Koje podatke o ovlaštenoj osobi za preuzimanje vrtić treba (telefon, odnos)? Smije li skrbnik sam predlagati/uređivati popis? | 🏫 ⚖️ |
+| ~~Q-T13~~ | ~~Koje podatke o ovlaštenoj osobi za preuzimanje vrtić treba (telefon, odnos)? Smije li skrbnik sam predlagati/uređivati popis?~~ **Zatvoreno — odluka vlasnika 2026-11-12 (D-34):** telefon i odnos prema djetetu zasad se ne prikupljaju niti pohranjuju; skrbnik ne može sam dodavati, mijenjati ni brisati ovlaštene osobe; popis odobrava i uređuje isključivo uprava uz MFA. Prijedlog nove osobe od strane skrbnika moguća je buduća funkcionalnost izvan trenutačnog opsega; predložena osoba nema nikakvo ovlaštenje dok je uprava izričito ne odobri. | 🏫 ⚖️ |
 | Q-T14 | Do kada se javlja izostanak za isti dan i koliko unaprijed? Utječe li na prehranu/naplatu? | 🏫 |
 | Q-T15 | Trebaju li potvrde pročitanosti obavijesti? (privatnost vs. potreba vrtića) | 🏫 |
 | Q-T16 | Smije li uprava čitati razgovore skrbnika i odgojitelja (nadzor kvalitete vs. privatnost)? | 🏫 ⚖️ |
