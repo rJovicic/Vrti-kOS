@@ -16,6 +16,9 @@ export type Database = {
               "invitation_id": string,"organization_id": string,"role": Database["public"]['Enums']["org_role"]
             }[]
                            },
+"cancel_future_record":
+{ Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
+                           },
 "record_audit_event":
 { Args: { "p_action": string,"p_actor_id": string,"p_organization_id": string,"p_outcome": string,"p_reason": string,"p_target_table": string }; Returns: undefined
                            },
@@ -539,7 +542,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -659,7 +662,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
           }
         }
 } as const

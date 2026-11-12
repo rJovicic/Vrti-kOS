@@ -35,6 +35,9 @@ export const errorCatalog = {
   GROUP_ARCHIVED: { status: 409 },
   ENROLLMENT_OVERLAP: { status: 409 },
   WITHDRAWAL_HAS_FUTURE_RECORDS: { status: 409 },
+  /** D-37: only records that start after today can be cancelled; a restricted link is not cancelled. */
+  RECORD_ALREADY_EFFECTIVE: { status: 409 },
+  CANCEL_RECORD_REFERENCED: { status: 409 },
   RATE_LIMITED: { status: 429 },
   INTERNAL: { status: 500 },
 } as const satisfies Record<string, { status: number }>;
@@ -86,6 +89,8 @@ export const dbErrorCatalog = {
   GROUP_ARCHIVED: 'GROUP_ARCHIVED',
   ENROLLMENT_OVERLAP: 'ENROLLMENT_OVERLAP',
   WITHDRAWAL_HAS_FUTURE_RECORDS: 'WITHDRAWAL_HAS_FUTURE_RECORDS',
+  RECORD_ALREADY_EFFECTIVE: 'RECORD_ALREADY_EFFECTIVE',
+  CANCEL_RECORD_REFERENCED: 'CANCEL_RECORD_REFERENCED',
 } as const satisfies Record<string, ErrorCode>;
 export type DbErrorName = keyof typeof dbErrorCatalog;
 
@@ -101,6 +106,8 @@ export const exposedDbErrors = [
   'GROUP_ARCHIVED',
   'ENROLLMENT_OVERLAP',
   'WITHDRAWAL_HAS_FUTURE_RECORDS',
+  'RECORD_ALREADY_EFFECTIVE',
+  'CANCEL_RECORD_REFERENCED',
 ] as const satisfies readonly DbErrorName[];
 
 export interface ApiError {
