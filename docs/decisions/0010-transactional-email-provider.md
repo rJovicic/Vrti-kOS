@@ -22,7 +22,14 @@ built-in mailer is rate-limited and not meant for production.
   Auth configured via SMTP. Owner approval required.
 
 ## Consequences
-Provider swap is configuration only (SMTP), so the decision can be made late without code changes.
+Provider swap for **Auth e-mails** (sign-in codes) is configuration only (SMTP), so that part can be decided late.
+
+## Implementation note (D1, 2026-11-11) — correction
+Not every e-mail goes through Auth SMTP. The invitation notice is sent by the `invite-member` Edge Function through
+`supabase/functions/_shared/email.ts`, which today supports **only** Mailpit's HTTP API (`EMAIL_TRANSPORT=mailpit`) and
+fails closed for any other value (ADR-0017). Choosing a production provider therefore also needs a small code change
+(a second transport in `email.ts`, its secret handled as an Edge Function secret) — not configuration alone. The decision
+itself (EU-headquartered provider, owner approval) is unchanged.
 
 ## Cost (approximate, verify)
 Free tiers typically cover pilot volume (thousands of emails/month).

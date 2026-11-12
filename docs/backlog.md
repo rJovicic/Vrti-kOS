@@ -69,10 +69,21 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [x] [D1-4] `staff_assignments` (regular/substitute) + politike za odgojitelje (grupe danas), proširenje `visible_profile_ids`
 - [x] [D1-5] Admin: objekti, pedagoške godine, skupine, djelatnici i rasporedi (FS-02, FS-03) prema prototipu
 - [x] [D1-6] Seed: rasporedi i zamjena; pgTAP NEG-07/08 za rasporede
-- [x] [D1-7a] CI na GitHubu zelen (run #6: integracijski i e2e testovi)
+- [x] [D1-7a] CI na GitHubu zelen (run #6 prvi s integracijskim i e2e testovima; zadnji run #8, commit `6c9a8a2`)
 - [ ] [D1-7b] Branch protection za `main` — **radnja vlasnika (D-27)**, `main` trenutačno nije zaštićen
 - [ ] [D1-8] Pokretanje mobilne aplikacije na iOS simulatoru / Android emulatoru (R-44)
 - [ ] [D1-9] Ponovno slanje pozivnice (FR-01-2), ekran platform admina za novi vrtić (FR-02-1), potvrda obavijesti o privatnosti (FR-01-5)
+- [ ] [D1-10] Aplikacijska ljuska mobilne aplikacije: grupe ruta s guardovima (sesija, aktivno članstvo, potvrda obavijesti FR-01-5), donja traka kartica i Android rail prema DESIGN.md (Layout), prebacivanje vrtića/načina rada. Preduvjet za D2–D3; ne započeto
+- [ ] [D1-11] Parent Home UI (`apps/mobile/src/features/guardian-home/`, dev preview `vrticos://dev/parent-home`) — izvedeno i lokalno provjereno (mobilni Vitest, typecheck, Expo export); čeka vizualnu provjeru na simulatoru ili uređaju (R-44)
+- [ ] [D1-12] Sigurnosni nalazi pregleda arhitekture (2026-11-11), čekaju odobrenje: suspenzija vs. pozivnica na čekanju (R-48), put prijave lozinkom (R-49 — **lokalno implementirano 2026-11-11**, čeka dokaz u GitHub CI-ju), Deno check/lint za Edge Functions (R-47), limit pozivnica (R-50), audit prema SR-AUD-01/02 (R-51), cross-tenant testovi čitanja za `academic_years` i `audit_events` (R-52)
+- [ ] [D1-13] Katalog `errorCodes` (`packages/validation/src/errors.ts`) uskladiti sa stvarnim kodovima: dodati `METHOD_NOT_ALLOWED` i `INVITATION_PENDING_EXISTS` (koriste ih Edge Functions; `INVITATION_PENDING_EXISTS` već ima hrvatski tekst), ukloniti ili iskoristiti nekorišteni `INVITATION_ALREADY_USED`; dodati `errors.METHOD_NOT_ALLOWED` u i18n. Sljedeći tehnički zadatak, nije dio dokumentacijskog usklađivanja
+
+#### Iz roadmapa Faze 6 namjerno odgođeno (nije bilo u D1 nalogu vlasnika od 5 stavki; ciljni sloj određuje vlasnik)
+- [ ] Upravljanje sesijama i uređajima, odjava svih sesija (FR-01-8, SR-SESS-03)
+- [ ] Obavijest o prijavi s novog uređaja (SR-AUTHN-06)
+- [ ] Break-glass pristup platform admina s razlogom, rokom i auditom vidljivim vrtiću (ADR-0005)
+- [ ] Testovi rate limita prijave i provjere koda (SR-AUTHN-02) i isteka sesije (Faza 6 „Testovi”)
+- [ ] Ponovno slanje pozivnice, ekran platform admina za novi vrtić, potvrda obavijesti o privatnosti (vidi D1-9)
 - [ ] [D2…D5] prema roadmapu
 
 ## Faza 5 (unaprijed zabilježeno)

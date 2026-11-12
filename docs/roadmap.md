@@ -29,7 +29,7 @@ svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin apl
 | Sloj | Sadržaj | Faze | Gotovo kada |
 |---|---|---|---|
 | D0 Temelj | monorepo, CI, lokalni stack, migracije osnovnih tablica i helpera, seed, ST-RLS-00 | 5 | `pnpm demo` pokreće sve; CI zelen |
-| D1 Identitet i struktura | prijava OTP, MFA uprave, pozivnice (Mailpit), vrtić/objekti/godine/skupine, djelatnici i rasporedi | 6 | uprava postavi vrtić i pozove odgojitelja; NEG testovi prolaze |
+| D1 Identitet i struktura | prijava OTP, MFA uprave, pozivnice (Mailpit), vrtić/objekti/godine/skupine, djelatnici i rasporedi | 6 (dio) | uprava postavi vrtić i pozove odgojitelja; NEG testovi prolaze |
 | D2 Djeca i skrbnici | djeca, upisi, premještaj, skrbnici, ograničenja, ovlaštene osobe | 7 | skrbnik vidi samo svoje dijete (NEG-03…06) |
 | D3 Dolasci i izostanci | evidencija s predajom, poništavanje, offline red, izostanci, pregled uprave | 8 (+ FS-14) | jutarnji tok < 30 s; AC-05/06 |
 | D4 Komunikacija | obavijesti, centar obavijesti u aplikaciji, razgovori, dnevni pregled | 9–10 | AC-07, AC-10, AC-11 |
@@ -138,6 +138,12 @@ svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin apl
 - **DoD:** staging projekt postoji (uz odobrenje), produkcija ne.
 
 ## FAZA 6 — Organizacije, autentikacija i dozvole
+
+> **Stanje 2026-11-11:** demo sloj D1 pokriva dio ove faze (organizacijska struktura, članstva, pozivnice, prijava kodom,
+> MFA uprave, audit zapisi). **Namjerno odgođeno** jer nije bilo u D1 nalogu vlasnika: upravljanje sesijama/uređajima,
+> break-glass za platform admina, testovi rate limitinga i isteka sesije — popis u [backlog.md](backlog.md) (D1).
+> Kriterij prihvaćanja ispod još nije u potpunosti dokazan: nedostaju cross-tenant testovi čitanja za `academic_years`
+> i `audit_events` (R-52). Faza 6 se ne smatra završenom.
 - **Cilj:** sigurna osnova identiteta i pristupa.
 - **Opseg:** organizacije, objekti, pedagoška godina, članstva, uloge, pozivnice, prijava (OTP), MFA za upravu,
   upravljanje sesijama/uređajima, break-glass za platform admina, audit zapisi.

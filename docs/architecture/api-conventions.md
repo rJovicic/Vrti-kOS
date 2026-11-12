@@ -59,6 +59,15 @@ All non-PostgREST endpoints (RPC raises, Edge Functions) map to one envelope:
 | 429 | `RATE_LIMITED` |
 | 500 | `INTERNAL` (with correlation ID) |
 
+**Implementation status after D1 (2026-11-11) — known deviations, to be corrected in a technical task (backlog D1-13):**
+- The Edge Functions return codes that are **not in the `errorCodes` catalog**: `METHOD_NOT_ALLOWED` (405) and
+  `INVITATION_PENDING_EXISTS` (409). `INVITATION_PENDING_EXISTS` has a Croatian message; `METHOD_NOT_ALLOWED` has none.
+- `INVITATION_ALREADY_USED` is in the catalog but no code path returns it (accepting an already used invitation simply
+  accepts nothing, ADR-0017).
+- `invite-member` answers a denied insert with **403 `PERMISSION_DENIED`**, not `NOT_FOUND`. The answer is the
+  same for an existing and a non-existing kindergarten, so no existence is revealed, but it differs from the wording above.
+- §5: the compensation step **revokes** the invitation (no DELETE grant exists); idempotency by request key is not implemented.
+
 ## 5. Transactions
 - One user command = one transaction: an RPC or a single PostgREST request. No client-side multi-request
   "transactions".

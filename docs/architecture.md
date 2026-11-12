@@ -7,6 +7,9 @@
 > the repository layout in §3 is superseded by technical-architecture §2.
 
 Status: **PROPOSED** — nothing here is approved until the linked ADRs are accepted.
+Implementation status after D1 (2026-11-11): see [architecture/d1-implementation.md](architecture/d1-implementation.md)
+and [architecture/technical-architecture.md](architecture/technical-architecture.md). Items below marked *(planned)*
+are not implemented.
 Owner decisions pending are tracked in [phase-status.md](phase-status.md).
 
 ## 1. Architectural principles
@@ -147,13 +150,15 @@ Key modelling decisions to validate:
 - **Pickup persons are not users** by default (grandparent with an ID card) — minimal fields only.
 - **Consent is versioned and per purpose** (`CONSENT_TYPE` version + text hash); withdrawal is a new record,
   never an update. Media visibility is computed from consent of *every* tagged child.
-- **Audit log** is append-only (no UPDATE/DELETE grants), partitioned by month, retention-bound.
+- **Audit log** is append-only (no UPDATE/DELETE grants for client roles — implemented in `public.audit_events`).
+  *(planned)* monthly partitioning and a retention rule — not implemented; retention awaits Q-P09 (Phase 12).
+  The table currently sits in the exposed `public` schema with manager-only RLS, which deviates from SR-AUD-02 (risk R-51).
 
 ## 5. Roles (draft — full matrix is a Phase 1 deliverable)
 
 | Role | Scope | Can see children | Notes |
 |---|---|---|---|
-| `platform_admin` | platform | **No** by default; break-glass with reason + audit | Org setup, support |
+| `platform_admin` | platform | **No** by default; *(planned)* break-glass with reason + audit — not implemented | Org setup, support (organization creation screen not implemented yet, FR-02-1) |
 | `org_admin` | organization | All in org | Kindergarten administration |
 | `director` (ravnatelj) | organization | All in org | Reports, announcements |
 | `educator` (odgojitelj) | assigned groups (current) | Only enrolled in their current groups | Attendance, reports, messages |
@@ -170,8 +175,8 @@ Key modelling decisions to validate:
 | Media | Private bucket per org prefix, client-side resize + EXIF strip, server-side re-validation of MIME/size, signed URL TTL ≈ 5 min, consent gate on issuance. |
 | Search | Postgres full-text (`unaccent` + Croatian config) within RLS. No external search engine. |
 | Reporting | SQL views/RPCs scoped by RLS; exports generated server-side, audited, short-lived links. |
-| Audit | Triggers + explicit audit RPCs for reads of sensitive data (exports, break-glass). |
-| Background jobs | `pg_cron` → Edge Functions: retention purge, notification retries, consent expiry. |
+| Audit | Implemented: `private.audit_row()` triggers on structure, membership, staff assignment and invitation tables (column names only, no values) and an explicit audit row on invitation acceptance. *(planned)* audit of sensitive reads (exports, break-glass). |
+| Background jobs | *(planned)* `pg_cron` → Edge Functions: retention purge, notification retries, consent expiry. None exist yet. |
 | Offline | Educator attendance tolerant to flaky network (local queue + idempotency keys). Full offline sync is **not** MVP. |
 | Observability | Error monitoring with PII scrubbing; no session replay; no product analytics on child-related screens. |
 | Environments | `local` (Supabase CLI) / `staging` / `production` — separate Supabase projects, separate keys. |

@@ -253,6 +253,11 @@ stanja koja nose značenje. Boja nikad nije jedini nositelj informacije: svako s
   jednoj koloni do 640 px. Prijelomne točke: 600 / 960 / 1280.
 - **Dodirni ciljevi:** 44 pt (iOS), 48 dp (Android), pločica dolaska ≥ 72 visine; razmak između ciljeva ≥ 8.
 
+> **Stanje implementacije (2026-11-11):** donja traka kartica i navigacijska traka sa strane (Android rail) na
+> tabletima **još nisu implementirane** — mobilna aplikacija trenutačno ima samo `Stack` navigaciju. Pravilo iznad
+> ostaje važeće; implementacija je u backlogu kao [D1-10](docs/backlog.md) (aplikacijska ljuska), preduvjet za D2–D3.
+> Vidi i [docs/architecture/mobile-app.md](docs/architecture/mobile-app.md) §1–2.
+
 ## Elevation & Depth
 
 Dvije razine, obje s pomakom i mekim zamućenjem neutralne tinte: **raised** (`0 1px 3px rgba(34,37,31,.08)`) za

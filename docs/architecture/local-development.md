@@ -1,6 +1,6 @@
 # Local development and demo environment — VrtićOS
 
-- Version: 0.1 · Date: 2026-11-10 · Phase: 3 · Decision: ADR-0009
+- Version: 0.2 · Date: 2026-11-11 · Phase: 3, updated after D1 · Decision: ADR-0009
 - Goal: any developer (or the owner before a kindergarten presentation) runs the **whole system** on one machine with
   synthetic data — no cloud account, no paid service, no production data.
 
@@ -32,7 +32,7 @@ override is unnecessary.
 | API gateway (PostgREST, Auth, Storage, Functions) | `http://127.0.0.1:54321` | clients connect here |
 | Postgres | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` | migrations, pgTAP, psql |
 | Studio | `http://127.0.0.1:54323` | optional DB browser |
-| Mailpit | `http://127.0.0.1:54324` | catches all auth/invitation emails locally — **no email leaves the machine** |
+| Mailpit | `http://127.0.0.1:54324` | catches all e-mail locally — **no email leaves the machine**: Auth sign-in codes (SMTP from GoTrue) and invitation notices (Edge Function → Mailpit HTTP API `/api/v1/send`) |
 | Admin (Next.js) | `http://localhost:3000` | |
 | Expo dev server | `exp://<LAN-IP>:8081` | mobile |
 
@@ -50,9 +50,36 @@ requirements, so the committed config overrides them (same values later mirrored
 | `[auth] enable_refresh_token_rotation` | true | true | SR-SESS-02 |
 | `[auth.email] otp_length` / `otp_expiry` | 6 / 3600 s | 6 / 600 s | SR-AUTHN-02 |
 | `[auth.mfa.totp] enroll_enabled` / `verify_enabled` | false / false | true / true | SR-AUTHN-07 |
-| `[auth] enable_signup` | true | false (invitation-only; accounts created by `accept-invitation`) | ADR-0008 |
+| `[auth] enable_signup` | true | false (invitation-only; accounts are created by the `invite-member` Edge Function via the Auth admin API) | ADR-0008, ADR-0017 |
 | `[realtime] enabled` | true | false | SR-API-05 |
 | `[api] schemas` | `public, graphql_public` | `public, api` (no `graphql_public`, no `private`) | SR-API-01, SR-TEN-01 |
+| `[auth.email.template.magic_link]`, `[auth.email.template.confirmation]` | CLI templates with a link | `supabase/templates/login-code.html` (6-digit code only, Croatian) | SR-AUTHN-01, SR-AUTHN-04 |
+| `[auth.rate_limit] email_sent` | 2 / hour | 60 / hour — **local demo and tests only** | ADR-0010 decides production |
+| `[edge_runtime.secrets]` | none | `EMAIL_TRANSPORT=mailpit`, `MAILPIT_URL`, `ALLOWED_ORIGINS` (non-secret) | SR-EF-03 |
+| `[functions.invite-member]`, `[functions.accept-invitations]` | — | `verify_jwt = true` | SR-EF-03 |
+| `minimum_password_length`, `password_requirements`, `secure_password_change` | 6, none, false | 12, `lower_upper_letters_digits_symbols`, true — **defence in depth only** | R-49 |
+| `[auth.hook.custom_access_token]` | off | on, `pg-functions://postgres/auth_hooks/custom_access_token` | R-49, ADR-0008 amendment |
+
+## 3b. Passwords are disabled (R-49, ADR-0008 amendment 2026-11-11)
+Sign-in is the e-mail code (+ TOTP for managers and platform admins). Passwords are refused for **every** user by two
+independent controls from migration `supabase/migrations/20261111170000_disable_passwords.sql`:
+
+| Control | What it does | Observable behaviour locally |
+|---|---|---|
+| Trigger `vrticos_reject_password_write` on `auth.users` (BEFORE INSERT OR UPDATE OF `encrypted_password`) | INSERT: stores new accounts without a password hash (GoTrue's admin API would store a random 64-character password). UPDATE: refuses any password set/change | `PUT /auth/v1/user {password}` (also after recovery and via the admin API) fails with **HTTP 500 `unexpected_failure`** — GoTrue does not translate the trigger's error (`PASSWORDS_DISABLED`, SQLSTATE 42501); the Auth log shows that code, no personal data |
+| Auth hook `auth_hooks.custom_access_token` | refuses an access token when `authentication_method = 'password'` or the session's `amr` contains `password` | password sign-in → HTTP 400 `invalid_credentials` (no stored password) or HTTP 403 `Password sign-in is disabled. Use the e-mail code.` (a password stored before the migration); refresh of such a session is refused; e-mail-code, TOTP and recovery sessions are unaffected |
+| `config.toml` password settings | defence in depth | weak passwords → HTTP 422 `weak_password` before the trigger runs |
+
+The migration also clears any password stored earlier. The hook is configured in `config.toml`, so changing it needs a
+stack restart (`pnpm db:stop && pnpm db:start`); the migration applies on `pnpm db:reset` or a fresh `pnpm db:start`.
+
+**Local requirements:** none beyond the normal stack; the hook runs inside the local Postgres as `supabase_auth_admin`.
+
+**Limitations of the local verification:** verified only against the local stack (Supabase CLI 3.1.0, GoTrue v2.197.0)
+— not on hosted Supabase and not yet in GitHub CI. A trigger that raises an error on `auth.users` is not a documented
+Supabase pattern; a GoTrue upgrade could change its behaviour, so the tests below must stay in CI. Access tokens issued
+by password before the migration stay valid until they expire (≤ 15 min). The hook is a single point of failure for all
+token issuance (covered by every integration and e2e test).
 
 ## 4. Commands (implemented in D0, 2026-11-11)
 Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
@@ -63,17 +90,25 @@ Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
 | `pnpm demo` | guard → `supabase start` if needed → `db reset` (migrations + synthetic seed) → writes `apps/*/.env.local` (public local key, LAN IP) → admin + Expo dev servers. `--keep` skips the reset, `--no-apps` only prepares the database | ✅ admin served the health page, Metro served the Android bundle |
 | `pnpm db:start` / `pnpm db:stop` | local Supabase stack incl. Mailpit; `VRTICOS_DOCKERHUB=1` switches the image registry | ✅ |
 | `pnpm db:reset` | drop + all migrations + `supabase/seed.sql` (refuses linked/remote targets) | ✅ from zero |
-| `pnpm db:test` | pgTAP: `supabase/tests/database/*.test.sql` (catalog checks + tenant isolation) | ✅ 56/56 |
+| `pnpm db:test` | pgTAP: `supabase/tests/database/*.test.sql` (catalog checks, tenant isolation, staff assignments, invitations) | ✅ 105/105 (D1) |
 | `pnpm db:spike` | Phase 3 RLS spike in a throw-away database | ✅ 14/14 |
 | `pnpm db:types` | regenerates `packages/db-types/src/database.ts` (deterministic; CI diffs it) | ✅ |
 | `pnpm seed:generate` | regenerates `supabase/seed.sql` and `docs/architecture/demo-accounts.md` | ✅ deterministic |
 | `pnpm design:sync` | regenerates `DESIGN.md` frontmatter and `design/prototype/tokens.css` from `packages/tokens` | ✅ |
-| `pnpm lint` / `pnpm typecheck` / `pnpm test` | ESLint (boundary rules), `tsc` per package, Vitest | ✅ |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` | ESLint (boundary rules; `supabase/**` excluded), `tsc` per package (admin runs `next typegen` first), Vitest in packages and `apps/mobile` | ✅ |
+| `pnpm --filter @vrticos/mobile test` | mobile Vitest only (pure presentation rules; no component render tests yet) | ✅ |
+| `pnpm --filter @vrticos/mobile export` | production JS bundles for iOS and Android into `apps/mobile/dist` | ✅ |
 | `pnpm dev:admin` / `pnpm dev:mobile` | individual dev servers | ✅ |
 
-Edge Functions (`functions:serve`) arrive with D1 (invitations).
+Edge Functions (`invite-member`, `accept-invitations`) are served automatically by `pnpm db:start` / `supabase start`
+(Edge Runtime container, `verify_jwt` on); there is no separate `functions:serve` script. They are not linted or
+type-checked yet (risk R-47); the integration tests exercise them.
 
 ## 4a. D1 test commands
+- R-49 (passwords disabled): `pnpm db:test` runs `supabase/tests/database/03_auth_password_policy.test.sql` (19 checks:
+  trigger, grants, hook decisions); `pnpm test:integration` runs `tests/integration/src/auth-password.test.ts` (7 tests:
+  T3 set password, T4 password sign-in, T6 weak/strong passwords, T7 educator, managers at AAL2, refresh of a code session,
+  recovery flow). Local result 2026-11-11: pgTAP 124/124, integration 27/27 (twice), admin e2e 8/8.
 - `pnpm test:integration` — Edge Functions, e-mail codes from Mailpit, TOTP MFA, RLS through the API (needs `pnpm db:start`).
 - `pnpm --filter @vrticos/integration-tests run e2e` — Playwright against a running admin (`ADMIN_URL`, default
   `http://localhost:3000`; build and `pnpm --filter @vrticos/admin start` first). Each run creates its own synthetic kindergarten.
@@ -84,12 +119,15 @@ Edge Functions (`functions:serve`) arrive with D1 (invitations).
 
 ## 5. Demo for a kindergarten (laptop + phones)
 1. Laptop runs `pnpm demo`; phones join the same Wi-Fi (or the laptop's hotspot); mobile app points to the laptop LAN IP.
-2. Synthetic seed (D0): kindergartens **"Vrtić Alfa (demo)"** and **"Vrtić Beta (demo)"**, 3 facilities, 6 groups,
-   academic year 2026./2027., 29 fictional people (platform admin, managers, educators, guardians, one guardian in
-   both kindergartens). Children, attendance and messages are added to the generator with D2–D4. Accounts:
-   [demo-accounts.md](demo-accounts.md).
-3. Demo accounts use the reserved `.test` domain (e.g. `odgojiteljica.s1@demo.vrtic.test`) so mail can never be
-   delivered; OTP codes are read from Mailpit. Manager accounts enroll TOTP on first login (shows the MFA story).
+2. Synthetic seed (after D1): kindergartens **"Vrtić Alfa (demo)"** and **"Vrtić Beta (demo)"**, 3 facilities, 6 groups,
+   academic year 2026./2027., 29 fictional people (platform admin, managers, a director, educators, guardians, one
+   guardian in both kindergartens), 6 regular staff assignments + 1 approved substitute relative to the load date, and
+   3 invitations in Vrtić Alfa (pending, expired, revoked). Guardians have no children yet — children, attendance and
+   messages are added with D2–D4. Accounts: [demo-accounts.md](demo-accounts.md).
+3. Demo accounts use the reserved `.test` domain (e.g. `odgojitelj.alfa.1@demo.vrtic.test`) so mail can never be
+   delivered; sign-in codes are read from Mailpit (`http://127.0.0.1:54324`). Manager accounts enrol TOTP on first
+   admin sign-in (shows the MFA story); an authenticator app is needed for that step.
+   The Parent Home design preview is available only in a development build at `vrticos://dev/parent-home`.
 4. A banner "DEMO: izmišljeni podaci" is shown in both apps when `APP_ENV=demo`.
 5. After the presentation: `pnpm db:reset` restores the seed.
 

@@ -1,6 +1,7 @@
 # ADR-0016: Toolchain versions for the demo build (TypeScript 6, pnpm 12, Expo SDK 58)
 
-- Status: Proposed — **non-blocking for the demo** (no cost, reversible); taken autonomously under the owner's
+- Status: **Accepted for the local demo** — owner decision D-23 in the D1 brief (2026-11-11): „D-23: zadržati postojeći
+  tehnološki stack.” Production use is re-confirmed before staging. Originally taken autonomously under the owner's
   2026-11-11 instruction "if a tool version is incompatible, choose a stable alternative and record an ADR"
 - Date: 2026-11-11
 - Related: R-39, technical-architecture.md §3, ADR-0002, ADR-0015
