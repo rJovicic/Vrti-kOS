@@ -129,6 +129,85 @@ describe('admin app (browser)', () => {
     await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Pozivnica je opozvana.');
   });
 
+  it('D2-G: child record — enrol, guardian with rights, invitation, pickup person, restriction, transfer, withdrawal', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    await page.goto(`${ADMIN}/${slug}/children`);
+    await page.locator('input[name=firstName]').fill('Lana');
+    await page.locator('input[name=lastName]').fill('Testić');
+    await page.locator('input[name=internalRef]').fill('E2E-1');
+    await submit(page, page.getByRole('button', { name: 'Dodaj dijete' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Spremljeno.');
+    await expect(page.getByRole('heading', { name: 'Lana Testić' }).isVisible()).resolves.toBe(true);
+    const childUrl = page.url().split('?')[0]!;
+
+    // Enrolment into the new group.
+    await page.locator('summary', { hasText: 'Upiši u skupinu' }).click();
+    await page.locator('form:has(input[name=from]) select[name=groupId]').selectOption({ label: 'Dupini' });
+    await page.locator('form:has(select[name=groupId]) input[name=from]').fill('2026-09-01');
+    await submit(page, page.getByRole('button', { name: 'Upiši u skupinu' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Dijete je upisano u skupinu.');
+    await expect(page.locator('.page-header .lede').textContent()).resolves.toContain('Dupini');
+
+    // A new guardian with rights; without the right to view no other right is allowed (database and form).
+    await page.locator('summary', { hasText: 'Dodaj skrbnika' }).click();
+    await page.getByLabel('Ime novog skrbnika', { exact: true }).fill('Ivana');
+    await page.getByLabel('Prezime novog skrbnika').fill('Testić');
+    await submit(page, page.getByRole('button', { name: 'Poveži skrbnika' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Skrbnik je povezan s djetetom.');
+    await expect(page.getByRole('row', { name: /Ivana Testić/ }).textContent()).resolves.toContain('Bez računa');
+
+    // Invitation from the child record (D2-F); the notice holds no link and no child data.
+    const to = email('e2e-roditelj');
+    const before = Date.now() - 1000;
+    await page.locator('summary', { hasText: 'Upravljanje vezom: Ivana Testić' }).click();
+    await page.getByLabel('E-adresa skrbnika').fill(to);
+    await submit(page, page.getByRole('button', { name: 'Pošalji pozivnicu' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Pozivnica je poslana.');
+    const notice = await latestMail(to, 'pozivnica', before);
+    expect(notice?.text).not.toMatch(/https?:\/\/|Lana/);
+    await expect(page.getByRole('row', { name: /Ivana Testić/ }).textContent()).resolves.toContain('Pozivnica poslana');
+
+    // Pickup person: names and validity only.
+    await page.locator('summary', { hasText: 'Dodaj ovlaštenu osobu' }).click();
+    await page.locator('form:has(input[name=to]) input[name=firstName]').fill('Mara');
+    await page.locator('form:has(input[name=to]) input[name=lastName]').fill('Baka');
+    await submit(page, page.getByRole('button', { name: 'Dodaj', exact: true }));
+    await expect(page.locator('.row', { hasText: 'Mara Baka' }).isVisible()).resolves.toBe(true);
+
+    // Restriction: refused without the confirmation (validation), saved with it; the row then shows no access.
+    await page.locator('summary', { hasText: 'Upravljanje vezom: Ivana Testić' }).click();
+    await page.getByLabel('Interna oznaka predmeta (neobavezno)').fill('E2E-117');
+    await page.getByLabel('Potvrđujem ograničenje pristupa').check();
+    await submit(page, page.getByRole('button', { name: 'Ograniči pristup' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Ograničenje pristupa je spremljeno.');
+    const row = await page.getByRole('row', { name: /Ivana Testić/ }).textContent();
+    expect(row).toContain('Bez pristupa');
+    expect(row).toContain('E2E-117');
+
+    // Transfer from today into the kindergarten's other group; a date in the past is refused by the database (D-36).
+    await page.locator('summary', { hasText: 'Premjesti u drugu skupinu' }).click();
+    await page.locator('form:has(input[name=effectiveOn]) select[name=groupId]').selectOption({ label: 'Galebovi' });
+    await page.locator('input[name=effectiveOn]').evaluate((el) => (el as { removeAttribute(n: string): void }).removeAttribute('min'));
+    await page.locator('input[name=effectiveOn]').fill('2020-01-01');
+    await submit(page, page.getByRole('button', { name: 'Premjesti', exact: true }));
+    await expect(page.locator('.flash.error').textContent()).resolves.toContain('prošlosti');
+    await page.locator('summary', { hasText: 'Premjesti u drugu skupinu' }).click();
+    await page.locator('form:has(input[name=effectiveOn]) select[name=groupId]').selectOption({ label: 'Galebovi' });
+    await page.locator('input[name=effectiveOn]').fill(today);
+    await submit(page, page.getByRole('button', { name: 'Premjesti', exact: true }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Premještaj je spremljen.');
+    await expect(page.locator('.page-header .lede').textContent()).resolves.toContain('Galebovi');
+
+    // Withdrawal needs the explicit confirmation; afterwards the record is read-only.
+    await page.locator('summary', { hasText: 'Ispis' }).click();
+    await page.getByLabel('Razumijem posljedice ispisa').check();
+    await submit(page, page.getByRole('button', { name: 'Ispiši dijete' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Dijete je ispisano.');
+    await page.goto(childUrl);
+    await expect(page.locator('.page-header .lede').textContent()).resolves.toContain('Ispisano');
+    await expect(page.locator('summary', { hasText: 'Dodaj skrbnika' }).count()).resolves.toBe(0);
+  });
+
   it('another kindergarten’s URL is not found (NEG-01, no existence leak)', async () => {
     const res = await page.goto(`${ADMIN}/alfa-demo/staff`);
     expect(res!.status()).toBe(404);

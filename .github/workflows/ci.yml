@@ -74,7 +74,7 @@ jobs:
           KEY=$(node scripts/supabase.mjs status -o json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s.slice(s.indexOf('{'))).PUBLISHABLE_KEY))")
           printf 'NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321\nNEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\nNEXT_PUBLIC_APP_ENV=demo\n' "$KEY" > apps/admin/.env.local
           pnpm --filter @vrticos/admin build
-      - name: admin e2e — sign-in, MFA, structure, staff, invitations (Playwright)
+      - name: admin e2e — sign-in, MFA, structure, staff, invitations, children and guardians (Playwright)
         run: |
           pnpm --filter @vrticos/integration-tests exec playwright install --with-deps chromium
           (pnpm --filter @vrticos/admin start > admin.log 2>&1 &)

@@ -129,6 +129,12 @@ isOneToOne: false
       foreignKeyName: "child_guardians_organization_id_guardian_id_fkey"
       columns: ["organization_id","guardian_id"]
 isOneToOne: false
+      referencedRelation: "guardian_directory"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "child_guardians_organization_id_guardian_id_fkey"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
       referencedRelation: "guardians"
       referencedColumns: ["organization_id","id"]
     }
@@ -305,6 +311,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "invitations_guardian_fk"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
+      referencedRelation: "guardian_directory"
+      referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "invitations_guardian_fk"
       columns: ["organization_id","guardian_id"]
@@ -538,8 +550,34 @@ isOneToOne: false
       foreignKeyName: "child_guardians_organization_id_guardian_id_fkey"
       columns: ["organization_id","guardian_id"]
 isOneToOne: false
+      referencedRelation: "guardian_directory"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "child_guardians_organization_id_guardian_id_fkey"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
       referencedRelation: "guardians"
       referencedColumns: ["organization_id","id"]
+    }
+                  ]
+                },"guardian_directory": {
+                  Row: {
+                    "first_name": string,"has_account": boolean | null,"id": string,"last_name": string,"organization_id": string,"status": Database["public"]['Enums']["guardian_status"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "first_name"?: string | null,"has_account"?: never,"id"?: string | null,"last_name"?: string | null,"organization_id"?: string | null,"status"?: Database["public"]['Enums']["guardian_status"] | null
+                         }
+                        Update: {
+                           "first_name"?: string | null,"has_account"?: never,"id"?: string | null,"last_name"?: string | null,"organization_id"?: string | null,"status"?: Database["public"]['Enums']["guardian_status"] | null
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "guardians_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
     }
                   ]
                 }

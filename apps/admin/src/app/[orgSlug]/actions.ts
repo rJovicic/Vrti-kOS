@@ -5,7 +5,6 @@
 import { toDateRange } from '@vrticos/domain';
 import {
   fromPostgrestError,
-  isErrorCode,
   zAcademicYearInput,
   zAcademicYearStatusInput,
   zAssignmentInput,
@@ -20,7 +19,7 @@ import type { Route } from 'next';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getOrgContext, type OrgContext } from '@/lib/dal';
-import { env } from '@/lib/env';
+import { callInviteMember } from '@/lib/invite';
 import type { FlashError, FlashOk } from '@/lib/flash';
 
 type Section = 'facilities' | 'academic-years' | 'groups' | 'staff' | 'invitations';
@@ -193,34 +192,9 @@ export async function inviteMember(formData: FormData) {
   });
   // Guardian invitations belong to the child record (FR-01-1, D2); the database also limits org_admin invites.
   if (!parsed.success || parsed.data.role === 'guardian') fail(ctx, 'invitations', 'VALIDATION_FAILED');
-  const { data: session } = await ctx.supabase.auth.getSession();
-  const token = session.session?.access_token;
-  if (!token) redirect('/sign-in');
-  const correlationId = crypto.randomUUID();
-  let status = 0;
-  let code: string | undefined;
-  try {
-    const res = await fetch(`${env.supabaseUrl}/functions/v1/invite-member`, {
-      method: 'POST',
-      headers: {
-        apikey: env.supabasePublishableKey,
-        authorization: `Bearer ${token}`,
-        'content-type': 'application/json',
-        'x-correlation-id': correlationId,
-      },
-      body: JSON.stringify(parsed.data),
-      cache: 'no-store',
-    });
-    status = res.status;
-    code = ((await res.json().catch(() => null)) as { error?: { code?: string } } | null)?.error?.code;
-  } catch {
-    // network failure: falls through to INTERNAL with the correlation id
-  }
-  if (status === 201) done(ctx, 'invitations', 'invited');
-  if (status === 401) redirect('/sign-in');
-  // Any catalogued code is shown with its own message (D1-13); unknown answers become INTERNAL with the reference.
-  if (isErrorCode(code) && code !== 'INTERNAL') fail(ctx, 'invitations', code);
-  fail(ctx, 'invitations', 'INTERNAL', correlationId);
+  const failure = await callInviteMember(ctx, parsed.data);
+  if (!failure) done(ctx, 'invitations', 'invited');
+  fail(ctx, 'invitations', failure.code, failure.ref);
 }
 
 export async function revokeInvitation(formData: FormData) {

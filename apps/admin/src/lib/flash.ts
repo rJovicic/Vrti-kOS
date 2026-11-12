@@ -2,7 +2,7 @@ import { type ErrorCode, errorCodes, errorMessageKey } from '@vrticos/validation
 import { t } from '@/lib/i18n';
 
 // Messages travel as allow-listed keys in the query string (never free text, never personal data).
-const okKeys = ['saved', 'invited', 'revoked', 'suspended', 'reactivated', 'ended'] as const;
+const okKeys = ['saved', 'invited', 'revoked', 'suspended', 'reactivated', 'ended', 'enrolled', 'transferred', 'withdrawn', 'cancelled', 'linked', 'restricted', 'closed'] as const;
 // Error flashes are exactly the central catalog (D1-13): every code has the message key `errors.<CODE>`.
 export type FlashError = ErrorCode;
 export type FlashOk = (typeof okKeys)[number];
