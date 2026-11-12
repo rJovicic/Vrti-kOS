@@ -178,3 +178,4 @@ pojavi nakon releasea tretira se kao potencijalni incident (vidi [incident-respo
 | Mutation check | weakening `facilities_select` to `USING (true)` made 4 tests fail | ✅ tests are not vacuous |
 | NEG-03…08, NEG-12, NEG-14; generated permission matrix (ST-RLS-01) | — | ⏳ with D1–D4 tables |
 | D2-A children and enrolments (46 assertions: NEG-01, NEG-07, NEG-08, NEG-09, NEG-10; guardians see nothing before D2-B; immutable columns; audit) | `supabase/tests/database/09_children_enrollments.test.sql`, `tests/integration/src/children.test.ts` | ✅ 2026-11-12 |
+| D2-B guardians and links (50 assertions: NEG-01, NEG-03, NEG-04, NEG-06, NEG-09, NEG-10, NEG-11; D-31 educator visibility incl. column grants; D-32; membership without link) | `supabase/tests/database/10_guardians.test.sql`, `tests/integration/src/guardians.test.ts` | ✅ 2026-11-12 |

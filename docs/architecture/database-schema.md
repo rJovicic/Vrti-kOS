@@ -172,20 +172,27 @@ grant), `created_at`.
   write only names and `internal_ref`; `status`/`withdrawn_on` change only through `api.withdraw_child` (D2-E).
   `enrollments`: educators see only enrolments valid today in their groups; clients may change only `valid_during`.
 
-### 5.8 `guardians`
+### 5.8 `guardians` — implemented in D2-B (`20261112102000_guardians.sql`)
 `id`, `organization_id`, `profile_id null`, `first_name`, `last_name`, `status` (`active|ended`), `created_by`, `created_at`.
 **No email or phone** — the address used for invitations lives only in `invitations` (and in `auth.users` after acceptance); educators therefore never see contact data (data minimization).
 - **FK** `profile_id → profiles` RESTRICT · **UQ** `(organization_id, id)`; `(organization_id, profile_id) where profile_id is not null`
 - **RLS** S: manager; own record (`profile_id = auth.uid()`); educators for guardians linked to `educator_child_ids()` (handover list, FR-05-3) · I/U: manager · D: none
 - **Sens.** R2
+- **As implemented (D2-B):** own record = `own_guardian_ids()` (active record + active guardian membership today). Column
+  grants: clients read only `id, organization_id, first_name, last_name, status, created_at, updated_at` (D-31);
+  `profile_id` is set only server-side (acceptance, D2-F). Status `active|ended`.
 
-### 5.9 `child_guardians`
+### 5.9 `child_guardians` — implemented in D2-B (`20261112102000_guardians.sql`)
 `id`, `organization_id`, `child_id`, `guardian_id`, `can_view`, `can_report_absence`, `receives_messages` (bool), `valid_during`, `created_by`, `created_at`.
 - **FK** `(organization_id, child_id) → children`, `(organization_id, guardian_id) → guardians` RESTRICT
 - **UQ** `(organization_id, id)`; **EXCLUDE** `(child_id with =, guardian_id with =, valid_during with &&)`
 - **IX** `(guardian_id)`, `(child_id)`
 - **RLS** S: manager; guardian's own rows; educators for `educator_child_ids()` (flags only, needed for handover) · I/U: manager · D: none (end via `valid_during`)
 - **Sens.** R3
+- **As implemented (D2-B):** check `can_view or not (can_report_absence or receives_messages)`; guardians see only their
+  own links valid today; `private.guardian_child_ids(flag)` (link valid today + right; unknown right → nothing) also
+  extends `children`, `enrollments` (current only) and `groups` (current group) select policies. No enrolment needed
+  (D-32). An accepted invitation or a guardian membership alone gives no child.
 
 ### 5.10 `access_restrictions`
 `id`, `organization_id`, `child_guardian_id`, `scope` (`full`; more scopes later), `valid_during`, `reference` (≤100, internal case reference — **no reason, no court text**), `created_by`, `created_at`.
