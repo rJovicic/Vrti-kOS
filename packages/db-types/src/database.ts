@@ -15,6 +15,9 @@ export type Database = {
 { Args: { "p_email": string,"p_user_id": string }; Returns: {
               "invitation_id": string,"organization_id": string,"role": Database["public"]['Enums']["org_role"]
             }[]
+                           },
+"record_audit_event":
+{ Args: { "p_action": string,"p_actor_id": string,"p_organization_id": string,"p_outcome": string,"p_reason": string,"p_target_table": string }; Returns: undefined
                            }
           }
           Enums: {
@@ -39,26 +42,6 @@ export type Database = {
                   Relationships: [
                     {
       foreignKeyName: "academic_years_organization_id_fkey"
-      columns: ["organization_id"]
-isOneToOne: false
-      referencedRelation: "organizations"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"audit_events": {
-                  Row: {
-                    "action": string,"actor_id": string | null,"correlation_id": string | null,"details": NonNullable<Json>,"id": number,"occurred_at": string,"organization_id": string | null,"outcome": string,"target_id": string | null,"target_table": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "action": string,"actor_id"?: string | null,"correlation_id"?: string | null,"details"?: NonNullable<Json>,"id"?: never,"occurred_at"?: string,"organization_id"?: string | null,"outcome"?: string,"target_id"?: string | null,"target_table": string
-                  }
-                  Update: {
-                    "action"?: string,"actor_id"?: string | null,"correlation_id"?: string | null,"details"?: NonNullable<Json>,"id"?: never,"occurred_at"?: string,"organization_id"?: string | null,"outcome"?: string,"target_id"?: string | null,"target_table"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "audit_events_organization_id_fkey"
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
@@ -189,14 +172,14 @@ isOneToOne: false
                   ]
                 },"organizations": {
                   Row: {
-                    "absence_cutoff_local": string | null,"created_at": string,"id": string,"locale": string,"name": string,"privacy_notice_version": string | null,"quiet_hours_end": string,"quiet_hours_start": string,"slug": string,"status": string,"timezone": string,"updated_at": string
+                    "absence_cutoff_local": string | null,"created_at": string,"id": string,"invitation_limit_per_hour": number,"locale": string,"name": string,"privacy_notice_version": string | null,"quiet_hours_end": string,"quiet_hours_start": string,"slug": string,"status": string,"timezone": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "absence_cutoff_local"?: string | null,"created_at"?: string,"id"?: string,"locale"?: string,"name": string,"privacy_notice_version"?: string | null,"quiet_hours_end"?: string,"quiet_hours_start"?: string,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string
+                    "absence_cutoff_local"?: string | null,"created_at"?: string,"id"?: string,"invitation_limit_per_hour"?: number,"locale"?: string,"name": string,"privacy_notice_version"?: string | null,"quiet_hours_end"?: string,"quiet_hours_start"?: string,"slug": string,"status"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "absence_cutoff_local"?: string | null,"created_at"?: string,"id"?: string,"locale"?: string,"name"?: string,"privacy_notice_version"?: string | null,"quiet_hours_end"?: string,"quiet_hours_start"?: string,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string
+                    "absence_cutoff_local"?: string | null,"created_at"?: string,"id"?: string,"invitation_limit_per_hour"?: number,"locale"?: string,"name"?: string,"privacy_notice_version"?: string | null,"quiet_hours_end"?: string,"quiet_hours_start"?: string,"slug"?: string,"status"?: string,"timezone"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -262,7 +245,27 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "audit_events": {
+                  Row: {
+                    "action": string,"actor_id": string | null,"actor_role": string,"correlation_id": string | null,"details": NonNullable<Json>,"id": number,"occurred_at": string,"organization_id": string | null,"outcome": string,"target_id": string | null,"target_table": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                           "action"?: string | null,"actor_id"?: string | null,"actor_role"?: string | null,"correlation_id"?: string | null,"details"?: Json | null,"id"?: number | null,"occurred_at"?: string | null,"organization_id"?: string | null,"outcome"?: string | null,"target_id"?: string | null,"target_table"?: string | null
+                         }
+                        Update: {
+                           "action"?: string | null,"actor_id"?: string | null,"actor_role"?: string | null,"correlation_id"?: string | null,"details"?: Json | null,"id"?: number | null,"occurred_at"?: string | null,"organization_id"?: string | null,"outcome"?: string | null,"target_id"?: string | null,"target_table"?: string | null
+                         }
+                        Relationships: [
+                    {
+      foreignKeyName: "audit_events_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             [_ in never]: never

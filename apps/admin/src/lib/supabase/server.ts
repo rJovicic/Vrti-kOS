@@ -9,6 +9,8 @@ export async function createClient() {
   const cookieStore = await cookies();
   return createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
     cookieOptions: sessionCookieOptions,
+    // One correlation id per server request, stored by the audit trigger with every row it writes (R-51).
+    global: { headers: { 'x-correlation-id': crypto.randomUUID() } },
     cookies: {
       getAll() {
         return cookieStore.getAll();
