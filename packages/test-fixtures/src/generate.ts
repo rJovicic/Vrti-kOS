@@ -46,9 +46,15 @@ writeFileSync(
     'of child 1 (without the right to report absences); `roditelj.alfa.1` also has the child without a group; `roditelj.oba`',
     'has one child in each kindergarten (one guardian record per kindergarten). Tea Blažević is entered without an account.',
     '',
+    '## Pickup authorizations (D2-D)',
+    '',
+    `${world.pickupAuthorizations.length} fictional persons authorized to pick up a child (name only, valid since 2026-09-01): two for child 1`,
+    'of Alfa, one for child 2 of Alfa, one for child 1 of Beta. Only managers maintain the list; guardians and the',
+    'educator of the group read it.',
+    '',
     'Only the pending invitation can be accepted: sign in as that address after an invite was sent through the',
     'admin app (the seed does not create Auth accounts for invited people).',
     '',
   ].join('\n'),
 );
-console.log(`seed: ${world.orgs.length} organizations, ${world.people.length} people, ${world.assignments.length} assignments, ${world.invitations.length} invitations, ${world.children.length} children, ${world.guardians.length} guardians, ${world.guardianLinks.length} guardian links`);
+console.log(`seed: ${world.orgs.length} organizations, ${world.people.length} people, ${world.assignments.length} assignments, ${world.invitations.length} invitations, ${world.children.length} children, ${world.guardians.length} guardians, ${world.guardianLinks.length} guardian links, ${world.pickupAuthorizations.length} pickup authorizations`);

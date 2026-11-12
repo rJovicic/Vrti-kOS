@@ -95,6 +95,15 @@ export interface GuardianLink {
   receivesMessages: boolean;
 }
 
+/** A person authorized to pick up a child (D2-D): name and validity only, no account, no contact data. */
+export interface PickupAuthorization {
+  id: string;
+  orgKey: OrgKey;
+  childId: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface World {
   orgs: Org[];
   people: Person[];
@@ -103,6 +112,7 @@ export interface World {
   children: Child[];
   guardians: Guardian[];
   guardianLinks: GuardianLink[];
+  pickupAuthorizations: PickupAuthorization[];
 }
 
 /** Builds the synthetic demo world (kindergartens Alfa and Beta). Same seed → same world. */
@@ -233,5 +243,14 @@ export function buildWorld(seed = 20261111): World {
   const noAccount: Guardian = { id: r.uuid(), orgKey: 'alfa', profileId: null, firstName: 'Tea', lastName: 'Blažević' };
   guardians.push(noAccount);
   link(noAccount, alfaChildren[1]!.id, { canReportAbsence: false, receivesMessages: false });
-  return { orgs, people, assignments, invitations, children, guardians, guardianLinks };
+  // D2-D additions — generated last. Persons authorized to pick up child 1 (two persons), child 2 and the first Beta child.
+  const betaChildren = children.filter((c) => c.orgKey === 'beta');
+  const pickupAuthorizations: PickupAuthorization[] = [];
+  const authorize = (child: Child, firstName: string, lastName: string) =>
+    pickupAuthorizations.push({ id: r.uuid(), orgKey: child.orgKey, childId: child.id, firstName, lastName });
+  authorize(alfaChildren[0]!, 'Marija', 'Kos');
+  authorize(alfaChildren[0]!, 'Ivan', 'Kos');
+  authorize(alfaChildren[1]!, 'Vesna', 'Radola');
+  authorize(betaChildren[0]!, 'Petra', 'Mogorović');
+  return { orgs, people, assignments, invitations, children, guardians, guardianLinks, pickupAuthorizations };
 }

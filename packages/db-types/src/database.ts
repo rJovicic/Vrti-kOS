@@ -362,6 +362,38 @@ isOneToOne: false
       referencedColumns: ["organization_id","version"]
     }
                   ]
+                },"pickup_authorizations": {
+                  Row: {
+                    "child_id": string,"created_at": string,"created_by": string | null,"first_name": string,"id": string,"last_name": string,"organization_id": string,"updated_at": string,"valid_during": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "child_id": string,"created_at"?: string,"created_by"?: string | null,"first_name": string,"id"?: string,"last_name": string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
+                  }
+                  Update: {
+                    "child_id"?: string,"created_at"?: string,"created_by"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "pickup_authorizations_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "pickup_authorizations_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "pickup_authorizations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"privacy_notices": {
                   Row: {
                     "body": string,"created_at": string,"id": string,"is_demo": boolean,"organization_id": string,"title": string,"version": string

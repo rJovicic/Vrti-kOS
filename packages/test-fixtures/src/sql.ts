@@ -69,6 +69,11 @@ export function toSeedSql(world: World): string {
       `insert into public.child_guardians (id, organization_id, child_id, guardian_id, can_view, can_report_absence, receives_messages, valid_during, created_by) values (${q(l.id)}, ${q(orgId(l.orgKey))}, ${q(l.childId)}, ${q(l.guardianId)}, ${l.canView}, ${l.canReportAbsence}, ${l.receivesMessages}, daterange('2026-09-01', null), null);`,
     );
   }
+  for (const a of world.pickupAuthorizations) {
+    out.push(
+      `insert into public.pickup_authorizations (id, organization_id, child_id, first_name, last_name, valid_during, created_by) values (${q(a.id)}, ${q(orgId(a.orgKey))}, ${q(a.childId)}, ${q(a.firstName)}, ${q(a.lastName)}, daterange('2026-09-01', null), null);`,
+    );
+  }
   out.push('commit;', '');
   return out.join('\n');
 }

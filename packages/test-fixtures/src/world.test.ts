@@ -66,4 +66,12 @@ describe('synthetic world', () => {
     expect(w.people.some((p) => p.memberships.length === 2)).toBe(true);
     expect(w.people.filter((p) => p.platformAdmin)).toHaveLength(1);
   });
+  it('pickup authorizations belong to a child of the same kindergarten and carry names only', () => {
+    const w = buildWorld();
+    expect(w.pickupAuthorizations.length).toBeGreaterThan(0);
+    for (const a of w.pickupAuthorizations) {
+      expect(w.children.find((c) => c.id === a.childId)!.orgKey).toBe(a.orgKey);
+      expect(Object.keys(a).sort()).toEqual(['childId', 'firstName', 'id', 'lastName', 'orgKey']);
+    }
+  });
 });
