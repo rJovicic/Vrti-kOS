@@ -71,13 +71,19 @@ export const claims = (jwt: string): Record<string, unknown> =>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test assertions inspect arbitrary response JSON
 type AnyJson = any;
 
-export async function callFunction(name: string, token: string | null, body?: unknown): Promise<{ status: number; json: AnyJson }> {
+export async function callFunction(
+  name: string,
+  token: string | null,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<{ status: number; json: AnyJson }> {
   const res = await fetch(`${stack.API_URL}/functions/v1/${name}`, {
     method: 'POST',
     headers: {
       apikey: stack.PUBLISHABLE_KEY,
       'content-type': 'application/json',
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...headers,
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
