@@ -67,11 +67,32 @@ export interface Invitation {
 /** Synthetic child (D2-A): fictional name, enrolled in one group since the start of the academic year. */
 export interface Child {
   id: string;
-  enrollmentId: string;
+  /** null: linked to a guardian but not enrolled in a group yet (D-32). */
+  enrollmentId: string | null;
   orgKey: OrgKey;
-  groupId: string;
+  groupId: string | null;
   firstName: string;
   lastName: string;
+}
+
+/** Synthetic guardian record (D2-B); `profileId` null = no account yet. */
+export interface Guardian {
+  id: string;
+  orgKey: OrgKey;
+  profileId: string | null;
+  firstName: string;
+  lastName: string;
+}
+
+/** Guardian–child link with rights per link (D2-B). */
+export interface GuardianLink {
+  id: string;
+  orgKey: OrgKey;
+  childId: string;
+  guardianId: string;
+  canView: boolean;
+  canReportAbsence: boolean;
+  receivesMessages: boolean;
 }
 
 export interface World {
@@ -80,6 +101,8 @@ export interface World {
   assignments: Assignment[];
   invitations: Invitation[];
   children: Child[];
+  guardians: Guardian[];
+  guardianLinks: GuardianLink[];
 }
 
 /** Builds the synthetic demo world (kindergartens Alfa and Beta). Same seed → same world. */
@@ -178,5 +201,37 @@ export function buildWorld(seed = 20261111): World {
       }
     }
   }
-  return { orgs, people, assignments, invitations, children };
+  // D2-B additions — generated last so every earlier id stays stable.
+  // One child linked to a guardian but not enrolled in any group yet (D-32).
+  children.push({ id: r.uuid(), enrollmentId: null, orgKey: 'alfa', groupId: null, firstName: 'Nika', lastName: 'Zgrablić' });
+  const guardians: Guardian[] = [];
+  const guardianLinks: GuardianLink[] = [];
+  const guardianFor = (p: Person, orgKey: OrgKey): Guardian => {
+    const existing = guardians.find((g) => g.profileId === p.id && g.orgKey === orgKey);
+    if (existing) return existing;
+    const g: Guardian = { id: r.uuid(), orgKey, profileId: p.id, firstName: p.firstName, lastName: p.lastName };
+    guardians.push(g);
+    return g;
+  };
+  const link = (g: Guardian, childId: string, rights: Partial<Pick<GuardianLink, 'canReportAbsence' | 'receivesMessages'>> = {}) =>
+    guardianLinks.push({ id: r.uuid(), orgKey: g.orgKey, childId, guardianId: g.id, canView: true, canReportAbsence: true, receivesMessages: true, ...rights });
+  const parent = (local: string) => people.find((p) => p.email === `${local}@${EMAIL_DOMAIN}`)!;
+  for (const org of orgs) {
+    const own = children.filter((c) => c.orgKey === org.key && c.groupId !== null);
+    const count = org.key === 'alfa' ? 12 : 6;
+    for (let i = 1; i <= count; i++) link(guardianFor(parent(`roditelj.${org.key}.${i}`), org.key), own[i - 1]!.id);
+  }
+  const alfaChildren = children.filter((c) => c.orgKey === 'alfa');
+  // Several guardians per child: roditelj.alfa.2 is also a guardian of child 1, without the right to report absences.
+  link(guardianFor(parent('roditelj.alfa.2'), 'alfa'), alfaChildren[0]!.id, { canReportAbsence: false });
+  // Several children per guardian: roditelj.alfa.1 also has the child without a group (D-32).
+  link(guardianFor(parent('roditelj.alfa.1'), 'alfa'), alfaChildren.find((c) => c.groupId === null)!.id);
+  // A guardian in both kindergartens (one record per kindergarten, same account).
+  link(guardianFor(parent('roditelj.oba'), 'alfa'), alfaChildren[13]!.id);
+  link(guardianFor(parent('roditelj.oba'), 'beta'), children.filter((c) => c.orgKey === 'beta')[6]!.id);
+  // A guardian entered by the kindergarten who has no account yet (invitation in D2-F).
+  const noAccount: Guardian = { id: r.uuid(), orgKey: 'alfa', profileId: null, firstName: 'Tea', lastName: 'Blažević' };
+  guardians.push(noAccount);
+  link(noAccount, alfaChildren[1]!.id, { canReportAbsence: false, receivesMessages: false });
+  return { orgs, people, assignments, invitations, children, guardians, guardianLinks };
 }

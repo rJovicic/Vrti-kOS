@@ -51,7 +51,13 @@ substitute in Sunčice from the day the seed is loaded for five days.
 
 ## Children
 
-30 fictional children, five per group, enrolled since 2026-09-01. Guardians are linked in D2-B.
+31 fictional children: five per group, enrolled since 2026-09-01, and Nika Zgrablić, linked but not enrolled in a group (D-32).
+
+## Guardians
+
+Each `roditelj.<vrtić>.<n>` is the guardian of child n of that kindergarten. `roditelj.alfa.2` is also a second guardian
+of child 1 (without the right to report absences); `roditelj.alfa.1` also has the child without a group; `roditelj.oba`
+has one child in each kindergarten (one guardian record per kindergarten). Tea Blažević is entered without an account.
 
 Only the pending invitation can be accepted: sign in as that address after an invite was sent through the
 admin app (the seed does not create Auth accounts for invited people).

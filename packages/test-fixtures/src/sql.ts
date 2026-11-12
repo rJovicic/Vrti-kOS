@@ -56,9 +56,17 @@ export function toSeedSql(world: World): string {
     );
   }
   for (const c of world.children) {
+    out.push(`insert into public.children (id, organization_id, first_name, last_name, created_by) values (${q(c.id)}, ${q(orgId(c.orgKey))}, ${q(c.firstName)}, ${q(c.lastName)}, null);`);
+    if (c.enrollmentId && c.groupId) {
+      out.push(`insert into public.enrollments (id, organization_id, child_id, group_id, valid_during, created_by) values (${q(c.enrollmentId)}, ${q(orgId(c.orgKey))}, ${q(c.id)}, ${q(c.groupId)}, daterange('2026-09-01', null), null);`);
+    }
+  }
+  for (const g of world.guardians) {
+    out.push(`insert into public.guardians (id, organization_id, profile_id, first_name, last_name, created_by) values (${q(g.id)}, ${q(orgId(g.orgKey))}, ${g.profileId ? q(g.profileId) : 'null'}, ${q(g.firstName)}, ${q(g.lastName)}, null);`);
+  }
+  for (const l of world.guardianLinks) {
     out.push(
-      `insert into public.children (id, organization_id, first_name, last_name, created_by) values (${q(c.id)}, ${q(orgId(c.orgKey))}, ${q(c.firstName)}, ${q(c.lastName)}, null);`,
-      `insert into public.enrollments (id, organization_id, child_id, group_id, valid_during, created_by) values (${q(c.enrollmentId)}, ${q(orgId(c.orgKey))}, ${q(c.id)}, ${q(c.groupId)}, daterange('2026-09-01', null), null);`,
+      `insert into public.child_guardians (id, organization_id, child_id, guardian_id, can_view, can_report_absence, receives_messages, valid_during, created_by) values (${q(l.id)}, ${q(orgId(l.orgKey))}, ${q(l.childId)}, ${q(l.guardianId)}, ${l.canView}, ${l.canReportAbsence}, ${l.receivesMessages}, daterange('2026-09-01', null), null);`,
     );
   }
   out.push('commit;', '');

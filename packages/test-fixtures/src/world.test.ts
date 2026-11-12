@@ -25,9 +25,28 @@ describe('synthetic world', () => {
   });
   it('children are enrolled in a group of their own kindergarten, five per group, with unique names', () => {
     const w = buildWorld();
-    for (const c of w.children) expect(w.orgs.find((o) => o.key === c.orgKey)!.groups.some((g) => g.id === c.groupId)).toBe(true);
-    expect(w.children).toHaveLength(w.orgs.reduce((n, o) => n + o.groups.length, 0) * 5);
+    const enrolled = w.children.filter((c) => c.groupId !== null);
+    for (const c of enrolled) expect(w.orgs.find((o) => o.key === c.orgKey)!.groups.some((g) => g.id === c.groupId)).toBe(true);
+    expect(enrolled).toHaveLength(w.orgs.reduce((n, o) => n + o.groups.length, 0) * 5);
+    expect(w.children.filter((c) => c.groupId === null)).toHaveLength(1);
     expect(new Set(w.children.map((c) => `${c.firstName} ${c.lastName}`)).size).toBe(w.children.length);
+  });
+  it('guardian links stay inside one kindergarten and cover several guardians per child and several children per guardian', () => {
+    const w = buildWorld();
+    for (const l of w.guardianLinks) {
+      expect(w.children.find((c) => c.id === l.childId)!.orgKey).toBe(l.orgKey);
+      expect(w.guardians.find((g) => g.id === l.guardianId)!.orgKey).toBe(l.orgKey);
+    }
+    const perChild = new Map<string, number>();
+    const perGuardian = new Map<string, number>();
+    for (const l of w.guardianLinks) {
+      perChild.set(l.childId, (perChild.get(l.childId) ?? 0) + 1);
+      perGuardian.set(l.guardianId, (perGuardian.get(l.guardianId) ?? 0) + 1);
+    }
+    expect(Math.max(...perChild.values())).toBeGreaterThan(1);
+    expect(Math.max(...perGuardian.values())).toBeGreaterThan(1);
+    expect(w.children.some((c) => c.groupId === null && w.guardianLinks.some((l) => l.childId === c.id))).toBe(true);
+    expect(new Set(w.guardianLinks.map((l) => `${l.childId}:${l.guardianId}`)).size).toBe(w.guardianLinks.length);
   });
   it('assignments never cross kindergartens', () => {
     const w = buildWorld();
