@@ -48,6 +48,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"access_restrictions": {
+                  Row: {
+                    "child_guardian_id": string,"created_at": string,"created_by": string | null,"id": string,"organization_id": string,"reference": string | null,"scope": Database["public"]['Enums']["restriction_scope"],"updated_at": string,"valid_during": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "child_guardian_id": string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id": string,"reference"?: string | null,"scope"?: Database["public"]['Enums']["restriction_scope"],"updated_at"?: string,"valid_during": unknown
+                  }
+                  Update: {
+                    "child_guardian_id"?: string,"created_at"?: string,"created_by"?: string | null,"id"?: string,"organization_id"?: string,"reference"?: string | null,"scope"?: Database["public"]['Enums']["restriction_scope"],"updated_at"?: string,"valid_during"?: unknown
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "access_restrictions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "access_restrictions_organization_id_child_guardian_id_fkey"
+      columns: ["organization_id","child_guardian_id"]
+isOneToOne: false
+      referencedRelation: "child_guardians"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "access_restrictions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"child_guardians": {
                   Row: {
                     "can_report_absence": boolean,"can_view": boolean,"child_id": string,"created_at": string,"created_by": string | null,"guardian_id": string,"id": string,"organization_id": string,"receives_messages": boolean,"updated_at": string,"valid_during": unknown
@@ -431,7 +463,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -551,7 +583,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
           }
         }
 } as const
