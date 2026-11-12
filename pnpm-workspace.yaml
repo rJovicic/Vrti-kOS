@@ -2,5 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tests/*
+allowBuilds:
+  '@parcel/watcher': false
 minimumReleaseAgeExclude:
   - i18next@27.1.1
