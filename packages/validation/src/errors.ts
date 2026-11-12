@@ -24,6 +24,17 @@ export const errorCatalog = {
   MEMBERSHIP_SUSPENDED: { status: 409 },
   /** R-50: the kindergarten reached its invitation limit for the rolling hour. */
   INVITATION_LIMIT_REACHED: { status: 429 },
+  /** D2-E (D-36): transfer/withdrawal dates and enrolment period changes never reach into the past. */
+  EFFECTIVE_DATE_IN_PAST: { status: 400 },
+  HISTORY_IMMUTABLE: { status: 409 },
+  /** D2-E (D-35): nothing about a withdrawn child is valid after its last day; it is not transferred again. */
+  CHILD_WITHDRAWN: { status: 409 },
+  CHILD_NOT_ENROLLED: { status: 409 },
+  TRANSFER_SAME_GROUP: { status: 409 },
+  TRANSFER_ON_ENROLLMENT_START: { status: 409 },
+  GROUP_ARCHIVED: { status: 409 },
+  ENROLLMENT_OVERLAP: { status: 409 },
+  WITHDRAWAL_HAS_FUTURE_RECORDS: { status: 409 },
   RATE_LIMITED: { status: 429 },
   INTERNAL: { status: 500 },
 } as const satisfies Record<string, { status: number }>;
@@ -66,11 +77,31 @@ export const dbErrorCatalog = {
   INVALID_ARGUMENTS: 'VALIDATION_FAILED',
   NOTICE_VERSION_MISMATCH: 'VALIDATION_FAILED',
   MEMBERSHIP_SUSPENDED: 'MEMBERSHIP_SUSPENDED',
+  EFFECTIVE_DATE_IN_PAST: 'EFFECTIVE_DATE_IN_PAST',
+  HISTORY_IMMUTABLE: 'HISTORY_IMMUTABLE',
+  CHILD_WITHDRAWN: 'CHILD_WITHDRAWN',
+  CHILD_NOT_ENROLLED: 'CHILD_NOT_ENROLLED',
+  TRANSFER_SAME_GROUP: 'TRANSFER_SAME_GROUP',
+  TRANSFER_ON_ENROLLMENT_START: 'TRANSFER_ON_ENROLLMENT_START',
+  GROUP_ARCHIVED: 'GROUP_ARCHIVED',
+  ENROLLMENT_OVERLAP: 'ENROLLMENT_OVERLAP',
+  WITHDRAWAL_HAS_FUTURE_RECORDS: 'WITHDRAWAL_HAS_FUTURE_RECORDS',
 } as const satisfies Record<string, ErrorCode>;
 export type DbErrorName = keyof typeof dbErrorCatalog;
 
 /** Database exceptions (errcode P0001) whose name is safe to show: raised only after authorization succeeded. */
-export const exposedDbErrors = ['MEMBERSHIP_SUSPENDED'] as const satisfies readonly DbErrorName[];
+export const exposedDbErrors = [
+  'MEMBERSHIP_SUSPENDED',
+  'EFFECTIVE_DATE_IN_PAST',
+  'HISTORY_IMMUTABLE',
+  'CHILD_WITHDRAWN',
+  'CHILD_NOT_ENROLLED',
+  'TRANSFER_SAME_GROUP',
+  'TRANSFER_ON_ENROLLMENT_START',
+  'GROUP_ARCHIVED',
+  'ENROLLMENT_OVERLAP',
+  'WITHDRAWAL_HAS_FUTURE_RECORDS',
+] as const satisfies readonly DbErrorName[];
 
 export interface ApiError {
   code: ErrorCode;

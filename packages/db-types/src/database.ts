@@ -18,6 +18,12 @@ export type Database = {
                            },
 "record_audit_event":
 { Args: { "p_action": string,"p_actor_id": string,"p_organization_id": string,"p_outcome": string,"p_reason": string,"p_target_table": string }; Returns: undefined
+                           },
+"transfer_child":
+{ Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
+                           },
+"withdraw_child":
+{ Args: { "p_child_id": string,"p_last_day": string }; Returns: undefined
                            }
           }
           Enums: {
