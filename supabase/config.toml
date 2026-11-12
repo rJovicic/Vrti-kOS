@@ -407,11 +407,15 @@ EMAIL_TRANSPORT = "mailpit"
 MAILPIT_URL = "http://supabase_inbucket_vrticos:8025"
 ALLOWED_ORIGINS = "http://localhost:3000"
 
+# One canonical Deno config for all functions (R-47): imports, lint and type checking live in functions/deno.json.
+# The path is relative to this supabase/ directory.
 [functions.invite-member]
 verify_jwt = true
+import_map = "./functions/deno.json"
 
 [functions.accept-invitations]
 verify_jwt = true
+import_map = "./functions/deno.json"
 
 [analytics]
 enabled = false  # not needed locally; keeps the demo stack light

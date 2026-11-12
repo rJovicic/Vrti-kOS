@@ -38,6 +38,15 @@ jobs:
         run: pnpm seed:generate && git diff --exit-code -- supabase/seed.sql docs/architecture/demo-accounts.md
       - name: DESIGN.md frontmatter and prototype tokens match packages/tokens
         run: pnpm design:sync && git diff --exit-code -- DESIGN.md design/prototype/tokens.css
+      # R-47: Edge Functions are outside ESLint/tsc; Deno checks them with the one canonical config
+      # (supabase/functions/deno.json, lockfile frozen). Same Deno version as the local Edge Runtime.
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: 2.1.4
+      - name: Edge Functions — deno check (types)
+        run: pnpm functions:check
+      - name: Edge Functions — deno lint
+        run: pnpm functions:lint
 
   db:
     name: database · migrations · RLS · integration · e2e

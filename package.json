@@ -14,6 +14,8 @@
     "db:stop": "node scripts/supabase.mjs stop",
     "db:reset": "node scripts/guard-local.mjs && node scripts/supabase.mjs db reset",
     "db:test": "node scripts/supabase.mjs test db",
+    "functions:check": "deno check --frozen --config supabase/functions/deno.json supabase/functions/*/index.ts",
+    "functions:lint": "deno lint --config supabase/functions/deno.json supabase/functions",
     "db:types": "node scripts/supabase.mjs gen types typescript --local --schema public --schema api > packages/db-types/src/database.ts",
     "seed:generate": "pnpm --filter @vrticos/test-fixtures run generate",
     "dev:admin": "pnpm --filter @vrticos/admin dev",
