@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { space, type } from '@vrticos/tokens';
 import { zEmailInput, zOtpInput } from '@vrticos/validation';
 import { env } from '../lib/env';
+import { useSession } from '../lib/session';
 import { supabase } from '../lib/supabase';
 import { Button } from '../ui/Button';
 import { Notice } from '../ui/Notice';
@@ -22,6 +23,7 @@ export default function SignIn() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { ended } = useSession();
 
   async function requestCode() {
     const parsed = zEmailInput.safeParse({ email });
@@ -55,7 +57,8 @@ export default function SignIn() {
         headers: { apikey: env.supabasePublishableKey, authorization: `Bearer ${data.session.access_token}` },
       }).catch(() => undefined);
       setCode('');
-      router.replace('/home');
+      // The root guard switches to the signed-in branch; its entry picks the landing tab for the person's role.
+      router.replace('/');
     } finally {
       setBusy(false);
     }
@@ -68,6 +71,7 @@ export default function SignIn() {
           {step === 'email' ? t('auth.signInTitle') : t('auth.codeTitle')}
         </Text>
         <Text style={[styles.lede, { color: c.textSecondary }]}>{step === 'email' ? t('mobile.signInLede') : t('mobile.codeSentTo')}</Text>
+        {ended === 'expired' && step === 'email' && !error ? <Notice title={t('errors.AUTH_SESSION_EXPIRED')} /> : null}
         {error ? <Notice tone="error" title={error} /> : null}
         {step === 'email' ? (
           <>

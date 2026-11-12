@@ -82,6 +82,30 @@ export const hr = {
     loadError: 'Početnu nije moguće učitati.',
     loadErrorHelp: 'Provjerite vezu i pokušajte ponovno.',
   },
+  // Mobile app shell (D1-10): navigation destinations and states of the signed-in app.
+  nav: {
+    home: 'Početna',
+    today: 'Danas',
+    attendance: 'Dolasci',
+    messages: 'Poruke',
+    profile: 'Profil',
+  },
+  shell: {
+    loadError: 'Podatke o vašem računu nije moguće učitati.',
+    noMembership: 'Račun nije povezan ni s jednim vrtićem.',
+    noMembershipHelp: 'Ako ste dobili pozivnicu, prijavite se e-adresom na koju je poslana. Inače se obratite vrtiću.',
+    noticeRequired: 'Potrebna je potvrda obavijesti o privatnosti.',
+    noticeRequiredHelp: 'Vrtić ({{kindergartens}}) objavio je obavijest o privatnosti koju aplikacija još ne može prikazati. Obratite se vrtiću.',
+    kindergartens: 'Vrtići',
+    mode: 'Način rada',
+    modeEducator: 'Odgojitelj',
+    modeGuardian: 'Roditelj',
+    modeCurrent: 'Trenutačni način rada',
+    comingLater: {
+      attendance: 'Evidencija dolazaka dolazi u sljedećoj fazi razvoja (D3). Do tada ovdje nema podataka.',
+      messages: 'Obavijesti i poruke vrtića dolaze u kasnijoj fazi razvoja (D4). Do tada ovdje nema podataka.',
+    },
+  },
   /** Parent Home (docs/design/parent-home-spec.md). State copy follows spec §8; full-load error reuses mobile.loadError / loadErrorHelp. */
   guardianHome: {
     greetingMorning: 'Dobro jutro',
