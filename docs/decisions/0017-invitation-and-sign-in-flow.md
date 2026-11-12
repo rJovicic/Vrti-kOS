@@ -40,6 +40,32 @@ invited-but-unconfirmed user **cannot request a sign-in code** while sign-up is 
 - Local transport is Mailpit's HTTP API from the Edge Function; there is deliberately no other transport until ADR-0010.
 - Admin sessions live in **httpOnly** cookies; the admin app never creates a browser Supabase client.
 
+## Amendment 2026-11-12 — suspended memberships and invitations (R-48)
+Added after the original decision, when a code review found that a pending invitation could lift a suspension
+(risk R-48). Implemented in migration `20261112075500_suspension_blocks_invitations.sql`, proven by pgTAP
+`04_membership_suspension.test.sql` and `tests/integration/src/membership-suspension.test.ts` (CI run #12). It formalises
+behaviour that now exists; like the rest of this ADR it is **Proposed** and part of the owner acceptance D-26.
+- **Scope of a suspension:** one membership = kindergarten + person + role. Suspending a person as educator does not
+  touch their guardian membership or their memberships in other kindergartens.
+- **Suspension revokes matching pending invitations:** same kindergarten, same role, same e-mail (case-insensitive);
+  the revocation is attributed to the suspending manager and audited.
+- **Acceptance never re-activates a suspended membership:** a pending invitation that still exists is consumed
+  (revoked) and audited as `invitation.accept_refused` / `denied`; repeating the acceptance changes nothing.
+- **A new invitation cannot lift a suspension:** the database refuses it with `MEMBERSHIP_SUSPENDED` (409).
+- **The way back is manual reactivation** by a manager (`org_admin` for `org_admin` memberships, as above).
+- **An ended membership may be re-activated by a new invitation** (unchanged rule); an active membership is left
+  unchanged by an acceptance (its start date is kept).
+- **Authorization precedes the suspension check:** a caller who does not manage that kindergarten (or lacks AAL2) gets
+  `PERMISSION_DENIED`, never `MEMBERSHIP_SUSPENDED`, so suspensions in another kindergarten cannot be probed.
+
+## Amendment 2026-11-12 — invitation limit per kindergarten (R-50)
+Added after the original decision. Migration `20261112085000_invitation_quota.sql`. Every new invitation (any write
+path: `invite-member`, a manager's direct REST insert, the service key) counts against
+`organizations.invitation_limit_per_hour` (rolling hour, every created invitation counts whatever its later status).
+Over the limit the insert is skipped and the refusal is written to the audit log in the same transaction;
+`invite-member` answers 429 `INVITATION_LIMIT_REACHED`. The check runs after authorization and is serialised per
+kindergarten. **The default of 50 per hour is a provisional operator setting, not an owner decision** (open point below).
+
 ## Consequences
 - Positive: no bearer secrets in e-mail; one proof of possession (the code); authorization stays in Postgres; acceptance
   is idempotent and auditable; works identically on mobile and web.
@@ -57,6 +83,8 @@ invited-but-unconfirmed user **cannot request a sign-in code** while sign-up is 
 Two small Edge Functions, one RPC, two tables' worth of RLS — implemented and tested in D1 (pgTAP 105, integration 20, e2e 8).
 
 ## Open points / approval needed
-- D-26: accept this ADR, including the org_admin-only rule for administrator rights.
+- D-26: accept this ADR, including the org_admin-only rule for administrator rights and the 2026-11-12 amendments
+  (suspension scope per membership; invitation limit).
+- Invitation limit value (R-50): 50 per kindergarten per rolling hour is provisional; confirm or change before a pilot.
 - Production e-mail provider and rate limits (ADR-0010); GoTrue enumeration mitigation (R-42) before any pilot.
 - Re-sending a notice for an existing pending invitation (FR-01-2 "ponovno poslati") is not implemented yet.
