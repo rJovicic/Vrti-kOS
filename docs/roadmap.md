@@ -24,7 +24,7 @@ Vlasnik je odlučio izgraditi funkcionalni demo cijele aplikacije prije završet
 Demo radi **samo lokalno** sa sintetičkim podacima (ADR-0009). Faze 5–12 izvode se kao **vertikalni slojevi**;
 svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin aplikaciju:
 
-**Stanje 2026-11-12:** Faza 4 ✅ · D0 ✅ · **D1 zaključen** (otvoreni rizici R-44, R-49, R-53, R-45/D-27 dokumentirani, ne blokiraju) · **D2 u tijeku**: D2-A…D2-G izvedeni; plan: [architecture/d2-plan.md](architecture/d2-plan.md).
+**Stanje 2026-11-12:** Faza 4 ✅ · D0 ✅ · **D1 zaključen** (otvoreni rizici R-44, R-49, R-53, R-45/D-27 dokumentirani, ne blokiraju) · **D2 u tijeku**: D2-A…D2-H izvedeni; plan: [architecture/d2-plan.md](architecture/d2-plan.md).
 
 | Sloj | Sadržaj | Faze | Gotovo kada |
 |---|---|---|---|

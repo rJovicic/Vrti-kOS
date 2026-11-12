@@ -52,12 +52,30 @@ Kindergarten switching is not needed: every list shows the kindergarten per item
 - `src/features/guardian-home/` holds a presentational `GuardianHomeScreen` (props only, no data access), its components
   (`ChildSummaryCard`, `AttendanceStatus`, `ActivityRow`, `InlineBanner`, `Skeleton`, `StatusIcon`) and pure presentation
   rules in `model/present.ts` with Vitest tests.
-- The guardian landing tab `(app)/home.tsx` renders it with `state="empty"` until D2 provides the authorized children query.
+- The guardian landing tab `(app)/index.tsx` renders it with the authorized children (D2-H, below).
 - `src/app/dev/parent-home.tsx` loads `preview/ParentHomePreview` and its synthetic fixtures only when `__DEV__` is true;
   in production the route redirects to `/` and the preview module and fixtures are not in the bundle (verified with
   `expo export`). Open in development: `vrticos://dev/parent-home`.
 - Absence actions in the preview are disabled until their destination screens exist. Visual check on a simulator or
   device has **not** been done (R-44).
+
+### D2-H: real data for guardians and educators (2026-11-12)
+- `src/lib/guardianHome.ts` reads, as the signed-in user, the children RLS returns (active link with `can_view`, no
+  active restriction), their kindergarten, today's enrolment, group and facility, and the person's own links
+  (`can_report_absence` for the card action). One correlation id per load; 401 ends the session. Attendance stays
+  `unavailable` and "Danas" empty until D3 — never sample data. A linked child without a group (D-32) shows
+  "Još nije raspoređeno u skupinu" and no facility (`placeLine`, `groupLine` in `model/present.ts`).
+- Child detail (`features/guardian-home/ChildDetailView.tsx`): kindergarten, facility, today's group and the pickup
+  persons valid today, read-only, with "Popis vodi vrtić". **Technical decision:** it is a view inside the Parent Home
+  destination, not a route: in the render tests the tab navigator of this Expo Router version never mounted a hidden
+  nested route (`href: null`), and deep links to a child are not part of the MVP. Back (button and Android hardware
+  back) returns to the list; the view re-reads the child on open, so access withdrawn in between shows nothing.
+- Educator "Danas" lists, per group assigned today, the first and last names of the children enrolled today
+  (`lib/home.ts`; RLS returns only those, D2-A). No other child data.
+- Tests: `features/guardian-home/home.render.test.tsx` (10, real router + in-memory client: children with/without
+  group, exactly the returned children, one correlation id, empty, error + retry, session expiry, detail with pickup
+  persons and Back, access withdrawn between list and detail, educator names per group); Vitest label test for the
+  child without a group. Visual check on a device is still open (R-44).
 
 ## 2. Planned (not implemented)
 - Showing and acknowledging the privacy notice text in the app (the gate exists; the content and the write of
