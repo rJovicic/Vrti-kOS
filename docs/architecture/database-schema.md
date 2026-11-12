@@ -120,7 +120,8 @@ Notation: **PK** primary key · **FK** foreign keys (→ target, delete rule) ·
 ### 5.1 `organizations` (tenant root)
 Columns: `id`, `name` (≤120), `slug` (UQ), `timezone` (default `Europe/Zagreb`), `locale` (default `hr`),
 `absence_cutoff_local time null`, `quiet_hours_start time`, `quiet_hours_end time`, `privacy_notice_version text null`,
-`status` (`active|suspended`), `created_at`.
+`status` (`active|suspended`), `invitation_limit_per_hour smallint` (default 50, 1–1000; R-50, operator setting — no client
+grant), `created_at`.
 - **PK** `id` · **IX** `slug`
 - **RLS** S: `id in member_org_ids()` or `is_platform_admin()` · I: none from clients (platform admin creates via Edge Function `create-organization`) · U: manager (guard trigger: only `name`, settings columns; `status` only platform admin) · D: none
 - **Grants** `select, update` to authenticated · **Del** never deleted by clients · **Sens.** R1
@@ -256,8 +257,16 @@ Columns: `id`, `name` (≤120), `slug` (UQ), `timezone` (default `Europe/Zagreb`
 - **RLS** S: manager; educators of the group; guardians — `published` and a child of theirs was enrolled in the group on `entry_date` · I/U: educator with assignment on the group today (`entry_date = org_today`; edits same day only) · D: none
 - **Sens.** R3
 
-### 5.20 `audit_events`
+### 5.20 `audit_events` — implemented as `audit.audit_events` (R-51, `20261112084900_audit_schema_and_actor.sql`)
 `id bigint generated always as identity`, `organization_id null` (null = platform-level), `occurred_at`, `actor_id`, `actor_role`, `action` (e.g. `child_guardian.updated`), `target_table`, `target_id`, `outcome` (`success|denied|error`), `correlation_id`, `details jsonb` (allow-listed keys only: changed column **names**, never values).
+- **Implemented (2026-11-12):** table in the non-exposed schema `audit`; `public.audit_events` is a read-only
+  `security_invoker` view (same columns), so reads go through the table's RLS. Trigger `audit_events_fill` sets
+  `actor_role` (highest active role in that kindergarten, `platform_admin`, `none`, or `system` without an actor),
+  `occurred_at` and `correlation_id` (`app.correlation_id` or a validated `x-correlation-id` header,
+  `^[A-Za-z0-9._-]{8,64}$`). A service-role JWT may attribute a row with `x-actor-id` (`details.via = 'service'`).
+  Grants: authenticated `select`; service_role `select, insert`; nobody `update/delete/truncate`; trigger
+  `audit_events_no_update` refuses UPDATE for every role. Denied attempts outside a transaction:
+  `api.record_audit_event` (service_role only, allow-listed shape).
 - **No FK** to targets (must outlive them) · **IX** `(organization_id, occurred_at desc)`, `(target_table, target_id)`; monthly partitioning when volume requires
 - **RLS** S: manager of the org; platform admin only for rows with `action like 'organization.%'` · I/U/D: **no grants** — written only by `private.write_audit()` from triggers/Edge Functions (SR-AUD-02)
 - **Sens.** R3
@@ -291,6 +300,10 @@ PK `(profile_id, type)`, `push_enabled bool`.
   audited `invitation.accept_refused` (`denied`); an ended or expired membership is re-activated from today; an active one
   is left unchanged
 - **RLS** S/I/U: manager (AAL2) · D: none · acceptance only via `api.accept_invitations` (service_role)
+- **Limit (R-50, `20261112085000_invitation_quota.sql`):** after authorization the guard counts every invitation created in
+  the kindergarten during the last hour (per-kindergarten advisory lock); at `invitation_limit_per_hour` the insert is
+  skipped and `invitation.limit_reached` (`denied`) is audited in the same transaction. Applies to clients and the
+  service key
 - **Sens.** R2
 
 ### 5.24 `private.platform_admins`

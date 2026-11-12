@@ -115,6 +115,10 @@ exercise the functions end to end.
   `tests/integration/src/membership-suspension.test.ts` (6 tests). R-52 (cross-tenant reads of `academic_years` and
   `audit_events`): `supabase/tests/database/05_cross_tenant_reads.test.sql` (16 checks). Local result 2026-11-12:
   pgTAP 174/174, integration 33/33, admin e2e 8/8.
+- R-51 (audit): `06_audit_log.test.sql` (33) and `tests/integration/src/audit.test.ts` (8). R-50 (invitation limit):
+  `07_invitation_quota.test.sql` (20) and `tests/integration/src/invitation-limit.test.ts` (4, parallel requests).
+  D1-13: `packages/validation/src/catalog.test.ts`. D1-10: `apps/mobile/src/shell/shell.test.ts`. Local result
+  2026-11-12: pgTAP 227/227, integration 45/45, admin e2e 8/8, unit tests 146.
 - `pnpm test:integration` — Edge Functions, e-mail codes from Mailpit, TOTP MFA, RLS through the API (needs `pnpm db:start`).
 - `pnpm --filter @vrticos/integration-tests run e2e` — Playwright against a running admin (`ADMIN_URL`, default
   `http://localhost:3000`; build and `pnpm --filter @vrticos/admin start` first). Each run creates its own synthetic kindergarten.
@@ -122,6 +126,10 @@ exercise the functions end to end.
 - Behind a TLS-intercepting proxy (e.g. the Claude Code cloud sandbox) the Edge Runtime container cannot fetch npm modules
   until the proxy CA is appended to `/etc/ssl/certs/ca-certificates.crt` inside `supabase_edge_runtime_vrticos` and the
   container is restarted. Not needed on normal machines or in CI. Never commit the CA.
+- The Edge Runtime mounts only the files in the functions' import graph **at start** and keeps workers warm. After adding
+  an import (e.g. a new file from `packages/validation`) run `pnpm db:stop && pnpm db:start`; after editing function code
+  restart the container (`docker restart supabase_edge_runtime_vrticos`) if a request still shows old behaviour. CI always
+  starts fresh.
 
 ## 5. Demo for a kindergarten (laptop + phones)
 1. Laptop runs `pnpm demo`; phones join the same Wi-Fi (or the laptop's hotspot); mobile app points to the laptop LAN IP.

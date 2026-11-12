@@ -38,7 +38,8 @@ The decision is unchanged; these notes record verified differences so the ADR is
 - Point 8: catalog checks (ST-RLS-00) and hand-written negative pgTAP tests run in CI (105 tests); the **generated
   permission matrix (ST-RLS-01) does not exist yet**.
 - Audit lives in `public.audit_events` with manager-only RLS and append-only grants — see risk R-51 for the deviation
-  from SR-AUD-02.
+  from SR-AUD-02. **Update 2026-11-12 (R-51):** the table moved to the non-exposed schema `audit`; `public.audit_events`
+  is a read-only security_invoker view; actor role and correlation id are set by the database (database-schema §5.20).
 
 ## Implementation note (2026-11-11) — schema `auth_hooks` (R-49, ADR-0008 amendment)
 A fourth schema exists besides `public`, `api` and `private`: **`auth_hooks`**, for functions called by Supabase Auth.

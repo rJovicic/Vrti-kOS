@@ -1,16 +1,16 @@
 # Mobile app architecture — VrtićOS (Expo / React Native)
 
-- Version: 0.2 · Date: 2026-11-11 · Phase: 3, **aligned with the code after D1 and the Parent Home UI checkpoint**
-- One app, two experiences: **roditelj** (guardian) and **odgojitelj** (educator) — ADR-0006. Today both appear on one
-  home screen by role; an explicit mode switch is planned. Mode is UI context, never authorization (SR-AUTHZ-02).
+- Version: 0.3 · Date: 2026-11-12 · Phase: 3, **aligned with the code after the D1 app shell (backlog D1-10)**
+- One app, two experiences: **roditelj** (guardian) and **odgojitelj** (educator) — ADR-0006. A person with both roles
+  switches mode in Profil. Mode is UI context, never authorization (SR-AUTHZ-02).
 - Visual design: DESIGN.md and docs/design/parent-home-spec.md. This document fixes structure, data and security behaviour.
 
 ## 1. Implemented (after D1)
 | Concern | Implementation |
 |---|---|
 | Framework | Expo SDK 58, React Native 0.88, Expo Router with typed routes (`apps/mobile/src/app/`) |
-| Navigation | a single `Stack` in `src/app/_layout.tsx`; **no route groups, no bottom tabs, no tablet rail yet** (backlog D1-10) |
-| Providers | `SafeAreaProvider` → `SessionProvider` (`src/lib/session.tsx`) → `SafeAreaView` (top edge) → `DemoBanner` → `Stack`. No QueryClient and no error boundary yet |
+| Navigation | root `Stack` with `Stack.Protected` by session; `(app)` group with `Tabs` and `Tabs.Protected` by mode; bottom bar on phones, side bar from 600 dp (Material rail on Android) — `src/shell/navigation.ts` |
+| Providers | `SafeAreaProvider` → `SessionProvider` (`src/lib/session.tsx`) → `SafeAreaView` (top edge) → `DemoBanner` → root `Stack`; inside `(app)`: `ShellProvider` (memberships, mode; keyed by user id). No QueryClient and no error boundary yet |
 | Session | `@supabase/supabase-js` with a chunked `expo-secure-store` adapter (`createChunkedStorage` from `packages/domain`), `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, storage key `vrticos.session`; auto-refresh only in the foreground |
 | Server state | component state + `useEffect` loaders (`src/lib/home.ts`); TanStack Query is planned (ADR-0015), not installed |
 | i18n | i18next + react-i18next over `@vrticos/i18n` (`hr`) |
@@ -20,23 +20,33 @@
 ### Routes that exist
 ```
 src/app/
-  _layout.tsx          providers + Stack (above)
-  index.tsx            waits for the stored session → /home or /sign-in
+  _layout.tsx          providers; root Stack: signed out → only sign-in, signed in → only (app) (Stack.Protected)
   sign-in.tsx          e-mail → 6-digit code (no magic link, SR-AUTHN-01); after verification calls the
-                       accept-invitations Edge Function (links pending invitations; no separate acceptance screen)
-  home.tsx             one screen for every role:
-                         educator → "Moje skupine danas" (groups assigned today, via RLS; substitute end date)
-                         guardian → "Moja djeca" with the parent-home-spec §8 empty state (no children before D2)
-                         manager only → pointer to the web admin
-                         profile block with sign-out (keychain entry always removed, FR-01-10)
+                       accept-invitations Edge Function, then returns to `/`; shows AUTH_SESSION_EXPIRED after an expiry
+  (app)/_layout.tsx    ShellProvider → gate (fail closed) → Tabs per mode
+  (app)/index.tsx      redirects to the landing tab of the current mode
+  (app)/today.tsx      educator "Danas": groups assigned today (RLS; substitute end date)
+  (app)/attendance.tsx educator "Dolasci": labelled placeholder until D3
+  (app)/home.tsx       guardian "Početna": Parent Home (GuardianHomeScreen), empty state until D2 links children
+  (app)/messages.tsx   guardian "Poruke": labelled placeholder until D4
+  (app)/info.tsx       no mobile role (managers): pointer to the web admin
+  (app)/profile.tsx    e-mail, kindergartens, mode switch (educator ↔ guardian), sign-out (FR-01-10)
   dev/parent-home.tsx  DEVELOPMENT-ONLY Parent Home design preview (below)
 ```
+
+### App shell gates (D1-10, `src/shell/`)
+Order of precedence, all fail closed: session (root guard) → memberships loaded (`loading`/`error`; a 401 or JWT error
+signs out with reason `expired`) → at least one active membership (`noMembership`) → privacy notice acknowledged for every
+kindergarten that published one (`noticeRequired`, FR-01-5) → tabs. The notice text itself cannot be shown yet, so a
+published notice blocks with a message to contact the kindergarten (no kindergarten has published one in the demo).
+Tabs per mode: educator `today, attendance, profile`; guardian `home, messages, profile`; none `info, profile`.
+Kindergarten switching is not needed: every list shows the kindergarten per item (multi-kindergarten views).
 
 ### Parent Home UI and development preview (implemented; visual check on a device pending)
 - `src/features/guardian-home/` holds a presentational `GuardianHomeScreen` (props only, no data access), its components
   (`ChildSummaryCard`, `AttendanceStatus`, `ActivityRow`, `InlineBanner`, `Skeleton`, `StatusIcon`) and pure presentation
   rules in `model/present.ts` with Vitest tests.
-- The real guardian path (`home.tsx`) is **not** connected to it yet; it keeps the §8 empty state until D2 provides data.
+- The guardian landing tab `(app)/home.tsx` renders it with `state="empty"` until D2 provides the authorized children query.
 - `src/app/dev/parent-home.tsx` loads `preview/ParentHomePreview` and its synthetic fixtures only when `__DEV__` is true;
   in production the route redirects to `/` and the preview module and fixtures are not in the bundle (verified with
   `expo export`). Open in development: `vrticos://dev/parent-home`.
@@ -44,9 +54,9 @@ src/app/
   device has **not** been done (R-44).
 
 ## 2. Planned (not implemented)
-- Route groups for authentication and the signed-in app with guards (session, active membership, privacy notice
-  acknowledgement FR-01-5), an organisation/mode switcher, bottom tabs per DESIGN.md (Početna, Obavijesti, Poruke, Profil)
-  and a navigation rail on Android tablets.
+- Showing and acknowledging the privacy notice text in the app (the gate exists; the content and the write of
+  `notice_ack_version` follow with the privacy work).
+- Tab icons (no icon set is installed; labels only).
 - Guardian screens: child overview, attendance/absence history, report absence (FS-06), announcements, messages, daily
   report, profile and settings (sessions/devices, notification preferences, language, account deletion request).
 - Educator screens: group attendance (core screen), group absences, daily report compose, conversations.
@@ -106,8 +116,11 @@ These follow the module table below and arrive with D2–D4.
   rules (`src/features/**/model/*.test.ts`); shared logic is tested in its package (e.g. the chunked session storage in
   `packages/domain`). Typecheck and `expo export` run in CI. RLS behaviour the app relies on is covered by pgTAP and
   `tests/integration`.
-- **Not set up:** component render tests. They need `@testing-library/react-native` + `jest-expo` (not installed;
-  owner approval required). Until then components are checked by typecheck and manual review only.
+- **App shell (D1-10):** `src/shell/shell.test.ts` (18 tests) covers the gates, role access, tabs per mode, layout per
+  width, session end handling and that the route files match the shell definition (protected groups, no fixtures).
+- **Not set up:** component render and router tests. They need `@testing-library/react-native` + `jest-expo` (for
+  `expo-router/testing-library`). Installing them was refused by the session's permission policy on 2026-11-12;
+  owner approval required (D-30). Until then components are checked by typecheck, `expo export` and manual review.
 - **Planned:** Maestro flows for sign-in, educator attendance, guardian absence report (needs an emulator).
 - **Not done yet:** running the app on an iOS simulator / Android emulator / device (R-44).
 - Accessibility: VoiceOver/TalkBack labels on every interactive element; dynamic type up to 200 % without loss of

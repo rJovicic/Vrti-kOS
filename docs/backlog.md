@@ -70,13 +70,29 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [x] [D1-5] Admin: objekti, pedagoške godine, skupine, djelatnici i rasporedi (FS-02, FS-03) prema prototipu
 - [x] [D1-6] Seed: rasporedi i zamjena; pgTAP NEG-07/08 za rasporede
 - [x] [D1-7a] CI na GitHubu zelen (run #6 prvi s integracijskim i e2e testovima; zadnji run #10, commit `4c7f599`)
-- [ ] [D1-7b] Branch protection za `main` — **radnja vlasnika (D-27)**, `main` trenutačno nije zaštićen
+- [ ] [D1-7b] Branch protection za `main` — **radnja vlasnika (D-27)**, `main` nije zaštićen (ponovno provjereno 2026-11-12); ruleset za uvoz `.github/rulesets/main-protection.json`, koraci u [security/branch-protection.md](security/branch-protection.md)
 - [ ] [D1-8] Pokretanje mobilne aplikacije na iOS simulatoru / Android emulatoru (R-44)
 - [ ] [D1-9] Ponovno slanje pozivnice (FR-01-2), ekran platform admina za novi vrtić (FR-02-1), potvrda obavijesti o privatnosti (FR-01-5)
-- [ ] [D1-10] Aplikacijska ljuska mobilne aplikacije: grupe ruta s guardovima (sesija, aktivno članstvo, potvrda obavijesti FR-01-5), donja traka kartica i Android rail prema DESIGN.md (Layout), prebacivanje vrtića/načina rada. Preduvjet za D2–D3; ne započeto
+- [x] [D1-10] Aplikacijska ljuska mobilne aplikacije — **izvedeno 2026-11-12** (GitHub CI [run #16](https://github.com/rJovicic/Vrti-kOS/actions/runs/43188757221), commit `b549c64`):
+  - grupe ruta s guardovima, redom: sesija (`Stack.Protected`) → aktivno članstvo → obavijest o privatnosti FR-01-5 (fail-closed poruka dok se tekst ne može prikazati) → kartice po načinu rada (`Tabs.Protected`);
+  - donja traka na telefonu, bočna od 600 dp (Material rail na Androidu); prebacivanje odgojitelj ↔ roditelj u Profilu;
+  - prebacivanje vrtića nije potrebno jer su prikazi viševrtićni;
+  - Parent Home kao početna roditelja (prazno stanje do D2); Dolasci (D3) i Poruke (D4) kao označeni placeholderi;
+  - istek sesije briše sesiju s uređaja i prikazuje `AUTH_SESSION_EXPIRED`;
+  - testovi: `shell.test.ts` (18).
+
+  Otvoreno:
+  - render i router testovi trebaju nove dev-ovisnosti (D-30);
+  - vizualna provjera na uređaju (R-44, D1-8);
+  - ikone kartica.
 - [ ] [D1-11] Parent Home UI (`apps/mobile/src/features/guardian-home/`, dev preview `vrticos://dev/parent-home`) — izvedeno i lokalno provjereno (mobilni Vitest, typecheck, Expo export); čeka vizualnu provjeru na simulatoru ili uređaju (R-44)
-- [ ] [D1-12] Sigurnosni nalazi pregleda arhitekture (2026-11-11). **Zatvoreno 2026-11-12 (GitHub CI run #12):** suspenzija vs. pozivnica na čekanju (R-48), Deno check/lint za Edge Functions (R-47), cross-tenant testovi čitanja za `academic_years` i `audit_events` (R-52). **Otvoreno:** put prijave lozinkom (R-49 — implementirano i dokazano u CI-ju, run #10; čeka procjenu na hosted Supabaseu), limit pozivnica (R-50), audit prema SR-AUD-01/02 (R-51)
-- [ ] [D1-13] Katalog `errorCodes` (`packages/validation/src/errors.ts`) uskladiti sa stvarnim kodovima: dodati `METHOD_NOT_ALLOWED`, `INVITATION_PENDING_EXISTS` i `MEMBERSHIP_SUSPENDED` (koriste ih Edge Functions; `INVITATION_PENDING_EXISTS` i `MEMBERSHIP_SUSPENDED` već imaju hrvatski tekst), ukloniti ili iskoristiti nekorišteni `INVITATION_ALREADY_USED`; dodati `errors.METHOD_NOT_ALLOWED` u i18n. Sljedeći tehnički zadatak, nije dio dokumentacijskog usklađivanja
+- [ ] [D1-12] Sigurnosni nalazi pregleda arhitekture (2026-11-11). **Zatvoreno 2026-11-12:** R-48, R-47, R-52 (CI run #12); limit pozivnica R-50 i audit prema SR-AUD-01/02 R-51 (CI run #14). **Otvoreno:** put prijave lozinkom (R-49 — implementirano i dokazano u CI-ju, run #10; čeka procjenu na hosted Supabaseu), retencija (R-53)
+- [x] [D1-13] Katalog kodova grešaka — **zatvoreno 2026-11-12** (CI run #14):
+  - `errorCatalog` s HTTP statusima (14 kodova) i `dbErrorCatalog` za sve iznimke iz baze;
+  - Edge Functions, admin i mobilna koriste samo katalog;
+  - nekorišteni kodovi uklonjeni;
+  - poruke samo u `errors.*`;
+  - `catalog.test.ts` skenira migracije, funkcije, admin i mobilnu aplikaciju te provjerava hrvatske poruke (crvena provjera: nepoznati kod u funkciji i migraciji ruši test).
 
 #### Iz roadmapa Faze 6 namjerno odgođeno (nije bilo u D1 nalogu vlasnika od 5 stavki; ciljni sloj određuje vlasnik)
 - [ ] Upravljanje sesijama i uređajima, odjava svih sesija (FR-01-8, SR-SESS-03)
