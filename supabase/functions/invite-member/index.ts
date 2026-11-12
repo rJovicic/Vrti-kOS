@@ -44,9 +44,16 @@ Deno.serve(async (req) => {
     .select('id, expires_at, organization:organizations(name)')
     .single();
   if (insertErr || !invitation) {
-    const code = insertErr?.code === '23505' ? 'INVITATION_PENDING_EXISTS' : 'PERMISSION_DENIED';
+    // 23505: one pending invitation per person, role and kindergarten. MEMBERSHIP_SUSPENDED (P0001) is raised by the
+    // invitation guard only after the caller has been authorized as a manager of that kindergarten (R-48).
+    const code =
+      insertErr?.code === '23505'
+        ? 'INVITATION_PENDING_EXISTS'
+        : insertErr?.code === 'P0001' && insertErr.message === 'MEMBERSHIP_SUSPENDED'
+          ? 'MEMBERSHIP_SUSPENDED'
+          : 'PERMISSION_DENIED';
     log(FN, correlationId, 'denied', { reason: insertErr?.code });
-    return error(req, code === 'INVITATION_PENDING_EXISTS' ? 409 : 403, code, correlationId);
+    return error(req, code === 'PERMISSION_DENIED' ? 403 : 409, code, correlationId);
   }
 
   // Compensation: an invitation whose account or notice could not be prepared must not stay open.

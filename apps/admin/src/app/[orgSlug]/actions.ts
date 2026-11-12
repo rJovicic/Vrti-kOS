@@ -217,7 +217,13 @@ export async function inviteMember(formData: FormData) {
   }
   if (status === 201) done(ctx, 'invitations', 'invited');
   if (status === 401) redirect('/sign-in');
-  if (code === 'INVITATION_PENDING_EXISTS' || code === 'VALIDATION_FAILED' || code === 'PERMISSION_DENIED') fail(ctx, 'invitations', code);
+  if (
+    code === 'INVITATION_PENDING_EXISTS' ||
+    code === 'MEMBERSHIP_SUSPENDED' ||
+    code === 'VALIDATION_FAILED' ||
+    code === 'PERMISSION_DENIED'
+  )
+    fail(ctx, 'invitations', code);
   fail(ctx, 'invitations', 'INTERNAL', correlationId);
 }
 

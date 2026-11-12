@@ -221,6 +221,7 @@ export const hr = {
   errors: {
     CONFLICT: 'Takav zapis već postoji ili se preklapa s postojećim.',
     INVITATION_PENDING_EXISTS: 'Za ovu osobu i ulogu već postoji pozivnica na čekanju.',
+    MEMBERSHIP_SUSPENDED: 'Ova osoba je suspendirana u toj ulozi. Umjesto nove pozivnice ponovno aktivirajte postojeće članstvo.',
     NOT_FOUND: 'Traženi sadržaj nije pronađen.',
     PERMISSION_DENIED: 'Nemate ovlast za ovu radnju.',
     VALIDATION_FAILED: 'Provjerite označena polja.',
