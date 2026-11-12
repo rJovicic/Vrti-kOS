@@ -5,7 +5,7 @@ import { type } from '@vrticos/tokens';
 import { useSession } from '../../lib/session';
 import { ShellProvider, useShell } from '../../shell/ShellProvider';
 import { GateScreen } from '../../shell/ShellScreens';
-import { navigationLayout, tabAllowed } from '../../shell/navigation';
+import { navigationLayout, tabAllowed, type TabName } from '../../shell/navigation';
 import { useColors } from '../../ui/theme';
 
 /** Signed-in shell: memberships → (notice) → role-based tabs. Rendered only while a session exists (root guard). */
@@ -27,7 +27,13 @@ function AppTabs() {
   if (gate.kind !== 'ready') return <GateScreen gate={gate} onRetry={reload} />;
 
   const layout = navigationLayout(width, Platform.OS);
-  const label = (key: string) => ({ title: t(key), tabBarLabel: t(key), tabBarAccessibilityLabel: t(key) });
+  // Tabs of the other mode are not offered (`href: null`); each role screen also guards itself (ModeGuard).
+  const tab = (name: TabName, key: string) => ({
+    title: t(key),
+    tabBarLabel: t(key),
+    tabBarAccessibilityLabel: t(key),
+    ...(tabAllowed(name, mode) ? {} : { href: null }),
+  });
   return (
     <Tabs
       screenOptions={{
@@ -42,20 +48,12 @@ function AppTabs() {
         sceneStyle: { backgroundColor: c.bgCanvas },
       }}
     >
-      {/* `index` only redirects to the landing tab of the current mode; never a tab itself. */}
-      <Tabs.Screen name="index" options={{ href: null }} />
-      <Tabs.Protected guard={tabAllowed('today', mode)}>
-        <Tabs.Screen name="today" options={label('nav.today')} />
-        <Tabs.Screen name="attendance" options={label('nav.attendance')} />
-      </Tabs.Protected>
-      <Tabs.Protected guard={tabAllowed('home', mode)}>
-        <Tabs.Screen name="home" options={label('nav.home')} />
-        <Tabs.Screen name="messages" options={label('nav.messages')} />
-      </Tabs.Protected>
-      <Tabs.Protected guard={tabAllowed('info', mode)}>
-        <Tabs.Screen name="info" options={label('nav.home')} />
-      </Tabs.Protected>
-      <Tabs.Screen name="profile" options={label('nav.profile')} />
+      <Tabs.Screen name="today" options={tab('today', 'nav.today')} />
+      <Tabs.Screen name="attendance" options={tab('attendance', 'nav.attendance')} />
+      <Tabs.Screen name="index" options={tab('home', 'nav.home')} />
+      <Tabs.Screen name="messages" options={tab('messages', 'nav.messages')} />
+      <Tabs.Screen name="info" options={tab('info', 'nav.home')} />
+      <Tabs.Screen name="profile" options={tab('profile', 'nav.profile')} />
     </Tabs>
   );
 }

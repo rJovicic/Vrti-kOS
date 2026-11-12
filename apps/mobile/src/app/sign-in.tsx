@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 're
 import { useTranslation } from 'react-i18next';
 import { space, type } from '@vrticos/tokens';
 import { zEmailInput, zOtpInput } from '@vrticos/validation';
+import { CORRELATION_HEADER, newCorrelationId } from '../lib/correlation';
 import { env } from '../lib/env';
 import { useSession } from '../lib/session';
 import { supabase } from '../lib/supabase';
@@ -54,7 +55,11 @@ export default function SignIn() {
       // the user simply sees no kindergarten data until it succeeds on a later sign-in.
       await fetch(`${env.supabaseUrl}/functions/v1/accept-invitations`, {
         method: 'POST',
-        headers: { apikey: env.supabasePublishableKey, authorization: `Bearer ${data.session.access_token}` },
+        headers: {
+          apikey: env.supabasePublishableKey,
+          authorization: `Bearer ${data.session.access_token}`,
+          [CORRELATION_HEADER]: newCorrelationId(),
+        },
       }).catch(() => undefined);
       setCode('');
       // The root guard switches to the signed-in branch; its entry picks the landing tab for the person's role.

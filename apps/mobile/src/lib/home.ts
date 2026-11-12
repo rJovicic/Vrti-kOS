@@ -1,4 +1,5 @@
 import { orgLocalDate, parseDateRange } from '@vrticos/domain';
+import { CORRELATION_HEADER, newCorrelationId } from './correlation';
 import { supabase } from './supabase';
 
 export interface HomeGroup {
@@ -20,12 +21,13 @@ export interface HomeData {
  * Everything here is read as the signed-in user; RLS decides what comes back (educators: only groups
  * assigned today, ADR-0005). The app never filters for security, only for presentation.
  */
-export async function loadHome(userId: string): Promise<HomeData> {
+export async function loadHome(userId: string, correlationId: string = newCorrelationId()): Promise<HomeData> {
   const { data: memberships, error } = await supabase
     .from('memberships')
     .select('role, organization:organizations(id, name, timezone)')
     .eq('profile_id', userId)
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .setHeader(CORRELATION_HEADER, correlationId);
   if (error) throw error;
   const active = (memberships ?? []).filter((m) => m.organization !== null);
   const roles = new Set(active.map((m) => m.role));
@@ -35,9 +37,9 @@ export async function loadHome(userId: string): Promise<HomeData> {
   let groups: HomeGroup[] = [];
   if (isEducator) {
     const [{ data: g, error: gErr }, { data: f }, { data: a }] = await Promise.all([
-      supabase.from('groups').select('id, name, organization_id, facility_id').order('name'),
-      supabase.from('facilities').select('id, name'),
-      supabase.from('staff_assignments').select('group_id, assignment_type, valid_during'),
+      supabase.from('groups').select('id, name, organization_id, facility_id').order('name').setHeader(CORRELATION_HEADER, correlationId),
+      supabase.from('facilities').select('id, name').setHeader(CORRELATION_HEADER, correlationId),
+      supabase.from('staff_assignments').select('group_id, assignment_type, valid_during').setHeader(CORRELATION_HEADER, correlationId),
     ]);
     if (gErr) throw gErr;
     const facility = new Map((f ?? []).map((x) => [x.id, x.name]));

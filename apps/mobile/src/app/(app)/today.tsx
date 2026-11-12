@@ -10,9 +10,10 @@ import { shellStyles } from '../../shell/ShellScreens';
 import { Button } from '../../ui/Button';
 import { Notice } from '../../ui/Notice';
 import { useColors } from '../../ui/theme';
+import { ModeGuard } from '../../shell/ModeGuard';
 
 /** Educator: "Moje skupine danas" — groups assigned today, decided by RLS (ADR-0005). Attendance follows in D3. */
-export default function Today() {
+function TodayScreen() {
   const { t } = useTranslation();
   const c = useColors();
   const { session } = useSession();
@@ -85,3 +86,11 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
   pill: { alignSelf: 'flex-start', borderRadius: radius.pill, paddingHorizontal: space[3], paddingVertical: 2, fontSize: type.caption.size, fontWeight: '600', overflow: 'hidden' },
 });
+
+export default function Today() {
+  return (
+    <ModeGuard tab="today">
+      <TodayScreen />
+    </ModeGuard>
+  );
+}

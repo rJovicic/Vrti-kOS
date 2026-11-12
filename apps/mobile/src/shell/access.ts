@@ -16,6 +16,21 @@ export interface Kindergarten {
   name: string;
 }
 
+/** A kindergarten whose published notice version this person has not acknowledged. */
+export interface PendingNotice extends Kindergarten {
+  version: string;
+}
+
+/** A notice text as stored by the kindergarten (`public.privacy_notices`, readable by its active members). */
+export interface PrivacyNotice {
+  organizationId: string;
+  version: string;
+  title: string;
+  body: string;
+  /** Synthetic demo text: the app must label it as not being a legal notice. */
+  isDemo: boolean;
+}
+
 export interface Access {
   /** Mobile modes this person may use, educator first (daily work). */
   modes: MobileMode[];
@@ -23,7 +38,7 @@ export interface Access {
   managerOnly: boolean;
   kindergartens: Kindergarten[];
   /** Kindergartens whose current privacy notice this person has not acknowledged yet (FR-01-5). */
-  noticePending: Kindergarten[];
+  noticePending: PendingNotice[];
 }
 
 /** Rows must be the caller's own ACTIVE memberships (the query filters status; RLS filters ownership). */
@@ -34,11 +49,16 @@ export function deriveAccess(rows: readonly MembershipRow[]): Access {
   if (roles.has('educator')) modes.push('educator');
   if (roles.has('guardian')) modes.push('guardian');
   const kindergartens = unique(active.map((r) => ({ id: r.organization.id, name: r.organization.name })));
-  const noticePending = unique(
-    active
-      .filter((r) => r.organization.privacy_notice_version !== null && r.notice_ack_version !== r.organization.privacy_notice_version)
-      .map((r) => ({ id: r.organization.id, name: r.organization.name })),
-  );
+  // A kindergarten counts once even if the person has several roles there; every role row must carry the
+  // acknowledgement of the current version (the database refuses any other version).
+  const pending = new Map<string, PendingNotice>();
+  for (const r of active) {
+    const published = r.organization.privacy_notice_version;
+    if (published !== null && r.notice_ack_version !== published && !pending.has(r.organization.id)) {
+      pending.set(r.organization.id, { id: r.organization.id, name: r.organization.name, version: published });
+    }
+  }
+  const noticePending = [...pending.values()].sort((a, b) => a.name.localeCompare(b.name, 'hr'));
   return { modes, managerOnly: active.length > 0 && modes.length === 0, kindergartens, noticePending };
 }
 
@@ -56,7 +76,7 @@ export type ShellGate =
   | { kind: 'error' }
   | { kind: 'sessionExpired' }
   | { kind: 'noMembership' }
-  | { kind: 'noticeRequired'; kindergartens: Kindergarten[] }
+  | { kind: 'noticeRequired'; kindergartens: PendingNotice[] }
   | { kind: 'ready'; access: Access };
 
 export function shellGate(status: LoadStatus, access: Access | null): ShellGate {

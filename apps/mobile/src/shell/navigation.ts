@@ -1,7 +1,7 @@
 // Mobile app shell (D1-10): tabs per mode, the navigation layout per screen width, and how a session ends.
 import type { Access, MobileMode } from './access';
 
-/** Route names inside `src/app/(app)/`. */
+/** Destinations of the signed-in app. `home` (Parent Home) is the `index` route at `/`; the others match their file. */
 export type TabName = 'home' | 'messages' | 'today' | 'attendance' | 'info' | 'profile';
 export type ShellMode = MobileMode | 'none';
 export const ALL_TABS: readonly TabName[] = ['today', 'attendance', 'home', 'messages', 'info', 'profile'];
@@ -22,6 +22,9 @@ export function shellMode(access: Access, preferred: MobileMode | null): ShellMo
 }
 
 export const landingTab = (mode: ShellMode): TabName => TABS_BY_MODE[mode][0]!;
+/** Route file (in `src/app/(app)/`) and URL of a destination. */
+export const routeName = (tab: TabName): string => (tab === 'home' ? 'index' : tab);
+export const tabPath = (tab: TabName): `/${string}` => (tab === 'home' ? '/' : `/${tab}`);
 export const tabAllowed = (tab: TabName, mode: ShellMode): boolean => TABS_BY_MODE[mode].includes(tab);
 
 /** Phones: bottom tab bar. Width ≥ 600 (tablets): navigation at the side, Material rail on Android (DESIGN.md). */

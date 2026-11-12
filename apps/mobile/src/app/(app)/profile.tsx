@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { signOut, useSession } from '../../lib/session';
 import { useShell } from '../../shell/ShellProvider';
 import { shellStyles } from '../../shell/ShellScreens';
-import { landingTab } from '../../shell/navigation';
+import { landingTab, tabPath } from '../../shell/navigation';
 import { Button } from '../../ui/Button';
 import { useColors } from '../../ui/theme';
 
@@ -49,7 +49,8 @@ export default function Profile() {
               accessibilityHint={m === mode ? t('shell.modeCurrent') : undefined}
               onPress={() => {
                 setMode(m);
-                router.replace(`/${landingTab(m)}`);
+                // Switch to the new mode's landing tab (a tab switch; Profil stays in the tab history).
+                router.navigate(tabPath(landingTab(m)));
               }}
             />
           ))}

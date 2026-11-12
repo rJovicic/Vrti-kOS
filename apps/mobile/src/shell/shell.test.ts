@@ -7,6 +7,8 @@ import {
   TABS_BY_MODE,
   isSessionExpiredError,
   landingTab,
+  routeName,
+  tabPath,
   navigationLayout,
   sessionEnd,
   shellMode,
@@ -55,10 +57,18 @@ describe('gate: what the signed-in app may show', () => {
     const published = { ...alfa, privacy_notice_version: '2026-09' };
     expect(shellGate('loaded', deriveAccess([row('guardian', published, null)]))).toEqual({
       kind: 'noticeRequired',
-      kindergartens: [{ id: 'a', name: 'Vrtić Alfa (demo)' }],
+      kindergartens: [{ id: 'a', name: 'Vrtić Alfa (demo)', version: '2026-09' }],
     });
     expect(shellGate('loaded', deriveAccess([row('guardian', published, '2026-08')])).kind).toBe('noticeRequired');
     expect(shellGate('loaded', deriveAccess([row('guardian', published, '2026-09')])).kind).toBe('ready');
+  });
+  it('several roles in one kindergarten ask for its notice once; any unacknowledged role keeps the gate closed', () => {
+    const published = { ...alfa, privacy_notice_version: '2026-09' };
+    const a = deriveAccess([row('educator', published, '2026-09'), row('guardian', published, null)]);
+    expect(a.noticePending).toEqual([{ id: 'a', name: 'Vrtić Alfa (demo)', version: '2026-09' }]);
+  });
+  it('a kindergarten without a published notice never blocks', () => {
+    expect(deriveAccess([row('guardian', alfa, null)]).noticePending).toEqual([]);
   });
   it('a member with access and no pending notice → ready', () => {
     expect(shellGate('loaded', deriveAccess([row('educator')])).kind).toBe('ready');
@@ -91,6 +101,8 @@ describe('navigation: tabs per mode', () => {
     }
     expect(landingTab('educator')).toBe('today');
     expect(landingTab('guardian')).toBe('home');
+    expect(tabPath('home')).toBe('/');
+    expect(tabPath('today')).toBe('/today');
   });
   it('phones get a bottom bar; tablets (≥ 600) a side bar, Material rail on Android', () => {
     expect(navigationLayout(390, 'ios')).toEqual({ position: 'bottom', variant: 'uikit' });
@@ -135,12 +147,15 @@ describe('route files match the shell definition', () => {
   const rootLayout = source('../app/_layout.tsx');
 
   it('every destination has exactly one route file, and there are no unlisted screens', () => {
-    expect(files.sort()).toEqual(['_layout', 'index', ...ALL_TABS].sort());
+    expect(files.sort()).toEqual(['_layout', ...ALL_TABS.map(routeName)].sort());
   });
-  it('every role-specific destination is declared inside a protected group of the tab navigator', () => {
+  it('every destination is offered by the tab bar only in its own mode', () => {
+    expect(layout).toMatch(/tabAllowed\(name, mode\) \? \{\} : \{ href: null \}/);
+    for (const tab of ALL_TABS) expect(layout, tab).toContain(`<Tabs.Screen name="${routeName(tab)}" options={tab('${tab}'`);
+  });
+  it('every role-specific screen guards itself with its own destination name', () => {
     for (const tab of ALL_TABS.filter((x) => x !== 'profile')) {
-      const declared = new RegExp(`<Tabs\\.Protected guard=\\{tabAllowed\\('(today|home|info)', mode\\)\\}>[\\s\\S]*?name="${tab}"[\\s\\S]*?</Tabs\\.Protected>`);
-      expect(layout, tab).toMatch(declared);
+      expect(source(`../app/(app)/${routeName(tab)}.tsx`), tab).toContain(`<ModeGuard tab="${tab}">`);
     }
   });
   it('the signed-in group and the sign-in screen are guarded by session state in the root navigator', () => {
@@ -148,7 +163,7 @@ describe('route files match the shell definition', () => {
     expect(rootLayout).toMatch(/<Stack\.Protected guard=\{!signedIn\}>\s*<Stack\.Screen name="sign-in" \/>/);
   });
   it('placeholders do not import sample data or fixtures', () => {
-    for (const f of ['attendance', 'messages', 'home', 'info']) {
+    for (const f of ['attendance', 'messages', 'index', 'info']) {
       expect(source(`../app/(app)/${f}.tsx`)).not.toMatch(/fixtures|preview|synthetic/i);
     }
   });
