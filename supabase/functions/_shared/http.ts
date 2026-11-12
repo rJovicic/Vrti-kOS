@@ -1,4 +1,6 @@
 // Shared HTTP helpers for VrtićOS Edge Functions (api-conventions.md §4, §9).
+import { type ErrorCode, errorMessageKey, errorStatus } from '../../../packages/validation/src/errors.ts';
+
 const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? 'http://localhost:3000').split(',').map((s) => s.trim());
 
 export function corsHeaders(req: Request): Record<string, string> {
@@ -19,8 +21,15 @@ export function json(req: Request, status: number, body: unknown): Response {
   });
 }
 
-export function error(req: Request, status: number, code: string, correlationId: string): Response {
-  return json(req, status, { error: { code, message: `errors.${code}`, correlationId } });
+/** Error envelope from the central catalog: the HTTP status and i18n key are derived from the code (D1-13). */
+export function error(req: Request, code: ErrorCode, correlationId: string): Response {
+  return json(req, errorStatus(code), { error: { code, message: errorMessageKey(code), correlationId } });
+}
+
+/** Accepts the caller's correlation id only in the format the audit log stores (SR-AUD-01); otherwise a new one. */
+export function correlationIdOf(req: Request): string {
+  const given = req.headers.get('x-correlation-id') ?? '';
+  return /^[A-Za-z0-9._-]{8,64}$/.test(given) ? given : crypto.randomUUID();
 }
 
 export function bearer(req: Request): string | null {

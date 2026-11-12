@@ -5,6 +5,7 @@
 import { toDateRange } from '@vrticos/domain';
 import {
   fromPostgrestError,
+  isErrorCode,
   zAcademicYearInput,
   zAcademicYearStatusInput,
   zAssignmentInput,
@@ -36,7 +37,7 @@ function fail(ctx: OrgContext, section: Section, code: FlashError, ref?: string)
 }
 function dbFail(ctx: OrgContext, section: Section, err: { code?: string }): never {
   const mapped = fromPostgrestError(err).code;
-  fail(ctx, section, mapped === 'NOT_FOUND' ? 'PERMISSION_DENIED' : (mapped as FlashError));
+  fail(ctx, section, mapped === 'NOT_FOUND' ? 'PERMISSION_DENIED' : mapped);
 }
 const opt = (v: FormDataEntryValue | null): string | undefined => {
   const s = typeof v === 'string' ? v.trim() : '';
@@ -217,13 +218,8 @@ export async function inviteMember(formData: FormData) {
   }
   if (status === 201) done(ctx, 'invitations', 'invited');
   if (status === 401) redirect('/sign-in');
-  if (
-    code === 'INVITATION_PENDING_EXISTS' ||
-    code === 'MEMBERSHIP_SUSPENDED' ||
-    code === 'VALIDATION_FAILED' ||
-    code === 'PERMISSION_DENIED'
-  )
-    fail(ctx, 'invitations', code);
+  // Any catalogued code is shown with its own message (D1-13); unknown answers become INTERNAL with the reference.
+  if (isErrorCode(code) && code !== 'INTERNAL') fail(ctx, 'invitations', code);
   fail(ctx, 'invitations', 'INTERNAL', correlationId);
 }
 

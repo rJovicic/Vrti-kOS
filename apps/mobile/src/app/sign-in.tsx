@@ -42,12 +42,12 @@ export default function SignIn() {
 
   async function verify() {
     const parsed = zOtpInput.safeParse({ email, code: code.trim() });
-    if (!parsed.success) return setError(t('auth.codeInvalid'));
+    if (!parsed.success) return setError(t('errors.CODE_INVALID'));
     setBusy(true);
     setError(null);
     try {
       const { data, error: e } = await supabase.auth.verifyOtp({ email: parsed.data.email, token: parsed.data.code, type: 'email' });
-      if (e || !data.session) return setError(e?.status === 429 ? t('errors.RATE_LIMITED') : t('auth.codeInvalid'));
+      if (e || !data.session) return setError(e?.status === 429 ? t('errors.RATE_LIMITED') : t('errors.CODE_INVALID'));
       // Links any pending invitation for this verified address (single use, server-side). Failure is not fatal:
       // the user simply sees no kindergarten data until it succeeds on a later sign-in.
       await fetch(`${env.supabaseUrl}/functions/v1/accept-invitations`, {

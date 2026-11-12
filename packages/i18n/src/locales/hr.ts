@@ -55,7 +55,6 @@ export const hr = {
     code: 'Kod iz e-pošte',
     confirm: 'Potvrdi',
     otherEmail: 'Upiši drugu e-adresu',
-    codeInvalid: 'Kod nije ispravan ili je istekao. Zatražite novi kod.',
     mfaEnrollTitle: 'Postavite dvofaktorsku autentifikaciju',
     mfaEnrollLede: 'Uprava vrtića pristupa osjetljivim podacima, zato je uz kod iz e-pošte potreban i kod iz aplikacije za autentifikaciju (npr. Google Authenticator, Microsoft Authenticator, Aegis).',
     mfaScan: 'Skenirajte QR kod u aplikaciji za autentifikaciju ili ručno upišite ključ:',
@@ -63,7 +62,6 @@ export const hr = {
     mfaVerifyTitle: 'Potvrda prijave',
     mfaVerifyLede: 'Upišite šesteroznamenkasti kod iz aplikacije za autentifikaciju.',
     mfaCode: 'Kod iz aplikacije',
-    mfaInvalid: 'Kod nije ispravan. Provjerite vrijeme na uređaju i pokušajte ponovno.',
     signOut: 'Odjava',
     noAdminAccess: 'Ovaj račun nema pristup administraciji.',
     noAdminAccessHelp: 'Administracija je namijenjena upravi vrtića. Odgojitelji i roditelji koriste mobilnu aplikaciju VrtićOS.',
@@ -218,18 +216,24 @@ export const hr = {
       ended: 'Raspored je završen.',
     },
   },
+  // Exactly one message per code in packages/validation/src/errors.ts (D1-13, checked by catalog.test.ts).
   errors: {
+    VALIDATION_FAILED: 'Provjerite označena polja.',
+    CODE_INVALID: 'Kod nije ispravan ili je istekao. Zatražite novi kod.',
+    MFA_INVALID: 'Kod nije ispravan. Provjerite vrijeme na uređaju i pokušajte ponovno.',
+    AUTH_REQUIRED: 'Prijavite se ponovno.',
+    AUTH_SESSION_EXPIRED: 'Sesija je istekla. Prijavite se ponovno.',
+    PERMISSION_DENIED: 'Nemate ovlast za ovu radnju.',
+    NOT_FOUND: 'Traženi sadržaj nije pronađen.',
+    METHOD_NOT_ALLOWED: 'Ova radnja nije podržana.',
     CONFLICT: 'Takav zapis već postoji ili se preklapa s postojećim.',
     INVITATION_PENDING_EXISTS: 'Za ovu osobu i ulogu već postoji pozivnica na čekanju.',
     MEMBERSHIP_SUSPENDED: 'Ova osoba je suspendirana u toj ulozi. Umjesto nove pozivnice ponovno aktivirajte postojeće članstvo.',
-    NOT_FOUND: 'Traženi sadržaj nije pronađen.',
-    PERMISSION_DENIED: 'Nemate ovlast za ovu radnju.',
-    VALIDATION_FAILED: 'Provjerite označena polja.',
-    AUTH_REQUIRED: 'Prijavite se ponovno.',
-    MFA_REQUIRED: 'Potrebna je potvrda dvofaktorskom autentifikacijom.',
+    INVITATION_LIMIT_REACHED: 'Dosegnut je najveći broj pozivnica za ovaj vrtić u jednom satu. Pokušajte ponovno kasnije.',
     RATE_LIMITED: 'Previše pokušaja. Pričekajte trenutak.',
     INTERNAL: 'Došlo je do pogreške. Oznaka: {{correlationId}}',
   },
+
 } as const;
 
 type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };

@@ -53,7 +53,7 @@ export default async function MfaPage({ searchParams }: { searchParams: SearchPa
         labels={{
           code: t('auth.mfaCode'),
           confirm: t('auth.confirm'),
-          errors: { MFA_INVALID: t('auth.mfaInvalid'), RATE_LIMITED: t('errors.RATE_LIMITED') },
+          errors: { MFA_INVALID: t('errors.MFA_INVALID'), RATE_LIMITED: t('errors.RATE_LIMITED') },
         }}
       />
       <form action={signOut}>
