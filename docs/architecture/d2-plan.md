@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
 - Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
-  D-27 precondition for work on the working branch the same day. **D2-A, D2-B, D2-C and D2-D are implemented** (2026-11-12); E–I are not.
+  D-27 precondition for work on the working branch the same day. **D2-A…D2-E are implemented** (2026-11-12); F–I are not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -75,9 +75,20 @@ children or group size (FR-04-9).
 ## 5. Write paths
 - **Simple writes** go through PostgREST as the manager (RLS + column grants + guard triggers): create child, guardian,
   pickup authorization, restriction, and flag changes.
-- **RPCs** (`api` schema, SECURITY INVOKER, one transaction each):
-  - `api.transfer_child(child, new_group, on_date)` closes the old enrolment and opens the new one (FR-04-2);
-  - `api.withdraw_child(child, on_date)` closes the enrolment, links and pickup authorizations and sets `withdrawn` (FR-04-3).
+- **RPCs** (`api` schema, SECURITY INVOKER wrappers, one transaction each) — **implemented in D2-E**:
+  - `api.transfer_child(child, new_group, effective_on)`: from `effective_on` the child is in the new group; the current
+    enrolment ends the day before and is kept; the new one keeps its planned end (FR-04-2, AC-04-4);
+  - `api.withdraw_child(child, last_day)`: enrolment, guardian links and pickup authorizations valid after `last_day`
+    end with it, the child becomes `withdrawn` (FR-04-3, AC-04-8, **D-35**); flags, restrictions, guardian records and
+    memberships are unchanged; nothing is deleted;
+  - dates are today or later, and a manual change of an enrolment period never changes days before today (**D-36**);
+  - deviation from the original sketch (technical): the work runs in `private.transfer_child` / `private.withdraw_child`
+    (SECURITY DEFINER, not exposed — SR-API-01) because `children.status` is writable by no client. Each authorizes
+    first (manager with MFA; one answer for unknown ids and other kindergartens), then locks the child row and
+    validates. A failure at any step rolls back the whole call (tested with injected failures);
+  - after withdrawal the trigger `guard_child_lifecycle` refuses any enrolment, link or pickup authorization valid after
+    the last day (`CHILD_WITHDRAWN`); a withdrawn child is not transferred or withdrawn again;
+  - refused instead of guessed (open D-37): records that start after the operation date are not cancelled.
 - **Guardian invitation** (FR-01-1): `invite-member` gets an optional `guardianId`. The guard checks:
   - the guardian belongs to the same kindergarten;
   - the role is `guardian`;
@@ -87,8 +98,10 @@ children or group size (FR-04-9).
   already linked to a different profile, nothing is linked and the attempt is audited as denied.
 - **Audit:** `audit_row` triggers on all six tables (role and correlation id come from R-51). Restriction changes are
   also covered by the per-row audit. No content values are written, only column names.
-- **New error codes** (catalogued when implemented): `ENROLLMENT_OVERLAP` (409), `CHILD_WITHDRAWN` (409),
-  `GUARDIAN_ALREADY_LINKED` (409). Each gets a Croatian message.
+- **New error codes:** D2-E added `EFFECTIVE_DATE_IN_PAST` (400), `HISTORY_IMMUTABLE`, `CHILD_WITHDRAWN`,
+  `CHILD_NOT_ENROLLED`, `TRANSFER_SAME_GROUP`, `TRANSFER_ON_ENROLLMENT_START`, `GROUP_ARCHIVED`, `ENROLLMENT_OVERLAP`,
+  `WITHDRAWAL_HAS_FUTURE_RECORDS` (409), each with a Croatian message; raised only after authorization, so they are
+  exposed (`exposedDbErrors`). `GUARDIAN_ALREADY_LINKED` (409) comes with D2-F.
 
 ## 6. App flows
 **Admin (web, managers, AAL2):**
@@ -137,7 +150,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 | D2-B | `guardians` + `child_guardians` + `guardian_child_ids()` | pgTAP NEG-03/04/06/11 green | **Done 2026-11-12:** `20261112102000_guardians.sql`, pgTAP 10 (50), integration `guardians.test.ts` (7). |
 | D2-C | `access_restrictions` (manager only) | pgTAP NEG-05 green; restriction wins over flags immediately | **Done 2026-11-12:** `20261112113000_access_restrictions.sql`, pgTAP 11 (47), integration `access-restrictions.test.ts` (7). D-33 decided and implemented (`20261112115000_link_restriction_flag.sql`, pgTAP 12). |
 | D2-D | `pickup_authorizations` | pgTAP read matrix green | **Done 2026-11-12:** `20261112120000_pickup_authorizations.sql`, pgTAP 13 (42), integration `pickup-authorizations.test.ts` (6), 4 synthetic persons in the seed. Not a handover rule (D3). |
-| D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green |
+| D2-E | RPCs `transfer_child`, `withdraw_child` + error codes | pgTAP + integration green; catalog test green | **Done 2026-11-12:** `20261112130000_transfer_and_withdrawal.sql`, pgTAP 14 (91), integration `transfer-withdrawal.test.ts` (7). D-35, D-36 applied; D-37 open. |
 | D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green |
 | D2-G | Admin screens | e2e green; build green |
 | D2-H | Mobile Parent Home with real data, child detail, educator group list | render tests green; Expo export green; R-44 check on a device still required |

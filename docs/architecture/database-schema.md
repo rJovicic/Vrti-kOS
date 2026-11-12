@@ -169,7 +169,7 @@ grant), `created_at`.
 - **RLS** S: manager, `id in educator_child_ids()`, `id in guardian_child_ids('can_view')` · I/U: manager · D: none
 - **Del** RESTRICT; anonymization via retention job (Phase 12) · **Sens.** R3
 - **As implemented (D2-A):** S for managers and `educator_child_ids()`; the guardian branch arrives with D2-B. Clients
-  write only names and `internal_ref`; `status`/`withdrawn_on` change only through `api.withdraw_child` (D2-E).
+  write only names and `internal_ref`; `status`/`withdrawn_on` change only through `api.withdraw_child` (implemented in D2-E, D-35).
   `enrollments`: educators see only enrolments valid today in their groups; clients may change only `valid_during`.
 
 ### 5.8 `guardians` — implemented in D2-B (`20261112102000_guardians.sql`)
@@ -219,7 +219,8 @@ grant), `created_at`.
 `id`, `organization_id`, `child_id`, `group_id`, `valid_during`, `created_by`, `created_at`.
 - **FK** composite to `children`, `groups` RESTRICT · **EXCLUDE** `(child_id with =, valid_during with &&)` (one active group per child; validated)
 - **IX** `(group_id)`, `(child_id)`
-- **RLS** S: manager, educators (`group_id in educator_group_ids()`), guardians (`child_id in guardian_child_ids('can_view')`) · I/U: manager; transfer via `api.transfer_child()` (invoker, one transaction) · D: none
+- **RLS** S: manager, educators (`group_id in educator_group_ids()`), guardians (`child_id in guardian_child_ids('can_view')`) · I/U: manager; transfer via `api.transfer_child()` (one transaction) · D: none
+- **As implemented (D2-E):** `api.transfer_child`/`api.withdraw_child` are invoker wrappers around `private.*` definer functions (explicit manager+MFA check first, child row locked). Trigger `guard_child_lifecycle` (enrolments, links, pickup authorizations): a client change of an enrolment period must leave all days before today unchanged (D-36, `HISTORY_IMMUTABLE`); nothing about a withdrawn child may be valid after `withdrawn_on` (D-35, `CHILD_WITHDRAWN`). Summary audit events `child.transfer` / `child.withdraw` (ids, dates, counts).
 - **Sens.** R3
 
 ### 5.13 `staff_assignments` — implemented in D1 (`20261111100000_staff_assignments.sql`)
