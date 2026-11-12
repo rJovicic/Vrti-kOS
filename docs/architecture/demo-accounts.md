@@ -49,5 +49,9 @@ substitute in Sunčice from the day the seed is loaded for five days.
 | pozvan.alfa.2@demo.vrtic.test | guardian | expired |
 | pozvan.alfa.3@demo.vrtic.test | guardian | revoked |
 
+## Children
+
+30 fictional children, five per group, enrolled since 2026-09-01. Guardians are linked in D2-B.
+
 Only the pending invitation can be accepted: sign in as that address after an invite was sent through the
 admin app (the seed does not create Auth accounts for invited people).

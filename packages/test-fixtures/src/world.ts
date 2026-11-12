@@ -64,11 +64,22 @@ export interface Invitation {
   createdBy: string;
 }
 
+/** Synthetic child (D2-A): fictional name, enrolled in one group since the start of the academic year. */
+export interface Child {
+  id: string;
+  enrollmentId: string;
+  orgKey: OrgKey;
+  groupId: string;
+  firstName: string;
+  lastName: string;
+}
+
 export interface World {
   orgs: Org[];
   people: Person[];
   assignments: Assignment[];
   invitations: Invitation[];
+  children: Child[];
 }
 
 /** Builds the synthetic demo world (kindergartens Alfa and Beta). Same seed → same world. */
@@ -151,5 +162,21 @@ export function buildWorld(seed = 20261111): World {
     const lastName = r.pick(surnames);
     return { id: r.uuid(), orgKey: 'alfa', email: `pozvan.alfa.${i + 1}@${EMAIL_DOMAIN}`, role: i === 0 ? 'educator' : 'guardian', firstName, lastName, state, createdBy: manager('alfa') };
   });
-  return { orgs, people, assignments, invitations };
+  // D2-A additions — generated last so every earlier id stays stable. Five fictional children per group.
+  const children: Child[] = [];
+  const usedChildren = new Set<string>();
+  for (const org of orgs) {
+    for (const g of org.groups) {
+      for (let i = 0; i < 5; i++) {
+        let firstName: string, lastName: string;
+        do {
+          firstName = r.pick(givenNames);
+          lastName = r.pick(surnames);
+        } while (usedChildren.has(`${firstName} ${lastName}`));
+        usedChildren.add(`${firstName} ${lastName}`);
+        children.push({ id: r.uuid(), enrollmentId: r.uuid(), orgKey: org.key, groupId: g.id, firstName, lastName });
+      }
+    }
+  }
+  return { orgs, people, assignments, invitations, children };
 }

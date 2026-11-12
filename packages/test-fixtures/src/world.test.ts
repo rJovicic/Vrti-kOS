@@ -23,6 +23,12 @@ describe('synthetic world', () => {
     expect(subs).toHaveLength(1);
     expect(subs[0]!.days && subs[0]!.approvedBy).toBeTruthy();
   });
+  it('children are enrolled in a group of their own kindergarten, five per group, with unique names', () => {
+    const w = buildWorld();
+    for (const c of w.children) expect(w.orgs.find((o) => o.key === c.orgKey)!.groups.some((g) => g.id === c.groupId)).toBe(true);
+    expect(w.children).toHaveLength(w.orgs.reduce((n, o) => n + o.groups.length, 0) * 5);
+    expect(new Set(w.children.map((c) => `${c.firstName} ${c.lastName}`)).size).toBe(w.children.length);
+  });
   it('assignments never cross kindergartens', () => {
     const w = buildWorld();
     for (const a of w.assignments) {

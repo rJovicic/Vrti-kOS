@@ -48,6 +48,70 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"children": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"first_name": string,"id": string,"internal_ref": string | null,"last_name": string,"organization_id": string,"status": Database["public"]['Enums']["child_status"],"updated_at": string,"withdrawn_on": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"first_name": string,"id"?: string,"internal_ref"?: string | null,"last_name": string,"organization_id": string,"status"?: Database["public"]['Enums']["child_status"],"updated_at"?: string,"withdrawn_on"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"first_name"?: string,"id"?: string,"internal_ref"?: string | null,"last_name"?: string,"organization_id"?: string,"status"?: Database["public"]['Enums']["child_status"],"updated_at"?: string,"withdrawn_on"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "children_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "children_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"enrollments": {
+                  Row: {
+                    "child_id": string,"created_at": string,"created_by": string | null,"group_id": string,"id": string,"organization_id": string,"updated_at": string,"valid_during": unknown
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "child_id": string,"created_at"?: string,"created_by"?: string | null,"group_id": string,"id"?: string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
+                  }
+                  Update: {
+                    "child_id"?: string,"created_at"?: string,"created_by"?: string | null,"group_id"?: string,"id"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "enrollments_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "enrollments_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "enrollments_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "enrollments_organization_id_group_id_fkey"
+      columns: ["organization_id","group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["organization_id","id"]
+    }
+                  ]
                 },"facilities": {
                   Row: {
                     "address": string | null,"archived_at": string | null,"created_at": string,"id": string,"name": string,"organization_id": string,"updated_at": string
@@ -297,7 +361,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","child_status": "active"|"withdrawn","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -417,7 +481,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"child_status": ["active", "withdrawn"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"]
           }
         }
 } as const

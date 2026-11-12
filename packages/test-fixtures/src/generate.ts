@@ -36,9 +36,13 @@ writeFileSync(
     '|---|---|---|',
     ...world.invitations.map((i) => `| ${i.email} | ${i.role} | ${i.state} |`),
     '',
+    '## Children',
+    '',
+    `${world.children.length} fictional children, five per group, enrolled since 2026-09-01. Guardians are linked in D2-B.`,
+    '',
     'Only the pending invitation can be accepted: sign in as that address after an invite was sent through the',
     'admin app (the seed does not create Auth accounts for invited people).',
     '',
   ].join('\n'),
 );
-console.log(`seed: ${world.orgs.length} organizations, ${world.people.length} people, ${world.assignments.length} assignments, ${world.invitations.length} invitations`);
+console.log(`seed: ${world.orgs.length} organizations, ${world.people.length} people, ${world.assignments.length} assignments, ${world.invitations.length} invitations, ${world.children.length} children`);

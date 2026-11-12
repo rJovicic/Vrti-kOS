@@ -55,6 +55,12 @@ export function toSeedSql(world: World): string {
       `insert into public.invitations (id, organization_id, email, role, first_name, last_name, created_by, created_at, expires_at, status, revoked_by, revoked_at) values (${q(i.id)}, ${q(orgId(i.orgKey))}, ${q(i.email)}, '${i.role}', ${q(i.firstName)}, ${q(i.lastName)}, ${q(i.createdBy)}, ${times}, ${revoked});`,
     );
   }
+  for (const c of world.children) {
+    out.push(
+      `insert into public.children (id, organization_id, first_name, last_name, created_by) values (${q(c.id)}, ${q(orgId(c.orgKey))}, ${q(c.firstName)}, ${q(c.lastName)}, null);`,
+      `insert into public.enrollments (id, organization_id, child_id, group_id, valid_during, created_by) values (${q(c.enrollmentId)}, ${q(orgId(c.orgKey))}, ${q(c.id)}, ${q(c.groupId)}, daterange('2026-09-01', null), null);`,
+    );
+  }
   out.push('commit;', '');
   return out.join('\n');
 }
