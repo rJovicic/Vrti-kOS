@@ -254,11 +254,17 @@ grant), `created_at`.
   read status through the D3-C read model. Handover columns exist but are not set until D-38.
 - **Sens.** R3
 
-### 5.15 `absence_records`
+### 5.15 `absence_records` — implemented in D3-B (`20261115110000_absence_records.sql`)
 `id`, `organization_id`, `child_id`, `starts_on`, `ends_on`, `reported_by`, `source` (`guardian|staff_on_behalf`), `status` (`active|cancelled`), `is_late`, `cancelled_by`, `cancelled_at`, `created_at`. **No reason field** (FR-06-2, Q-P16).
 - **Check** `starts_on <= ends_on`, `ends_on - starts_on <= 30`
 - **IX** `(organization_id, starts_on)`, `(child_id, starts_on)`
 - **RLS** S: manager, educators, guardians (`can_view`) · I: guardian (`child_id in guardian_child_ids('can_report_absence')`, `source='guardian'`, `reported_by=auth.uid()`), manager (`staff_on_behalf`) · U: cancel only — guard trigger permits `status→cancelled` for reporter or manager, future days only · D: none
+- **As implemented (D3-B):** no client write grants; `api.report_absence`, `api.record_absence_on_behalf` (managers;
+  educators denied, N-10 open), `api.cancel_absence` (reporter while still allowed, or manager). Start today or later,
+  at most 30 days ahead, at most 30 days long (`ABSENCE_DATES_INVALID`); active reports of one child do not overlap
+  (`ABSENCE_OVERLAP`, also an exclusion constraint). Cancel: not started → whole report cancelled; started → original
+  ends yesterday, a cancelled row (`split_from`) holds today and later. `is_late` from `absence_cutoff_local`. Educators
+  read via `educator_child_ids()`. Every insert/update audited.
 - **Sens.** R3
 
 ### 5.16 `announcements`
