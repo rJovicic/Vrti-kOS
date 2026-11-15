@@ -270,11 +270,19 @@ grant), `created_at`.
   read via `educator_child_ids()`. Every insert/update audited.
 - **Sens.** R3
 
-### 5.16 `announcements`
+### 5.16 `announcements` — implemented in D4-B (`20261116120000_announcements.sql`)
 `id`, `organization_id`, `author_id`, `title` (≤120), `body` (≤4000), `audience_scope` (`organization|facility|group`), `audience_ids uuid[]` (facility/group IDs; validated by trigger against the same org), `audience_roles text[]` (`guardians`, `staff`), `status` (`draft|published|archived`), `published_at`, `created_at`.
 - **IX** `(organization_id, status, published_at desc)`; GIN on `audience_ids`
 - **RLS** S: manager; author; recipients — `status='published'` and audience matches current relationships (guardian: `guardian_group_ids()` / their facilities / org; staff: assignments) · I/U: manager (educator: Otvoreno → denied, SR-AUTHZ-10) · D: none (archive)
-- Published rows are immutable except `status→archived` (demo: no revisions)
+- **As implemented (D4-B):** writes only through `api.save_announcement_draft / publish_announcement / edit_announcement /
+  archive_announcement` (invoker wrappers; managers with MFA; educators denied, SR-AUTHZ-10). Audience ids are checked
+  against the kindergarten and scope (`ANNOUNCEMENT_AUDIENCE_INVALID`), limits 120/4,000 (`ANNOUNCEMENT_CONTENT_INVALID`),
+  state machine draft → published → archived (`ANNOUNCEMENT_STATE_INVALID`); the audience is fixed once published.
+  Edits after publishing store the previous title and text in `announcement_revisions` (managers only, AC-07-3) and set
+  `edited_at`. `private.announcement_recipients(id)` is the single audience definition (RLS and fan-out): guardians with
+  `can_view`, link valid today and started on/before the publishing day, no active restriction, active membership,
+  child enrolled today in a matching group (facility/group scope); educators assigned today to a matching group; managers
+  for kindergarten-wide staff announcements. Audit via `private.audit_row()` (column names only).
 - **Sens.** R2
 
 ### 5.17 `conversations`

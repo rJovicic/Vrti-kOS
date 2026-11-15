@@ -54,7 +54,7 @@ As schema §5.16–5.22 with these technical choices:
 | Package | Content | Acceptance |
 |---|---|---|
 | D4-A | Notification core: `notifications`, `notification_preferences`, fan-out helper, absence-report notifications to educators (FR-06-5), mark read, generic push texts | pgTAP (own rows only, no content columns, preferences respected, fan-out recipients), unit test over all push templates, integration | **Done 2026-11-15:** `20261116110000_notifications.sql`; pgTAP 24 (26; mutation → 3 fail); integration `notifications.test.ts` (3); `@vrticos/i18n` `pushPayload` + tests (3). Push texts live in i18n (shared, UI-free), not domain. |
-| D4-B | Announcements: tables, audience at read time, publish/edit/archive RPCs with revisions and audit, fan-out | pgTAP AC-07-1/2/3, NEG (educator publish, other kindergarten, guardian of another group, after transfer), integration |
+| D4-B | Announcements: tables, audience at read time, publish/edit/archive RPCs with revisions and audit, fan-out | pgTAP AC-07-1/2/3, NEG (educator publish, other kindergarten, guardian of another group, after transfer), integration | **Done 2026-11-15:** `20261116120000_announcements.sql`; pgTAP 25 (43; mutation → 4 fail); integration `announcements.test.ts` (3). |
 | D4-C | Admin: announcements list, editor with warning, publish, edit, archive, revisions | e2e |
 | D4-D | Mobile: notification centre (list, unread, open resource under RLS, "no longer available"), announcements, push preferences per type | render tests, Expo export |
 | D4-E | Daily overview: table, RPCs (draft, publish, same-day edit), RLS; mobile educator editor and guardian view; fan-out | pgTAP AC-10-1/2 + NEG, integration, render |
