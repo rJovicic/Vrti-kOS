@@ -158,6 +158,15 @@ export const hr = {
     needsConnection: 'Za slanje prijave potrebna je internetska veza. Prijava nije poslana.',
   },
   // Mobile app shell (D1-10): navigation destinations and states of the signed-in app.
+  push: {
+    title: 'VrtićOS',
+    types: {
+      'announcement.published': 'Nova obavijest vrtića',
+      'absence.reported': 'Nova prijava izostanka',
+      'message.received': 'Nova poruka',
+      'daily_entry.published': 'Novi dnevni pregled',
+    },
+  },
   nav: {
     home: 'Početna',
     today: 'Danas',

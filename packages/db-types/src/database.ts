@@ -35,6 +35,9 @@ export type Database = {
               "first_name": string,"id": string,"kind": string,"last_name": string,"restricted": boolean
             }[]
                            },
+"mark_notifications_read":
+{ Args: { "p_ids"?: (string)[] }; Returns: number
+                           },
 "record_absence_on_behalf":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
                            },
@@ -502,6 +505,52 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notification_preferences": {
+                  Row: {
+                    "profile_id": string,"push_enabled": boolean,"type": Database["public"]['Enums']["notification_type"],"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "profile_id": string,"push_enabled": boolean,"type": Database["public"]['Enums']["notification_type"],"updated_at"?: string
+                  }
+                  Update: {
+                    "profile_id"?: string,"push_enabled"?: boolean,"type"?: Database["public"]['Enums']["notification_type"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_preferences_profile_id_fkey"
+      columns: ["profile_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "created_at": string,"id": string,"organization_id": string,"push_attempts": number,"push_status": string,"read_at": string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"organization_id": string,"push_attempts"?: number,"push_status"?: string,"read_at"?: string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"organization_id"?: string,"push_attempts"?: number,"push_status"?: string,"read_at"?: string | null,"recipient_id"?: string,"resource_id"?: string,"resource_type"?: string,"type"?: Database["public"]['Enums']["notification_type"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_recipient_id_fkey"
+      columns: ["recipient_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"organizations": {
                   Row: {
                     "absence_cutoff_local": string | null,"created_at": string,"id": string,"invitation_limit_per_hour": number,"locale": string,"name": string,"privacy_notice_version": string | null,"quiet_hours_end": string,"quiet_hours_start": string,"slug": string,"status": string,"timezone": string,"updated_at": string
@@ -719,7 +768,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","attendance_correction_reason": "entry_error"|"forgot"|"other","attendance_kind": "check_in"|"check_out"|"void","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","attendance_correction_reason": "entry_error"|"forgot"|"other","attendance_kind": "check_in"|"check_out"|"void","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","notification_type": "announcement.published"|"absence.reported"|"message.received"|"daily_entry.published","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -839,7 +888,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"attendance_correction_reason": ["entry_error", "forgot", "other"],"attendance_kind": ["check_in", "check_out", "void"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"attendance_correction_reason": ["entry_error", "forgot", "other"],"attendance_kind": ["check_in", "check_out", "void"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"notification_type": ["announcement.published", "absence.reported", "message.received", "daily_entry.published"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
           }
         }
 } as const
