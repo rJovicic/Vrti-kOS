@@ -298,10 +298,16 @@ grant), `created_at`.
 - **RLS** S: `can_access_conversation(conversation_id)` · I: same, `sender_id = auth.uid()` · U: guard trigger — sender only, within 5 min, only `withdrawn_at` (sets `body = null`) · D: none
 - **Sens.** **R4**
 
-### 5.19 `daily_entries`
+### 5.19 `daily_entries` — implemented in D4-E (`20261116130000_daily_entries.sql`)
 `id`, `organization_id`, `group_id`, `entry_date`, `body` (≤1000), `activity_tags text[]`, `status` (`draft|published`), `author_id`, `published_at`, `edited_at`.
 - **FK** composite to `groups` · **UQ** `(organization_id, group_id, entry_date)`
 - **RLS** S: manager; educators of the group; guardians — `published` and a child of theirs was enrolled in the group on `entry_date` · I/U: educator with assignment on the group today (`entry_date = org_today`; edits same day only) · D: none
+- **As implemented (D4-E):** writes only through `api.save_daily_entry(group, body, tags, publish)` (invoker wrapper;
+  educator assigned today; managers and others `PERMISSION_DENIED`; limits and the fixed tag list `outdoor, art, music,
+  story` → `DAILY_ENTRY_CONTENT_INVALID`); creates or changes today's row; after publishing only same-day edits with
+  `edited_at` (no unpublishing). Guardian audience = `private.daily_entry_recipients(id)` (can_view, link valid today, no
+  active restriction, active membership, child enrolled in the group on `entry_date`), used by RLS and by the fan-out on
+  publishing. Audit via `private.audit_row()` (column names only).
 - **Sens.** R3
 
 ### 5.20 `audit_events` — implemented as `audit.audit_events` (R-51, `20261112084900_audit_schema_and_actor.sql`)

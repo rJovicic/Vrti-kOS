@@ -147,6 +147,14 @@ absence RLS; a report that is no longer readable shows "Sadržaj više nije dost
 (stored in `notification_preferences`), with the note that the kindergarten has not enabled push yet (D-40). Nothing of
 this is stored on the device. Render tests 6; the i18n notification types are checked against the DB enum at compile time.
 
+**D4-E daily overview (2026-11-15):** educators open "Dnevni pregled: <skupina>" from "Danas" (a view inside the
+destination): the warning that guardians of the whole group read it and that no names, health or developmental data
+belong there, text up to 1,000 characters with a counter, four fixed activity tags, "Objavi skrbnicima" / "Spremi kao
+nacrt", and after publishing "Spremi izmjenu" (marked "uređeno"). Guardians see today's published overview of their
+children's groups and today's or unread announcements in the "Danas" section of Parent Home; the overview opens with the
+earlier days they may read and "Objavile odgojiteljice skupine u …" (no author name); an announcement opens the
+notification centre. Render tests 5.
+
 ## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an
