@@ -16,11 +16,17 @@ export type Database = {
               "invitation_id": string,"organization_id": string,"role": Database["public"]['Enums']["org_role"]
             }[]
                            },
+"cancel_absence":
+{ Args: { "p_absence_id": string }; Returns: string
+                           },
 "cancel_future_record":
 { Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
                            },
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
+                           },
+"record_absence_on_behalf":
+{ Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
                            },
 "record_attendance":
 { Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at"?: string,"p_source"?: string }; Returns: {
@@ -32,6 +38,9 @@ export type Database = {
                            },
 "record_missed_attendance":
 { Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at": string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_source"?: string }; Returns: string
+                           },
+"report_absence":
+{ Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
                            },
 "transfer_child":
 { Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
@@ -51,7 +60,51 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "academic_years": {
+            "absence_records": {
+                  Row: {
+                    "cancelled_at": string | null,"cancelled_by": string | null,"child_id": string,"created_at": string,"ends_on": string,"id": string,"is_late": boolean,"organization_id": string,"reported_by": string,"source": string,"split_from": string | null,"starts_on": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"child_id": string,"created_at"?: string,"ends_on": string,"id"?: string,"is_late"?: boolean,"organization_id": string,"reported_by": string,"source": string,"split_from"?: string | null,"starts_on": string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "cancelled_at"?: string | null,"cancelled_by"?: string | null,"child_id"?: string,"created_at"?: string,"ends_on"?: string,"id"?: string,"is_late"?: boolean,"organization_id"?: string,"reported_by"?: string,"source"?: string,"split_from"?: string | null,"starts_on"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "absence_records_cancelled_by_fkey"
+      columns: ["cancelled_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "absence_records_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "absence_records_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "absence_records_organization_id_split_from_fkey"
+      columns: ["organization_id","split_from"]
+isOneToOne: false
+      referencedRelation: "absence_records"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "absence_records_reported_by_fkey"
+      columns: ["reported_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"academic_years": {
                   Row: {
                     "created_at": string,"ends_on": string,"id": string,"name": string,"organization_id": string,"starts_on": string,"status": Database["public"]['Enums']["academic_year_status"],"updated_at": string
                   }

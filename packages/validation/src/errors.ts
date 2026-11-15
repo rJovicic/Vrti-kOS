@@ -46,6 +46,11 @@ export const errorCatalog = {
   ATTENDANCE_UNDO_EXPIRED: { status: 409 },
   ATTENDANCE_ALREADY_VOIDED: { status: 409 },
   IDEMPOTENCY_KEY_REUSED: { status: 409 },
+  /** D3-B absences: today or later, at most 30 days ahead and 30 days long; no overlap; cancel days not passed. */
+  ABSENCE_DATES_INVALID: { status: 400 },
+  ABSENCE_OVERLAP: { status: 409 },
+  ABSENCE_ALREADY_CANCELLED: { status: 409 },
+  ABSENCE_ALREADY_PAST: { status: 409 },
   RATE_LIMITED: { status: 429 },
   INTERNAL: { status: 500 },
 } as const satisfies Record<string, { status: number }>;
@@ -106,6 +111,10 @@ export const dbErrorCatalog = {
   ATTENDANCE_UNDO_EXPIRED: 'ATTENDANCE_UNDO_EXPIRED',
   ATTENDANCE_ALREADY_VOIDED: 'ATTENDANCE_ALREADY_VOIDED',
   IDEMPOTENCY_KEY_REUSED: 'IDEMPOTENCY_KEY_REUSED',
+  ABSENCE_DATES_INVALID: 'ABSENCE_DATES_INVALID',
+  ABSENCE_OVERLAP: 'ABSENCE_OVERLAP',
+  ABSENCE_ALREADY_CANCELLED: 'ABSENCE_ALREADY_CANCELLED',
+  ABSENCE_ALREADY_PAST: 'ABSENCE_ALREADY_PAST',
 } as const satisfies Record<string, ErrorCode>;
 export type DbErrorName = keyof typeof dbErrorCatalog;
 
@@ -129,6 +138,10 @@ export const exposedDbErrors = [
   'ATTENDANCE_UNDO_EXPIRED',
   'ATTENDANCE_ALREADY_VOIDED',
   'IDEMPOTENCY_KEY_REUSED',
+  'ABSENCE_DATES_INVALID',
+  'ABSENCE_OVERLAP',
+  'ABSENCE_ALREADY_CANCELLED',
+  'ABSENCE_ALREADY_PAST',
 ] as const satisfies readonly DbErrorName[];
 
 export interface ApiError {
