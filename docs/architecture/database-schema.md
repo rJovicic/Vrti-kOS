@@ -236,13 +236,22 @@ grant), `created_at`.
   (kindergarten time zone); `groups_select` = manager or that set.
 - **Sens.** R2
 
-### 5.14 `attendance_records`
+### 5.14 `attendance_records` — implemented in D3-A (`20261115100000_attendance_records.sql`)
 `id`, `organization_id`, `child_id`, `kind attendance_kind` (`check_in|check_out|void`), `occurred_at`, `local_date` (set by trigger from org tz), `recorded_by` (default `auth.uid()`), `recorded_at` (default `now()`), `source` (`app|admin|offline_sync`), `handover_child_guardian_id null`, `handover_pickup_id null`, `corrects_id null`, `correction_reason` (`entry_error|forgot|other`, null), `idempotency_key uuid`.
 - **FK** composite to `children`; `(organization_id, handover_child_guardian_id) → child_guardians`; `(organization_id, handover_pickup_id) → pickup_authorizations`; `(organization_id, corrects_id) → attendance_records`
 - **Check** at most one handover reference; `void` requires `corrects_id`; correction after undo window requires `correction_reason`
 - **UQ** `(organization_id, idempotency_key)` (SR-API-08) · **IX** `(organization_id, local_date)`, `(child_id, local_date)`
 - **RLS** S: manager, educators (`child_id in educator_child_ids()`), guardians (`can_view`) · I: educator for `educator_child_ids()` with `recorded_by = auth.uid()` and `local_date = org_today`; manager (any child of org) · U/D: **no grant** (immutable; validated)
 - **Guard trigger:** void within 10 s by the same recorder without reason; later corrections only by manager with reason (FR-05-5, SR-AUTHZ-12)
+- **As implemented (D3-A):** clients have **no INSERT** grant; writes go through `api.record_attendance`,
+  `api.undo_attendance`, `api.correct_attendance`, `api.record_missed_attendance` (invoker wrappers; `private` definer
+  functions authorize first, take a per-child-and-day advisory lock and validate). One sequence rule on every write:
+  per child and local day the events that are not voided, ordered by `occurred_at`, alternate `check_in`, `check_out`
+  (double arrival, departure without arrival and out-of-order offline replays → `ATTENDANCE_STATE_CONFLICT`). Educators:
+  today only, children in `educator_child_ids()`; corrections with a reason (`entry_error|forgot|other`) for today;
+  managers any past day. Undo: recorder within 10 s, no reason. The child must be enrolled that day. Append-only for every
+  role (`ATTENDANCE_APPEND_ONLY`); voids and corrections audited. Select: managers and `educator_child_ids()`; guardians
+  read status through the D3-C read model. Handover columns exist but are not set until D-38.
 - **Sens.** R3
 
 ### 5.15 `absence_records`

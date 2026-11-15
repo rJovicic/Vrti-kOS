@@ -24,7 +24,7 @@
 | Past days | Read-only for educators; managers correct with reason | FR-05-10, AC-05-8 |
 | Idempotency | `unique (organization_id, idempotency_key)`; a replay returns the stored event | SR-API-08, AC-05-2 |
 | Double entry | Check-in only from *expected/absent*, check-out only from *present*; concurrent writers serialized per child | FR-05-2, FR-05-8 |
-| Conflict | Resolved by `occurred_at`; the second writer gets a warning, not silent loss | FR-05-8 |
+| Conflict | Resolved by `occurred_at`; the second writer gets a warning, not silent loss. Implemented as one sequence rule (events ordered by `occurred_at` must alternate arrival → departure); a write that would break it is refused with `ATTENDANCE_STATE_CONFLICT` and the app shows the current state | FR-05-8 |
 | Reported absence | Visible in the list; check-in of a child with an absence asks for confirmation | FR-05-7, AC-05-7 |
 | No "all present" | Not offered | FR-05-6 |
 | Guardian view | "U vrtiću od 7:42" / "Otišlo u 15:10", no staff identity; only children with `can_view` and no restriction | FR-05-9, AC-05-6 |
@@ -53,7 +53,7 @@
 ## 5. Work packages (order, acceptance)
 | Package | Content | Acceptance |
 |---|---|---|
-| D3-A | `attendance_records` + RPCs `record_attendance`, `undo_attendance`, `correct_attendance` + state machine, idempotency, per-child lock, `local_date` | pgTAP: RLS matrix, NEG-01/03/05/07/08/10, idempotency, double entry, undo window, correction rules; integration through the API |
+| D3-A | `attendance_records` + RPCs `record_attendance`, `undo_attendance`, `correct_attendance` + state machine, idempotency, per-child lock, `local_date` | pgTAP: RLS matrix, NEG-01/03/05/07/08/10, idempotency, double entry, undo window, correction rules; integration through the API | **Done 2026-11-15:** `20261115100000_attendance_records.sql`, pgTAP 19 (53), integration `attendance.test.ts` (6, incl. two educators at once). Also `api.record_missed_attendance` (FS-05 edge case: forgotten departure, manager next day). |
 | D3-B | `absence_records` + RPCs `report_absence`, `cancel_absence`, `record_absence_on_behalf`; late flag | pgTAP: NEG-04 (missing flag), NEG-05, AC-06-3, split cancel; integration |
 | D3-C | Read model `attendance_day` for staff and guardians (status, times; no recorder for guardians) | pgTAP: guardian sees status without `recorded_by`; restricted guardian nothing |
 | D3-D | Mobile educator attendance screen (online): list per group, one tap, undo 10 s, absence confirmation, conflict warning, states | render tests; Expo export |

@@ -102,6 +102,7 @@ Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09
 | DI-11 veza skrbnik–dijete | `guardians`, `child_guardians`, view `guardian_directory` | uprava; odgojitelj imena i prava (D-31) i oznaka „Ograničeno” (D-33); skrbnik samo vlastite neograničene veze | e-pošta i telefon skrbnika (e-pošta samo u pozivnici i Auth); veza na račun nije čitljiva nijednom klijentu, uprava vidi samo ima li račun | nema; samo planirana veza prije početka (D-37) |
 | DI-12 ograničenje | `access_restrictions` | **samo uprava**; odgojitelj samo oznaku; skrbnik ništa | razlog i sadržaj odluke; samo interna oznaka predmeta (≤100) | nema; završava se valjanošću |
 | DI-13 ovlaštena osoba | `pickup_authorizations` | uprava; odgojitelj i skrbnik samo danas valjane osobe | telefon, odnos prema djetetu, račun (D-34) | nema; samo planirano ovlaštenje prije početka (D-37) |
+| DI-14/15 dolasci i ispravci (D3-A) | `attendance_records` | uprava; odgojitelj za djecu svoje skupine danas; skrbnik ne čita retke (samo status kroz D3-C, bez djelatnika) | slobodan tekst, napomene; razlog ispravka samo kao kategorija | nema (samo dodavanje); R-53 |
 | DI-05 pozivnica | `invitations.guardian_id` | uprava | podaci o djetetu u poruci | R-53 (otvoreno) |
 
 Audit (DI-22) za sve navedeno bilježi ID-jeve, nazive stupaca, uloge i kodove razloga, nikad imena ni vrijednosti.
