@@ -80,9 +80,9 @@ describe('roles and tabs', () => {
     expect(screen.queryByText(hr.nav.messages)).toBeNull();
   });
 
-  it('educator: the attendance tab is a labelled placeholder (D3), without sample data', async () => {
+  it('educator: the attendance tab without a group today shows the specified empty state, without sample data', async () => {
     const r = await start({ session: session(ME), tables: tables([membership(ME, 'educator', ALFA)], { groups: [], facilities: [], staff_assignments: [] }) }, '/attendance');
-    expect(await screen.findByText(hr.shell.comingLater.attendance)).toBeTruthy();
+    expect(await screen.findByText(hr.attendance.noGroupToday)).toBeTruthy();
     expect(r.getPathname()).toBe('/attendance');
   });
 

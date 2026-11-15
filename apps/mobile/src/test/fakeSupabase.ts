@@ -9,8 +9,9 @@ export interface FakeSession {
 }
 
 export interface FakeRequest {
+  /** Table name, or `rpc:<function>` for an RPC in the api schema. */
   table: string;
-  op: 'select' | 'update';
+  op: 'select' | 'update' | 'rpc';
   headers: Record<string, string>;
   values?: Row;
 }
@@ -20,6 +21,8 @@ export interface FakeState {
   tables: Record<string, Row[]>;
   /** Next request to this table answers with this error (e.g. an expired token). */
   failNext?: { table: string; error: { code?: string; status?: number; message: string } };
+  /** RPC handlers by function name (api schema); they may change `tables` to model the server's effect. */
+  rpc?: Record<string, (args: Row, state: FakeState) => { data: unknown; error: unknown }>;
 }
 
 type AuthListener = (event: string, session: FakeSession | null) => void;
@@ -57,8 +60,28 @@ export function createFakeSupabase(state: FakeState) {
     return api;
   }
 
+  function rpcCall(fn: string, args: Row) {
+    const request: FakeRequest = { table: `rpc:${fn}`, op: 'rpc', headers: {}, values: args };
+    const api = {
+      setHeader: (name: string, value: string) => ((request.headers[name] = value), api),
+      then: (resolve: (r: { data: unknown; error: unknown }) => unknown, reject?: (e: unknown) => unknown) => {
+        requests.push(request);
+        if (state.failNext?.table === request.table) {
+          const error = state.failNext.error;
+          state.failNext = undefined;
+          return Promise.resolve({ data: null, error }).then(resolve, reject);
+        }
+        const handler = state.rpc?.[fn];
+        const result = handler ? handler(args, state) : { data: null, error: { code: 'PGRST202', message: `no fake for ${fn}` } };
+        return Promise.resolve(result).then(resolve, reject);
+      },
+    };
+    return api;
+  }
+
   const client = {
     from: (table: string) => builder(table),
+    schema: (_name: string) => ({ rpc: (fn: string, args: Row = {}) => rpcCall(fn, args) }),
     auth: {
       getSession: async () => ({ data: { session: state.session } }),
       onAuthStateChange: (listener: AuthListener) => {
