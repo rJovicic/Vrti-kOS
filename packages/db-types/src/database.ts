@@ -16,6 +16,9 @@ export type Database = {
               "invitation_id": string,"organization_id": string,"role": Database["public"]['Enums']["org_role"]
             }[]
                            },
+"archive_announcement":
+{ Args: { "p_id": string }; Returns: string
+                           },
 "cancel_absence":
 { Args: { "p_absence_id": string }; Returns: string
                            },
@@ -30,6 +33,9 @@ export type Database = {
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
                            },
+"edit_announcement":
+{ Args: { "p_body": string,"p_id": string,"p_title": string }; Returns: string
+                           },
 "handover_candidates":
 { Args: { "p_child_id": string }; Returns: {
               "first_name": string,"id": string,"kind": string,"last_name": string,"restricted": boolean
@@ -37,6 +43,9 @@ export type Database = {
                            },
 "mark_notifications_read":
 { Args: { "p_ids"?: (string)[] }; Returns: number
+                           },
+"publish_announcement":
+{ Args: { "p_id": string }; Returns: string
                            },
 "record_absence_on_behalf":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
@@ -54,6 +63,9 @@ export type Database = {
                            },
 "report_absence":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
+                           },
+"save_announcement_draft":
+{ Args: { "p_audience_ids": (string)[],"p_audience_roles": (string)[],"p_audience_scope": string,"p_body": string,"p_id"?: string,"p_organization_id": string,"p_title": string }; Returns: string
                            },
 "transfer_child":
 { Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
@@ -169,6 +181,64 @@ isOneToOne: false
       referencedColumns: ["organization_id","id"]
     },{
       foreignKeyName: "access_restrictions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"announcement_revisions": {
+                  Row: {
+                    "announcement_id": string,"body": string,"id": string,"organization_id": string,"revised_at": string,"revised_by": string | null,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "announcement_id": string,"body": string,"id"?: string,"organization_id": string,"revised_at"?: string,"revised_by"?: string | null,"title": string
+                  }
+                  Update: {
+                    "announcement_id"?: string,"body"?: string,"id"?: string,"organization_id"?: string,"revised_at"?: string,"revised_by"?: string | null,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcement_revisions_organization_id_announcement_id_fkey"
+      columns: ["organization_id","announcement_id"]
+isOneToOne: false
+      referencedRelation: "announcements"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "announcement_revisions_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "announcement_revisions_revised_by_fkey"
+      columns: ["revised_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"announcements": {
+                  Row: {
+                    "archived_at": string | null,"audience_ids": (string)[],"audience_roles": (string)[],"audience_scope": string,"author_id": string | null,"body": string,"created_at": string,"edited_at": string | null,"id": string,"organization_id": string,"published_at": string | null,"status": string,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archived_at"?: string | null,"audience_ids"?: (string)[],"audience_roles": (string)[],"audience_scope": string,"author_id"?: string | null,"body": string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"organization_id": string,"published_at"?: string | null,"status"?: string,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "archived_at"?: string | null,"audience_ids"?: (string)[],"audience_roles"?: (string)[],"audience_scope"?: string,"author_id"?: string | null,"body"?: string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"organization_id"?: string,"published_at"?: string | null,"status"?: string,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "announcements_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "announcements_organization_id_fkey"
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
