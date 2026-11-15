@@ -17,6 +17,7 @@ export default async function OrgLayout({ children, params }: { children: ReactN
     { href: `${base}/academic-years`, label: t('admin.nav.academicYears') },
     { href: `${base}/groups`, label: t('admin.nav.groups') },
     { href: `${base}/children`, label: t('admin.nav.children') },
+    { href: `${base}/attendance`, label: t('admin.nav.attendance') },
     { href: `${base}/staff`, label: t('admin.nav.staff') },
     { href: `${base}/invitations`, label: t('admin.nav.invitations') },
   ];

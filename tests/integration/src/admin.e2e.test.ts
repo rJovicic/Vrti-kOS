@@ -208,6 +208,49 @@ describe('admin app (browser)', () => {
     await expect(page.locator('summary', { hasText: 'Dodaj skrbnika' }).count()).resolves.toBe(0);
   });
 
+  it('D3-G: attendance by group and day — record, correct with a reason (original kept), absence on behalf and cancel', async () => {
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    await page.goto(`${ADMIN}/${slug}/children`);
+    await page.locator('input[name=firstName]').fill('Ivo');
+    await page.locator('input[name=lastName]').fill('Dolazak');
+    await submit(page, page.getByRole('button', { name: 'Dodaj dijete' }));
+    await page.locator('summary', { hasText: 'Upiši u skupinu' }).click();
+    await page.locator('form:has(input[name=from]) select[name=groupId]').selectOption({ label: 'Dupini' });
+    await page.locator('form:has(select[name=groupId]) input[name=from]').fill('2026-09-01');
+    await submit(page, page.getByRole('button', { name: 'Upiši u skupinu' }));
+
+    await page.goto(`${ADMIN}/${slug}/attendance`);
+    await page.locator('form[method=get] select[name=group]').selectOption({ label: 'Dupini' });
+    await page.getByRole('button', { name: 'Prikaži' }).click();
+    await expect(page.getByRole('row', { name: /Ivo Dolazak/ }).textContent()).resolves.toContain('Očekuje se');
+
+    await page.locator('summary', { hasText: 'Evidencija i ispravak: Ivo Dolazak' }).click();
+    await submit(page, page.getByRole('button', { name: 'Dolazak sada' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Unos je spremljen.');
+    await expect(page.getByRole('row', { name: /Ivo Dolazak/ }).textContent()).resolves.toContain('U vrtiću');
+
+    await page.locator('summary', { hasText: 'Evidencija i ispravak: Ivo Dolazak' }).click();
+    await page.locator('form:has(select[name=recordId]) input[name=time]').fill('00:01');
+    await page.locator('form:has(select[name=recordId]) select[name=reason]').selectOption({ label: 'Pogrešan unos' });
+    await submit(page, page.getByRole('button', { name: 'Spremi ispravak' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toContain('Izvorni zapis ostaje');
+    const row = await page.getByRole('row', { name: /Ivo Dolazak/ }).textContent();
+    expect(row).toContain('00:01');
+    expect(row).toContain('Ispravljeno');
+
+    await page.locator('summary', { hasText: 'Evidentiraj izostanak u ime skrbnika' }).click();
+    await page.locator('form:has(input[name=to]) select[name=childId]').selectOption({ label: 'Ivo Dolazak' });
+    await page.locator('form:has(select[name=childId]) input[name=from]').fill(tomorrow);
+    await page.locator('form:has(select[name=childId]) input[name=to]').fill(tomorrow);
+    await submit(page, page.getByRole('button', { name: 'Evidentiraj izostanak' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Izostanak je evidentiran u ime skrbnika.');
+    await expect(page.locator('.row', { hasText: 'Ivo Dolazak' }).textContent()).resolves.toContain('uprava u ime skrbnika');
+
+    await page.locator('.row', { hasText: 'Ivo Dolazak' }).locator('summary').click();
+    await submit(page, page.locator('.row', { hasText: 'Ivo Dolazak' }).getByRole('button', { name: 'Otkaži dane koji nisu prošli' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toContain('otkazana');
+  });
+
   it('another kindergarten’s URL is not found (NEG-01, no existence leak)', async () => {
     const res = await page.goto(`${ADMIN}/alfa-demo/staff`);
     expect(res!.status()).toBe(404);

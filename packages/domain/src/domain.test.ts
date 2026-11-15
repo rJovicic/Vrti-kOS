@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { attendanceStateForDay, nextAction } from './attendance.ts';
-import { exclusiveEndToInclusive, inclusiveEndToExclusive, orgLocalDate, parseDateRange, spanContains, toDateRange } from './dates.ts';
+import { exclusiveEndToInclusive, inclusiveEndToExclusive, orgLocalDate, parseDateRange, spanContains, timeZoneOffsetMinutes, toDateRange, zonedTimeToIso } from './dates.ts';
 
 describe('dates', () => {
   it('uses the kindergarten local day, not UTC', () => {
@@ -46,3 +46,26 @@ describe('attendance state', () => {
     expect(nextAction('departed')).toBeNull();
   });
 });
+
+describe('wall-clock time in the kindergarten time zone (D3-G)', () => {
+  it('converts winter and summer times of Zagreb to UTC', () => {
+    expect(zonedTimeToIso('2026-11-15', '07:42')).toBe('2026-11-15T06:42:00.000Z');
+    expect(zonedTimeToIso('2026-06-15', '07:42')).toBe('2026-06-15T05:42:00.000Z');
+  });
+  it('handles the DST change days', () => {
+    expect(zonedTimeToIso('2026-03-29', '01:30')).toBe('2026-03-29T00:30:00.000Z');
+    expect(zonedTimeToIso('2026-03-29', '04:00')).toBe('2026-03-29T02:00:00.000Z');
+    expect(zonedTimeToIso('2026-10-25', '04:00')).toBe('2026-10-25T03:00:00.000Z');
+  });
+  it('round-trips with orgLocalDate and reports offsets', () => {
+    expect(orgLocalDate(new Date(zonedTimeToIso('2026-11-15', '00:05')))).toBe('2026-11-15');
+    expect(timeZoneOffsetMinutes(new Date('2026-11-15T12:00:00Z'), 'Europe/Zagreb')).toBe(60);
+    expect(timeZoneOffsetMinutes(new Date('2026-07-15T12:00:00Z'), 'Europe/Zagreb')).toBe(120);
+  });
+  it('rejects malformed input', () => {
+    expect(() => zonedTimeToIso('15. 11. 2026.', '07:42')).toThrow();
+    expect(() => zonedTimeToIso('2026-11-15', '7:42')).toThrow();
+    expect(() => zonedTimeToIso('2026-11-15', '24:00')).toThrow();
+  });
+});
+

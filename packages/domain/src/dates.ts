@@ -44,3 +44,28 @@ export function toDateRange(from: string, toInclusive: string | null): string {
 export function spanContains(span: DateSpan, day: string): boolean {
   return (span.from === null || span.from <= day) && (span.toInclusive === null || day <= span.toInclusive);
 }
+
+/** Minutes the time zone is ahead of UTC at `instant` (e.g. 60 for Zagreb in winter, 120 in summer). */
+export function timeZoneOffsetMinutes(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(instant);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const asUtc = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'), get('second'));
+  return Math.round((asUtc - Math.floor(instant.getTime() / 1000) * 1000) / 60_000);
+}
+
+/**
+ * The instant of a wall-clock time (`HH:MM`) on a calendar day in the kindergarten's time zone, as ISO UTC. Used when a
+ * manager types the time of an event. Re-checks the offset after the first guess so DST changes are handled.
+ */
+export function zonedTimeToIso(day: string, time: string, timeZone = 'Europe/Zagreb'): string {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  const t = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+  if (!d || !t) throw new Error('invalid day or time');
+  const guess = Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3]), Number(t[1]), Number(t[2]));
+  let utc = guess - timeZoneOffsetMinutes(new Date(guess), timeZone) * 60_000;
+  const second = guess - timeZoneOffsetMinutes(new Date(utc), timeZone) * 60_000;
+  if (second !== utc) utc = second;
+  return new Date(utc).toISOString();
+}

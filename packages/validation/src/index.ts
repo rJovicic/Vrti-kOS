@@ -3,3 +3,4 @@ export * from './organization.ts';
 export * from './invitation.ts';
 export * from './staff.ts';
 export * from './child.ts';
+export * from './attendance.ts';
