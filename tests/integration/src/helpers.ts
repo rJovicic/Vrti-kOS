@@ -19,8 +19,12 @@ interface MailpitMessage {
   Created: string;
 }
 
+/**
+ * Polls Mailpit for the newest matching message. Up to 15 s: on a loaded CI runner delivery has taken longer than the
+ * former 5 s window (run #33, 2026-11-15: "no login code e-mail"). Returns as soon as the message is there.
+ */
 export async function latestMail(to: string, subjectIncludes: string, after = 0): Promise<{ subject: string; text: string } | null> {
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 60; i++) {
     const r = (await (await fetch(`${stack.MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`)).json()) as {
       messages: MailpitMessage[];
     };
