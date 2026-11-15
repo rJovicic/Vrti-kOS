@@ -40,6 +40,12 @@ export const errorCatalog = {
   CANCEL_RECORD_REFERENCED: { status: 409 },
   /** D2-F: the guardian record is ended or already attached to an account. */
   GUARDIAN_ALREADY_LINKED: { status: 409 },
+  /** D3-A attendance: today only for educators; the order arrival → departure per day; undo within 10 s. */
+  ATTENDANCE_TIME_INVALID: { status: 400 },
+  ATTENDANCE_STATE_CONFLICT: { status: 409 },
+  ATTENDANCE_UNDO_EXPIRED: { status: 409 },
+  ATTENDANCE_ALREADY_VOIDED: { status: 409 },
+  IDEMPOTENCY_KEY_REUSED: { status: 409 },
   RATE_LIMITED: { status: 429 },
   INTERNAL: { status: 500 },
 } as const satisfies Record<string, { status: number }>;
@@ -94,6 +100,12 @@ export const dbErrorCatalog = {
   RECORD_ALREADY_EFFECTIVE: 'RECORD_ALREADY_EFFECTIVE',
   CANCEL_RECORD_REFERENCED: 'CANCEL_RECORD_REFERENCED',
   GUARDIAN_ALREADY_LINKED: 'GUARDIAN_ALREADY_LINKED',
+  ATTENDANCE_APPEND_ONLY: 'PERMISSION_DENIED',
+  ATTENDANCE_TIME_INVALID: 'ATTENDANCE_TIME_INVALID',
+  ATTENDANCE_STATE_CONFLICT: 'ATTENDANCE_STATE_CONFLICT',
+  ATTENDANCE_UNDO_EXPIRED: 'ATTENDANCE_UNDO_EXPIRED',
+  ATTENDANCE_ALREADY_VOIDED: 'ATTENDANCE_ALREADY_VOIDED',
+  IDEMPOTENCY_KEY_REUSED: 'IDEMPOTENCY_KEY_REUSED',
 } as const satisfies Record<string, ErrorCode>;
 export type DbErrorName = keyof typeof dbErrorCatalog;
 
@@ -112,6 +124,11 @@ export const exposedDbErrors = [
   'RECORD_ALREADY_EFFECTIVE',
   'CANCEL_RECORD_REFERENCED',
   'GUARDIAN_ALREADY_LINKED',
+  'ATTENDANCE_TIME_INVALID',
+  'ATTENDANCE_STATE_CONFLICT',
+  'ATTENDANCE_UNDO_EXPIRED',
+  'ATTENDANCE_ALREADY_VOIDED',
+  'IDEMPOTENCY_KEY_REUSED',
 ] as const satisfies readonly DbErrorName[];
 
 export interface ApiError {

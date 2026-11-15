@@ -19,11 +19,25 @@ export type Database = {
 "cancel_future_record":
 { Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
                            },
+"correct_attendance":
+{ Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
+                           },
+"record_attendance":
+{ Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at"?: string,"p_source"?: string }; Returns: {
+              "kind": Database["public"]['Enums']["attendance_kind"],"occurred_at": string,"record_id": string,"replayed": boolean
+            }[]
+                           },
 "record_audit_event":
 { Args: { "p_action": string,"p_actor_id": string,"p_organization_id": string,"p_outcome": string,"p_reason": string,"p_target_table": string }; Returns: undefined
                            },
+"record_missed_attendance":
+{ Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at": string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_source"?: string }; Returns: string
+                           },
 "transfer_child":
 { Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
+                           },
+"undo_attendance":
+{ Args: { "p_idempotency_key": string,"p_record_id": string }; Returns: string
                            },
 "withdraw_child":
 { Args: { "p_child_id": string,"p_last_day": string }; Returns: undefined
@@ -92,6 +106,62 @@ isOneToOne: false
       columns: ["organization_id"]
 isOneToOne: false
       referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"attendance_records": {
+                  Row: {
+                    "child_id": string,"correction_reason": Database["public"]['Enums']["attendance_correction_reason"] | null,"corrects_id": string | null,"handover_child_guardian_id": string | null,"handover_pickup_id": string | null,"id": string,"idempotency_key": string,"kind": Database["public"]['Enums']["attendance_kind"],"local_date": string,"occurred_at": string,"organization_id": string,"recorded_at": string,"recorded_by": string,"source": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "child_id": string,"correction_reason"?: Database["public"]['Enums']["attendance_correction_reason"] | null,"corrects_id"?: string | null,"handover_child_guardian_id"?: string | null,"handover_pickup_id"?: string | null,"id"?: string,"idempotency_key": string,"kind": Database["public"]['Enums']["attendance_kind"],"local_date": string,"occurred_at": string,"organization_id": string,"recorded_at"?: string,"recorded_by": string,"source": string
+                  }
+                  Update: {
+                    "child_id"?: string,"correction_reason"?: Database["public"]['Enums']["attendance_correction_reason"] | null,"corrects_id"?: string | null,"handover_child_guardian_id"?: string | null,"handover_pickup_id"?: string | null,"id"?: string,"idempotency_key"?: string,"kind"?: Database["public"]['Enums']["attendance_kind"],"local_date"?: string,"occurred_at"?: string,"organization_id"?: string,"recorded_at"?: string,"recorded_by"?: string,"source"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "attendance_records_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "attendance_records_organization_id_corrects_id_fkey"
+      columns: ["organization_id","corrects_id"]
+isOneToOne: false
+      referencedRelation: "attendance_records"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "attendance_records_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "attendance_records_organization_id_handover_child_guardian_fkey"
+      columns: ["organization_id","handover_child_guardian_id"]
+isOneToOne: false
+      referencedRelation: "child_guardian_overview"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "attendance_records_organization_id_handover_child_guardian_fkey"
+      columns: ["organization_id","handover_child_guardian_id"]
+isOneToOne: false
+      referencedRelation: "child_guardians"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "attendance_records_organization_id_handover_pickup_id_fkey"
+      columns: ["organization_id","handover_pickup_id"]
+isOneToOne: false
+      referencedRelation: "pickup_authorizations"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "attendance_records_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -586,7 +656,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","attendance_correction_reason": "entry_error"|"forgot"|"other","attendance_kind": "check_in"|"check_out"|"void","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -706,7 +776,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"attendance_correction_reason": ["entry_error", "forgot", "other"],"attendance_kind": ["check_in", "check_out", "void"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
           }
         }
 } as const
