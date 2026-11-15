@@ -106,6 +106,19 @@ describe('D3-A: attendance through the API', () => {
     expect((await mgrB.client.from('attendance_records').select('id').eq('organization_id', alfa.orgId)).data).toEqual([]);
   });
 
+  it('D3-C: the guardian sees today\'s status and time without any staff data; staff see the last event', async () => {
+    const parent = (await signInWithCode(accounts.roditelj!)).client;
+    const { data, error } = await parent.schema('api').rpc('child_day_status', {});
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0]).toMatchObject({ child_id: ids.Lea, status: 'present', last_record_id: null, last_record_kind: null });
+    expect(data![0]!.arrived_at).not.toBeNull();
+    expect(JSON.stringify(data)).not.toMatch(/recorded_by/);
+    const staff = await edu1.schema('api').rpc('child_day_status', { p_group_id: alfa.groupId });
+    expect(staff.data!.map((r) => r.status).sort()).toEqual(['expected', 'present']);
+    expect(staff.data!.find((r) => r.child_id === ids.Lea)!.last_record_kind).toBe('check_in');
+  });
+
   it('nobody can change or delete an event through the API', async () => {
     const upd = await manager.from('attendance_records').update({ occurred_at: new Date().toISOString() }).eq('child_id', ids.Lea!);
     expect(upd.error).not.toBeNull();

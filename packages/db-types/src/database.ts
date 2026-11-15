@@ -22,6 +22,11 @@ export type Database = {
 "cancel_future_record":
 { Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
                            },
+"child_day_status":
+{ Args: { "p_day"?: string,"p_group_id"?: string }; Returns: {
+              "absence_is_late": boolean,"absence_reported": boolean,"arrived_at": string,"child_id": string,"departed_at": string,"group_id": string,"last_record_id": string,"last_record_kind": Database["public"]['Enums']["attendance_kind"],"local_date": string,"organization_id": string,"status": string
+            }[]
+                           },
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
                            },
