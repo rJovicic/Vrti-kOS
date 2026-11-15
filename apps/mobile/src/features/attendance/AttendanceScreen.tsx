@@ -5,7 +5,7 @@ import { nextAction, type AttendanceState, type QueuedAttendance } from '@vrtico
 import { formatLongDate, formatTime } from '@vrticos/i18n';
 import type { ColorRoles } from '@vrticos/tokens';
 import { radius, space, type } from '@vrticos/tokens';
-import { loadGroupDay, newIdempotencyKey, undoAttendance, type AttendanceTile, type GroupDay } from '../../lib/attendance';
+import { loadGroupDay, loadHandoverCandidates, newIdempotencyKey, undoAttendance, type AttendanceTile, type GroupDay, type HandoverCandidate } from '../../lib/attendance';
 import { enqueue, flushAttendance, removeFromQueue } from '../../lib/attendanceQueue';
 import { newCorrelationId } from '../../lib/correlation';
 import type { HomeGroup } from '../../lib/home';
@@ -26,6 +26,14 @@ interface Snack {
 }
 interface ShownTile extends AttendanceTile {
   pending: boolean;
+}
+/** D3-H: the handover panel of one child. `candidates` is null while loading; names live only in this state. */
+interface HandoverPanel {
+  tile: AttendanceTile;
+  kind: 'check_in' | 'check_out';
+  candidates: HandoverCandidate[] | null;
+  failed: boolean;
+  notListed: boolean;
 }
 
 function tone(c: ColorRoles, state: AttendanceState) {
@@ -67,6 +75,7 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
   const [notice, setNotice] = useState<string | null>(null);
   const [snack, setSnack] = useState<Snack | null>(null);
   const [queue, setQueue] = useState<QueuedAttendance[]>([]);
+  const [handover, setHandover] = useState<HandoverPanel | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const group = groups.find((g) => g.id === groupId) ?? null;
 
@@ -109,11 +118,22 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
     if (next.undo) undoTimer.current = setTimeout(() => setSnack((s) => (s ? { text: s.text } : s)), UNDO_WINDOW_MS);
   };
 
-  const perform = async (tile: AttendanceTile, kind: 'check_in' | 'check_out') => {
+  const perform = async (tile: AttendanceTile, kind: 'check_in' | 'check_out', person?: HandoverCandidate) => {
     setConfirm(null);
+    setHandover(null);
     setNotice(null);
     setBusy(tile.childId);
-    const item: QueuedAttendance = { key: newIdempotencyKey(), childId: tile.childId, kind, occurredAt: now().toISOString(), attempts: 0, state: 'queued' };
+    const item: QueuedAttendance = {
+      key: newIdempotencyKey(),
+      childId: tile.childId,
+      kind,
+      occurredAt: now().toISOString(),
+      attempts: 0,
+      state: 'queued',
+      // Only the kind and id of the person go into the encrypted queue, never the name (SR-MOB-02).
+      ...(person ? { handover: { kind: person.kind, id: person.id } } : {}),
+    };
+    const withPerson = (text: string) => (person ? `${text} · ${t('attendance.handoverBy', { person: person.name })}` : text);
     try {
       await enqueue(userId, item);
       const report = await flushAttendance(userId);
@@ -121,7 +141,7 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
       if (result?.ok) {
         const time = formatTime(new Date(item.occurredAt));
         showSnack({
-          text: t(kind === 'check_in' ? 'attendance.savedCheckIn' : 'attendance.savedCheckOut', { name: tile.displayName, time }),
+          text: withPerson(t(kind === 'check_in' ? 'attendance.savedCheckIn' : 'attendance.savedCheckOut', { name: tile.displayName, time })),
           undo: { recordId: result.recordId, name: tile.displayName, kind },
         });
         setQueue(report.remaining);
@@ -134,7 +154,7 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
       } else {
         // Not delivered: the tap stays on this device, encrypted, and is sent later (FR-05-8).
         setQueue(report.remaining);
-        showSnack({ text: t('attendance.queuedSaved', { name: tile.displayName }), undo: { queuedKey: item.key, name: tile.displayName, kind } });
+        showSnack({ text: withPerson(t('attendance.queuedSaved', { name: tile.displayName })), undo: { queuedKey: item.key, name: tile.displayName, kind } });
       }
     } finally {
       setBusy(null);
@@ -163,6 +183,22 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
   };
 
   const dismissFailed = async (key: string) => setQueue(await removeFromQueue(userId, key));
+
+  /** D3-H (FR-05-3, D-38 b): optional person from the list; restricted guardians are shown with the mark, not hidden. */
+  const openHandover = async (tile: AttendanceTile) => {
+    const action = nextAction(tile.state);
+    if (!action) return;
+    const kind = action === 'check_out' ? 'check_out' : 'check_in';
+    setConfirm(null);
+    setHandover({ tile, kind, candidates: null, failed: false, notListed: false });
+    try {
+      const candidates = await loadHandoverCandidates(tile.childId);
+      setHandover((h) => (h && h.tile.childId === tile.childId ? { ...h, candidates } : h));
+    } catch (e) {
+      if (onSessionExpired(e)) return;
+      setHandover((h) => (h && h.tile.childId === tile.childId ? { ...h, candidates: [], failed: true } : h));
+    }
+  };
 
   const tap = (tile: AttendanceTile) => {
     const action = nextAction(tile.state);
@@ -285,7 +321,57 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
               </View>
             ) : null}
 
+            {handover ? (
+              <View style={[styles.confirm, { backgroundColor: c.bgSurface, borderColor: c.borderControl }]} accessibilityRole="alert">
+                <Text accessibilityRole="header" style={[styles.confirmTitle, { color: c.textPrimary }]}>
+                  {t(handover.kind === 'check_in' ? 'attendance.handoverTitleIn' : 'attendance.handoverTitleOut', { name: handover.tile.fullName })}
+                </Text>
+                {handover.kind === 'check_in' && handover.tile.state === 'absent' ? (
+                  <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.handoverAbsent')}</Text>
+                ) : null}
+                {handover.candidates === null ? <ActivityIndicator color={c.accent} accessibilityLabel={t('common.loading')} /> : null}
+                {handover.failed ? <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.handoverUnavailable')}</Text> : null}
+                {handover.candidates?.length === 0 && !handover.failed ? (
+                  <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.handoverEmpty')}</Text>
+                ) : null}
+                {(handover.candidates ?? []).map((p) => (
+                  <Pressable
+                    key={`${p.kind}:${p.id}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={[p.name, t(p.kind === 'guardian' ? 'attendance.handoverGuardian' : 'attendance.handoverPickup'), p.restricted ? `${t('attendance.handoverRestricted')}. ${t('attendance.handoverRestrictedHelp')}` : '']
+                      .filter(Boolean)
+                      .join(', ')}
+                    disabled={busy !== null}
+                    onPress={() => void perform(handover.tile, handover.kind, p)}
+                    style={[styles.person, { borderColor: p.restricted ? c.warningFg : c.borderControl }]}
+                  >
+                    <View style={styles.personText}>
+                      <Text style={[styles.personName, { color: c.textPrimary }]}>{p.name}</Text>
+                      <Text style={[styles.meta, { color: c.textSecondary }]}>
+                        {t(p.kind === 'guardian' ? 'attendance.handoverGuardian' : 'attendance.handoverPickup')}
+                      </Text>
+                      {p.restricted ? <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.handoverRestrictedHelp')}</Text> : null}
+                    </View>
+                    {p.restricted ? (
+                      <View style={[styles.badge, { backgroundColor: c.warningBg }]}>
+                        <Text style={[styles.badgeText, { color: c.warningFg }]}>{t('attendance.handoverRestricted')}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                ))}
+                {handover.candidates !== null ? (
+                  <Button variant="secondary" label={t('attendance.handoverNotListed')} onPress={() => setHandover({ ...handover, notListed: true })} />
+                ) : null}
+                {handover.notListed ? <Notice title={t('attendance.handoverNotListedHelp')} /> : null}
+                <View style={styles.row}>
+                  <Button variant="secondary" label={t('attendance.handoverWithout')} onPress={() => void perform(handover.tile, handover.kind)} />
+                  <Button variant="secondary" label={t('attendance.cancel')} onPress={() => setHandover(null)} />
+                </View>
+              </View>
+            ) : null}
+
             {tiles.length === 0 ? <Notice title={t('mobile.groupEmpty')} /> : null}
+            {tiles.length > 0 ? <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.handoverHint')}</Text> : null}
 
             <View style={styles.wall}>
               {shown.map((x) => {
@@ -301,6 +387,9 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
                     accessibilityState={{ disabled: action === null || busy !== null, busy: busy === x.childId }}
                     disabled={action === null || busy !== null}
                     onPress={() => tap(x)}
+                    onLongPress={() => void openHandover(x)}
+                    accessibilityActions={action ? [{ name: 'handover', label: t('attendance.handoverAction') }] : []}
+                    onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'handover' ? void openHandover(x) : undefined)}
                     style={[styles.tile, { backgroundColor: k.bg, borderColor: k.border }]}
                   >
                     <Text style={[styles.tileName, { color: c.textPrimary }]}>{x.displayName}</Text>
@@ -354,6 +443,11 @@ const styles = StyleSheet.create({
   tileStatus: { fontSize: type.footnote.size, lineHeight: type.footnote.lineHeight, fontWeight: '600' },
   confirm: { borderWidth: 1.5, borderRadius: radius.lg, padding: space[4], gap: space[2] },
   confirmTitle: { fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
+  person: { minHeight: 56, borderWidth: 1.5, borderRadius: radius.md, padding: space[3], flexDirection: 'row', alignItems: 'center', gap: space[3] },
+  personText: { flex: 1, gap: space[1] },
+  personName: { fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
+  badge: { borderRadius: radius.pill, paddingHorizontal: space[2], paddingVertical: space[1] },
+  badgeText: { fontSize: type.footnote.size, fontWeight: '700' },
   snack: { position: 'absolute', left: space[4], right: space[4], bottom: space[4], borderRadius: radius.md, padding: space[3], flexDirection: 'row', alignItems: 'center', gap: space[3] },
   snackText: { flex: 1, fontSize: type.footnote.size, lineHeight: type.footnote.lineHeight },
   snackAction: { minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: space[2] },

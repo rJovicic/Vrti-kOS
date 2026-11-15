@@ -287,3 +287,79 @@ describe('offline queue (D3-E, ADR-0012)', () => {
     expect(mockStorage.has('vrticos.attendance-queue')).toBe(false);
   });
 });
+
+describe('handover person (D3-H, FR-05-3/4, D-38 b)', () => {
+  const IVO = '00000000-0000-4000-8000-0000000000a2';
+  const ANA = '00000000-0000-4000-8000-00000000c001';
+  const BEA = '00000000-0000-4000-8000-00000000c002';
+  const OTO = '00000000-0000-4000-8000-00000000b001';
+  const candidates = [
+    { kind: 'guardian', id: ANA, first_name: 'Ana', last_name: 'Antić', restricted: false },
+    { kind: 'guardian', id: BEA, first_name: 'Bea', last_name: 'Antić', restricted: true },
+    { kind: 'pickup', id: OTO, first_name: 'Oto', last_name: 'Osoba', restricted: false },
+  ];
+  function withList(list: unknown = candidates) {
+    const s = server();
+    s.state.rpc!.handover_candidates = (args) =>
+      args.p_child_id === IVO ? (list instanceof Error ? { data: null, error: { code: 'P0001', message: 'INTERNAL' } } : { data: list, error: null }) : { data: [], error: null };
+    return s;
+  }
+  const open = async () => {
+    await act(async () => fireEvent(await screen.findByLabelText(/^Ivo Antić\. U vrtiću od /), 'longPress'));
+    return screen.findByText('Tko preuzima dijete Ivo Antić?');
+  };
+
+  it("a long press lists the child's guardians and pickup persons; the restricted guardian is shown with the mark, there is no free text", async () => {
+    await start(withList().state);
+    await open();
+    expect(rpcCalls('handover_candidates')[0]!.values).toEqual({ p_child_id: IVO });
+    expect(screen.getByLabelText('Ana Antić, Skrbnik')).toBeTruthy();
+    expect(screen.getByLabelText(`Bea Antić, Skrbnik, ${hr.attendance.handoverRestricted}. ${hr.attendance.handoverRestrictedHelp}`)).toBeTruthy();
+    expect(screen.getByText(hr.attendance.handoverRestricted)).toBeTruthy();
+    expect(screen.getByLabelText('Oto Osoba, Ovlaštena osoba')).toBeTruthy();
+    // No free-text entry anywhere on the screen (FR-05-4: a person not on the list cannot be added).
+    expect(screen.container.queryAll((n) => n.type === 'TextInput')).toHaveLength(0);
+    expect(rpcCalls('record_attendance')).toHaveLength(0);
+  });
+
+  it('choosing the restricted guardian records the departure with that person (not a pickup ban, D-38 b)', async () => {
+    await start(withList().state);
+    await open();
+    await fireEvent.press(screen.getByLabelText(new RegExp(`^Bea Antić, Skrbnik, ${hr.attendance.handoverRestricted}`)));
+    expect(rpcCalls('record_attendance')[0]!.values).toMatchObject({ p_child_id: IVO, p_kind: 'check_out', p_handover_child_guardian_id: BEA });
+    expect(rpcCalls('record_attendance')[0]!.values).not.toHaveProperty('p_handover_pickup_id');
+    expect(await screen.findByText(/^Ivo A\. — odlazak u .* · osoba: Bea Antić$/)).toBeTruthy();
+  });
+
+  it('"person not on the list" shows the procedure and records nothing; recording without a person sends no person', async () => {
+    await start(withList().state);
+    await open();
+    await fireEvent.press(screen.getByText(hr.attendance.handoverNotListed));
+    expect(screen.getByText(hr.attendance.handoverNotListedHelp)).toBeTruthy();
+    expect(rpcCalls('record_attendance')).toHaveLength(0);
+    await fireEvent.press(screen.getByText(hr.attendance.handoverWithout));
+    const values = rpcCalls('record_attendance')[0]!.values!;
+    expect(values).toMatchObject({ p_child_id: IVO, p_kind: 'check_out' });
+    expect(Object.keys(values).filter((k) => k.startsWith('p_handover'))).toEqual([]);
+  });
+
+  it('if the list cannot be loaded, the screen says so and recording without a person still works', async () => {
+    await start(withList(new Error('down')).state);
+    await open();
+    expect(await screen.findByText(hr.attendance.handoverUnavailable)).toBeTruthy();
+    await fireEvent.press(screen.getByText(hr.attendance.handoverWithout));
+    expect(rpcCalls('record_attendance')).toHaveLength(1);
+  });
+
+  it('offline, the queue keeps only the kind and id of the chosen person, never the name', async () => {
+    const s = withList();
+    s.state.rpc!.record_attendance = () => ({ data: null, error: { code: '', message: 'TypeError: Network request failed' } });
+    await start(s.state);
+    await open();
+    await fireEvent.press(screen.getByLabelText('Oto Osoba, Ovlaštena osoba'));
+    await screen.findByText('1 promjena čeka slanje');
+    const stored = mockStorage.get('vrticos.attendance-queue')!;
+    expect(JSON.parse(stored).items[0].handover).toEqual({ kind: 'pickup', id: OTO });
+    expect(stored).not.toMatch(/Oto|Osoba|Ivo|Antić/);
+  });
+});

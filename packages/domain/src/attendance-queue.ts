@@ -1,8 +1,9 @@
 // Offline queue for attendance taps (ADR-0012, FR-05-8, SR-MOB-02, SR-API-08, AC-05-5). UI-free and storage-agnostic:
 // the mobile app supplies the encrypted backing store (chunked SecureStore, keychain / keystore, device only).
 //
-// What is stored: per item only the idempotency key, the child id, the kind, the instant of the tap, the attempt
-// count and the sync state — no names, no group, no free text. The whole queue is bound to one account; a queue of
+// What is stored: per item only the idempotency key, the child id, the kind, the instant of the tap, optionally the id
+// of the handover person (D3-H: a guardian link or a pickup authorization — never a name), the attempt count and the
+// sync state — no names, no group, no free text. The whole queue is bound to one account; a queue of
 // another account is never replayed (it is discarded on load).
 
 import type { ChunkedStorage } from './session-storage.ts';
@@ -19,6 +20,14 @@ export interface QueuedAttendance {
   state: 'queued' | 'failed';
   /** Catalogued code of the refusal (failed items only). */
   errorCode?: string;
+  /** D3-H: the person chosen from the list (id only; the server checks it again on every replay). */
+  handover?: Handover;
+}
+
+export interface Handover {
+  kind: 'guardian' | 'pickup';
+  /** `child_guardians.id` for a guardian, `pickup_authorizations.id` for a pickup person. */
+  id: string;
 }
 
 export type SendResult = { ok: true; recordId: string } | { ok: false; network: true } | { ok: false; network: false; code: string };
@@ -31,6 +40,11 @@ export interface QueueStore {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const CODE = /^[A-Z_]{3,60}$/;
+
+function isHandover(v: unknown): v is Handover {
+  const h = v as Record<string, unknown>;
+  return typeof h === 'object' && h !== null && (h.kind === 'guardian' || h.kind === 'pickup') && typeof h.id === 'string' && UUID.test(h.id) && Object.keys(h).length === 2;
+}
 
 /** Keeps only well-formed items with exactly the allowed fields (anything else in storage is discarded). */
 export function sanitizeQueue(value: unknown): QueuedAttendance[] {
@@ -46,7 +60,8 @@ export function sanitizeQueue(value: unknown): QueuedAttendance[] {
       typeof x.occurredAt !== 'string' || Number.isNaN(Date.parse(x.occurredAt)) ||
       typeof x.attempts !== 'number' || !Number.isInteger(x.attempts) || x.attempts < 0 ||
       (x.state !== 'queued' && x.state !== 'failed') ||
-      (x.errorCode !== undefined && (typeof x.errorCode !== 'string' || !CODE.test(x.errorCode)))
+      (x.errorCode !== undefined && (typeof x.errorCode !== 'string' || !CODE.test(x.errorCode))) ||
+      (x.handover !== undefined && !isHandover(x.handover))
     ) {
       continue;
     }
@@ -58,6 +73,7 @@ export function sanitizeQueue(value: unknown): QueuedAttendance[] {
       attempts: x.attempts,
       state: x.state,
       ...(x.errorCode ? { errorCode: x.errorCode as string } : {}),
+      ...(x.handover ? { handover: { kind: (x.handover as Handover).kind, id: (x.handover as Handover).id } } : {}),
     });
   }
   return out;

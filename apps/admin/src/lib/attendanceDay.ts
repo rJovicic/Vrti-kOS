@@ -11,6 +11,8 @@ export interface EventRow {
   reason: 'entry_error' | 'forgot' | 'other' | null;
   source: string;
   voided: boolean;
+  /** D3-H: the person who handed over or picked up the child (name only), and the D-38 (b) mark. */
+  handover: { name: string; restricted: boolean } | null;
 }
 export interface ChildDay {
   childId: string;
@@ -45,7 +47,7 @@ export async function loadAttendanceDay(ctx: OrgContext, groupId: string, date: 
         supabase.from('children').select('id, first_name, last_name').in('id', ids),
         supabase
           .from('attendance_records')
-          .select('id, child_id, kind, occurred_at, corrects_id, correction_reason, source')
+          .select('id, child_id, kind, occurred_at, corrects_id, correction_reason, source, handover_child_guardian_id, handover_pickup_id')
           .eq('organization_id', org.id)
           .eq('local_date', date)
           .in('child_id', ids)
@@ -61,13 +63,17 @@ export async function loadAttendanceDay(ctx: OrgContext, groupId: string, date: 
       ])
     : [{ data: [] }, { data: [] }, { data: [] }];
   const name = new Map((children.data ?? []).map((c) => [c.id, `${c.first_name} ${c.last_name}`]));
-  const all = (events.data ?? []) as { id: string; child_id: string; kind: EventRow['kind']; occurred_at: string; corrects_id: string | null; correction_reason: EventRow['reason']; source: string }[];
+  const all = (events.data ?? []) as {
+    id: string; child_id: string; kind: EventRow['kind']; occurred_at: string; corrects_id: string | null; correction_reason: EventRow['reason']; source: string;
+    handover_child_guardian_id: string | null; handover_pickup_id: string | null;
+  }[];
+  const person = await handoverNames(ctx, all);
   const voided = new Set(all.filter((e) => e.kind === 'void').map((e) => e.corrects_id));
   const days: ChildDay[] = rows
     .map((r) => {
       const ev = all
         .filter((e) => e.child_id === r.child_id)
-        .map((e) => ({ id: e.id, kind: e.kind, occurredAt: e.occurred_at, correctsId: e.corrects_id, reason: e.correction_reason, source: e.source, voided: voided.has(e.id) }));
+        .map((e) => ({ id: e.id, kind: e.kind, occurredAt: e.occurred_at, correctsId: e.corrects_id, reason: e.correction_reason, source: e.source, voided: voided.has(e.id), handover: person(e) }));
       return {
         childId: r.child_id,
         name: name.get(r.child_id) ?? '—',
@@ -91,4 +97,27 @@ export async function loadAttendanceDay(ctx: OrgContext, groupId: string, date: 
     isLate: a.is_late,
   }));
   return { days, absences: absenceItems, failed: Boolean(status.error) };
+}
+
+/** Names of the handover persons referenced by the events (managers read links, guardians and pickup persons). */
+async function handoverNames(ctx: OrgContext, rows: { handover_child_guardian_id: string | null; handover_pickup_id: string | null }[]) {
+  const { supabase } = ctx;
+  const links = [...new Set(rows.map((r) => r.handover_child_guardian_id).filter((x): x is string => x !== null))];
+  const pickups = [...new Set(rows.map((r) => r.handover_pickup_id).filter((x): x is string => x !== null))];
+  const [overview, people] = await Promise.all([
+    links.length ? supabase.from('child_guardian_overview').select('id, guardian_id, is_restricted').in('id', links) : Promise.resolve({ data: [] }),
+    pickups.length ? supabase.from('pickup_authorizations').select('id, first_name, last_name').in('id', pickups) : Promise.resolve({ data: [] }),
+  ]);
+  const ov = (overview.data ?? []) as { id: string; guardian_id: string; is_restricted: boolean }[];
+  const guardianIds = [...new Set(ov.map((o) => o.guardian_id))];
+  const guardians = guardianIds.length ? await supabase.from('guardians').select('id, first_name, last_name').in('id', guardianIds) : { data: [] };
+  const gName = new Map(((guardians.data ?? []) as { id: string; first_name: string; last_name: string }[]).map((g) => [g.id, `${g.first_name} ${g.last_name}`]));
+  const linkInfo = new Map(ov.map((o) => [o.id, { name: gName.get(o.guardian_id) ?? '—', restricted: o.is_restricted }]));
+  const pickupName = new Map(((people.data ?? []) as { id: string; first_name: string; last_name: string }[]).map((p) => [p.id, `${p.first_name} ${p.last_name}`]));
+  return (r: { handover_child_guardian_id: string | null; handover_pickup_id: string | null }) =>
+    r.handover_child_guardian_id
+      ? (linkInfo.get(r.handover_child_guardian_id) ?? { name: '—', restricted: false })
+      : r.handover_pickup_id
+        ? { name: pickupName.get(r.handover_pickup_id) ?? '—', restricted: false }
+        : null;
 }

@@ -26,6 +26,17 @@ describe('offline attendance queue (ADR-0012, SR-MOB-02)', () => {
     expect(JSON.stringify(clean)).not.toMatch(/Lana|tekst/);
   });
 
+  it('D3-H: keeps the handover person as kind and id only; a name, extra fields or a malformed id drop the item', () => {
+    const ok = item(3, { handover: { kind: 'pickup', id: uuid(900) } });
+    expect(sanitizeQueue([ok])).toEqual([ok]);
+    const bad = [
+      item(4, { handover: { kind: 'pickup', id: uuid(901), name: 'Oto Osoba' } as never }),
+      item(5, { handover: { kind: 'neighbour', id: uuid(902) } as never }),
+      item(6, { handover: { kind: 'guardian', id: 'Oto' } }),
+    ];
+    expect(sanitizeQueue(bad)).toEqual([]);
+  });
+
   it('is bound to one account: another account never replays it and the data is removed', async () => {
     const s = memory();
     await createQueueStore(s, KEY, 'user-a').save([item(1)]);

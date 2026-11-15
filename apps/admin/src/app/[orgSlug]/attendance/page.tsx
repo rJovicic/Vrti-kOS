@@ -121,6 +121,15 @@ export default async function Attendance({ params, searchParams }: { params: Pro
                         <td>{time(d.arrivedAt)}</td>
                         <td>{time(d.departedAt)}</td>
                         <td className="wrap">
+                          {d.events
+                            .filter((e) => e.kind !== 'void' && !e.voided && e.handover)
+                            .map((e) => (
+                              <span key={e.id} className="small">
+                                {t(e.kind === 'check_in' ? 'admin.attendance.handedOverBy' : 'admin.attendance.pickedUpBy', { name: e.handover!.name })}
+                                {e.handover!.restricted ? ` (${t('attendance.handoverRestricted')})` : ''}
+                                <br />
+                              </span>
+                            ))}
                           {d.corrected ? <span className="muted">{t('admin.attendance.corrected')}</span> : null}
                           {d.absenceIsLate ? <span className="muted"> · {t('admin.attendance.lateAbsence')}</span> : null}
                         </td>

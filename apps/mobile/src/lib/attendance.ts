@@ -1,4 +1,4 @@
-import type { AttendanceState } from '@vrticos/domain';
+import type { AttendanceState, Handover } from '@vrticos/domain';
 import { displayName, newIdempotencyKey } from './attendanceKeys';
 import { CORRELATION_HEADER, newCorrelationId } from './correlation';
 import { supabase } from './supabase';
@@ -73,6 +73,8 @@ export async function recordAttendance(
   /** The instant of the tap (replays from the offline queue send the original time). */
   occurredAt?: string,
   source: 'app' | 'offline_sync' = 'app',
+  /** D3-H: the person chosen from `loadHandoverCandidates` (the server checks it against the same list). */
+  handover?: Handover,
 ): Promise<Recorded> {
   const { data, error } = await supabase
     .schema('api')
@@ -82,11 +84,31 @@ export async function recordAttendance(
       p_idempotency_key: idempotencyKey,
       ...(occurredAt ? { p_occurred_at: occurredAt } : {}),
       p_source: source,
+      ...(handover?.kind === 'guardian' ? { p_handover_child_guardian_id: handover.id } : {}),
+      ...(handover?.kind === 'pickup' ? { p_handover_pickup_id: handover.id } : {}),
     })
     .setHeader(CORRELATION_HEADER, correlationId);
   if (error) throw error;
   const row = (data as { record_id: string; occurred_at: string }[])[0]!;
   return { recordId: row.record_id, occurredAt: row.occurred_at };
+}
+
+/** A person who may hand over or pick up the child today (D3-H). Names stay in memory, never in the offline queue. */
+export interface HandoverCandidate extends Handover {
+  name: string;
+  /** D-38 (b): the guardian's link has an active access restriction — shown with the "Ograničeno" mark, not hidden. */
+  restricted: boolean;
+}
+
+export async function loadHandoverCandidates(childId: string, correlationId: string = newCorrelationId()): Promise<HandoverCandidate[]> {
+  const { data, error } = await supabase.schema('api').rpc('handover_candidates', { p_child_id: childId }).setHeader(CORRELATION_HEADER, correlationId);
+  if (error) throw error;
+  return ((data ?? []) as { kind: 'guardian' | 'pickup'; id: string; first_name: string; last_name: string; restricted: boolean }[]).map((r) => ({
+    kind: r.kind,
+    id: r.id,
+    name: `${r.first_name} ${r.last_name}`,
+    restricted: r.restricted,
+  }));
 }
 
 export async function undoAttendance(recordId: string, correlationId: string = newCorrelationId()): Promise<void> {

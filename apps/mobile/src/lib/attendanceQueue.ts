@@ -14,7 +14,7 @@ export const queueFor = (userId: string): QueueStore => createQueueStore(session
 
 async function send(item: QueuedAttendance, replay: boolean): Promise<SendResult> {
   try {
-    const r = await recordAttendance(item.childId, item.kind, item.key, newCorrelationId(), item.occurredAt, replay ? 'offline_sync' : 'app');
+    const r = await recordAttendance(item.childId, item.kind, item.key, newCorrelationId(), item.occurredAt, replay ? 'offline_sync' : 'app', item.handover);
     return { ok: true, recordId: r.recordId };
   } catch (e) {
     return classify(e);
