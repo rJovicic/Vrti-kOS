@@ -155,6 +155,14 @@ children's groups and today's or unread announcements in the "Danas" section of 
 earlier days they may read and "Objavile odgojiteljice skupine u …" (no author name); an announcement opens the
 notification centre. Render tests 5.
 
+**D4-F conversations (2026-11-15):** guardians "Poruke" (children for whom their own link has `receives_messages` today)
+and educators "Razgovori" (fifth destination, as in the prototype; children of their groups today). A conversation (a
+view inside the destination) always shows "Razgovor vide: …" (guardians by name, educators as "odgojitelji skupine X")
+and "Vrtić odgovara u svoje radno vrijeme" — the actual hours are open (Q-T05), so no hours are shown; staff messages
+appear as "Odgojitelj/ica skupine" without a name; own messages can be withdrawn for 5 minutes ("Poruka je uklonjena.");
+opening marks the conversation's notifications read. Sending needs a connection; nothing is stored on the device. Render
+tests 5.
+
 ## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an

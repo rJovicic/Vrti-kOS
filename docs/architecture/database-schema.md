@@ -285,17 +285,24 @@ grant), `created_at`.
   for kindergarten-wide staff announcements. Audit via `private.audit_row()` (column names only).
 - **Sens.** R2
 
-### 5.17 `conversations`
+### 5.17 `conversations` — implemented in D4-F (`20261116140000_conversations.sql`)
 `id`, `organization_id`, `child_id`, `created_at`.
 - **FK** composite to `children` · **UQ** `(organization_id, child_id)` — one conversation per child (A-07)
 - **RLS** S: `can_access_conversation(id)` · I: guardian with `receives_messages` or educator of the child (`api.open_conversation(child_id)` is idempotent) · U/D: none
 - **Managers: no access to content** until Q-T16 (SR-AUTHZ-11)
 - **Sens.** R3
 
-### 5.18 `messages`
+### 5.18 `messages` — implemented in D4-F
 `id`, `organization_id`, `conversation_id`, `sender_id`, `body` (≤2000, null when withdrawn), `created_at`, `withdrawn_at`.
 - **FK** `(organization_id, conversation_id) → conversations` RESTRICT · **IX** `(conversation_id, created_at desc)`
 - **RLS** S: `can_access_conversation(conversation_id)` · I: same, `sender_id = auth.uid()` · U: guard trigger — sender only, within 5 min, only `withdrawn_at` (sets `body = null`) · D: none
+- **As implemented (D4-F):** participants = `private.child_participant_ids(child)` (guardians: link valid today with
+  `receives_messages`, no active restriction, active membership; educators: assigned today to the child's group, active
+  membership) — used by RLS, `api.open_conversation` (idempotent), `api.send_message` (≤ 2,000, `MESSAGE_CONTENT_INVALID`),
+  `api.withdraw_message` (sender only, 5 minutes, `MESSAGE_WITHDRAW_EXPIRED` / `MESSAGE_ALREADY_WITHDRAWN`) and the
+  fan-out. Writes only through these RPCs (no client grants instead of an update guard). Managers: no path at all
+  (Q-T16). Display: `api.conversation_participants` (guardians by name, educators as their group) and
+  `api.conversation_messages` (staff by role without a name). Audit via `private.audit_row()` (ids and column names).
 - **Sens.** **R4**
 
 ### 5.19 `daily_entries` — implemented in D4-E (`20261116130000_daily_entries.sql`)
