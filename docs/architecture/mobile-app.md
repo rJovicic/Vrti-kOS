@@ -130,6 +130,14 @@ These follow the module table below and arrive with D2–D4.
   spremljeno · HH:MM". Handover sheet waits for D-38; offline queue is D3-E. Tests: `attendance.render.test.tsx` (10),
   `lib/attendance.test.ts` (3). Plain `ScrollView` instead of FlashList (no new dependency; group sizes ≤ 30).
 
+**D3-H handover person (2026-11-15, D-38 b):** a single tap still records at once (FR-05-2). A long press on a tile (or
+the accessibility action "Odaberi osobu predaje") opens the list from `api.handover_candidates`: guardians and pickup
+persons of the child for today, a restricted guardian shown with the "Ograničeno" badge (warning tone) and the note
+"Postupite prema proceduri vrtića." Choosing a person records the event with that person; "Osoba nije na popisu" only
+shows the procedure text (FR-05-4) and records nothing; "Evidentiraj bez osobe" records without one. There is no text
+input. Names stay in component state; the offline queue stores only the kind and id of the person, and the server checks
+it again on replay (`HANDOVER_INVALID` → shown as a failed item).
+
 ## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an

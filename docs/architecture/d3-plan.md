@@ -38,7 +38,7 @@
 ## 3. Decisions needed from the owner (work continues around them)
 | ID | Question | Why it is open | Effect until decided |
 |---|---|---|---|
-| **D-38** | Is a guardian whose link has an active access restriction offered as the handover person? AC-05-3 says no ("ako nisu ograničeni"); D-33 says a restriction is not an automatic pickup ban and handover rules are decided in D3. Options: (a) not offered (AC-05-3); (b) offered with the "Ograničeno" mark, the educator decides by the kindergarten procedure; (c) offered like any guardian | The two owner-facing sources conflict | Handover selection (D3-H) is built last; everything else proceeds |
+| ~~D-38~~ | Restricted guardian as handover person | **Decided by the owner 2026-11-15: option (b)** — offered with a clearly visible "Ograničeno" mark; the educator follows the kindergarten's procedure; no free text, no person outside the list | Built in D3-H |
 | D-39 (existing open, matrix §9) | Educator correction deadline beyond "same day" | Matrix footnote "opseg treba potvrditi" | Implemented as documented: educators same day only (schema RLS), managers any day |
 | Q-T14 (existing) | Same-day cut-off value and the 30-day horizon | Kindergarten input | Setting stays per organization (null by default); 30/30 limits as documented assumption |
 | N-10/H-04 (existing) | May educators record absences on behalf? | Validation | Denied |
@@ -60,26 +60,26 @@
 | D3-E | Offline queue (ADR-0012): encrypted, IDs only, replay with server re-authorization, wipe on sign-out with warning | unit + render tests; AC-05-5 | **Done 2026-11-15:** domain queue (7 unit), mobile adapter (`lib/attendanceQueue.ts`), screen integration, sign-out warning; render tests 6 offline cases. Storage: chunked SecureStore instead of expo-sqlite (ADR-0012 note). |
 | D3-F | Guardian mobile: status on Parent Home and child view; absence report and cancel flow | render tests | **Done 2026-11-15:** status from `child_day_status` on the cards; `AbsenceReportView` (day chips today…+30, summary, send, "Prijava izostanka poslana vrtiću.", no offline queue); absences in the child view with cancel for own reports after confirmation; render tests 7. Technical: day chips instead of a date-picker dependency. |
 | D3-G | Admin: attendance by group and day, corrections with reason, absence on behalf | e2e | **Done 2026-11-15:** `/[org]/attendance` (group + day, counts, status table, per child: record now (today), correction with reason and optional time, missed event; absences from that day with cancel; absence on behalf), DST-aware `zonedTimeToIso` (domain, 4 tests), Zod schemas (3 tests), e2e flow. |
-| D3-H | Handover person selection (after D-38) | pgTAP + render | **Not built — waiting for D-38.** Departures are recorded without a handover person until then. |
+| D3-H | Handover person selection (after D-38) | pgTAP + render | **Done 2026-11-15:** `20261116100000_attendance_handover.sql` — `api.handover_candidates(child)` (guardians linked that day with `restricted`, pickup persons valid that day; names only; staff who may record), `record_attendance` takes at most one person and re-checks it against the same list (`HANDOVER_INVALID`), a correction keeps the person; mobile long press / accessibility action → list with "Ograničeno", "Osoba nije na popisu" shows the procedure only, queue stores kind + id; admin shows who handed over / picked up. pgTAP 23 (27; mutation (a) instead of (b) → 4 fail), integration +1, render +5, domain +1. |
 | D3-I | Docs, NEG coverage, privacy (DI-14…16), risks | CI green | **Done 2026-11-15:** pgTAP 22 (20: NEG-02 two kindergartens, NEG-08 transfer during the day, NEG-09 suspended educator; mutation check 7/20 fail), NEG matrix without open D3 items, inventory §6 (handover person not implemented), R-55 extended to the D3 screens, sign-in test helper resends once (CI #33/#40). |
 
 ## 6. Out of scope for D3 (recorded, not built)
 Push notifications for absences (FS-08, FR-06-5 second half) — no notification table or push provider exists yet;
 reports and exports (FS-14); QR/NFC, geolocation, billing (FS-05 out of scope).
 
-## 7. Closure of D3 (2026-11-15) — what is proven and what is not
+## 7. Closure of D3 (2026-11-15, D3 closed after D3-H) — what is proven and what is not
 **Proven by automated tests (CI green):**
 - Database: `attendance_records`, `absence_records`, `api.child_day_status` — RLS, grants, invoker wrappers, append-only,
   audit, idempotency, sequence rule, undo window, corrections with reason, date limits, split cancel; pgTAP 19–22
-  (53 + 44 + 24 + 20), NEG-01…NEG-15 for the D3 tables (NEG-12 n/a: no storage bucket).
+  (53 + 44 + 24 + 20) and 23 (27, handover), NEG-01…NEG-15 for the D3 tables (NEG-12 n/a: no storage bucket).
 - API: integration `attendance.test.ts` (7, incl. two educators at once → one arrival) and `absences.test.ts` (6).
-- Mobile: render tests on the real router — educator screen (10), offline queue (6), guardian status and absence report
-  (7); queue unit tests (7); Expo export iOS + Android.
+- Mobile: render tests on the real router — educator screen (10), offline queue (6), handover (5), guardian status and
+  absence report (7); queue unit tests (7); Expo export iOS + Android.
 - Admin: e2e manager flow (record, correct with reason, absence on behalf, cancel); DST-aware time conversion (4 unit).
 
 **Not verified (owner deferred device testing, 2026-11-15):** the mobile screens on a phone or simulator — SecureStore
 behaviour of the offline queue, network-return replay, AppState retry, layout at real sizes (R-44, R-55).
 
-**Not built:** handover person (D3-H, D-38); push notifications for absences (FS-08); reports and exports (FS-14).
+**Not built:** push notifications for absences (FS-08); reports and exports (FS-14).
 
-**Open and unchanged:** D-38, D-39, Q-T14, N-10/H-04, R-44, R-45/D-27, R-49, R-53, R-54, R-55.
+**Decided during D3:** D-38 (b), built in D3-H. **Open and unchanged:** D-39 (educators correct today only, as documented), Q-T14, N-10/H-04, R-44, R-45/D-27, R-49, R-53, R-54, R-55.

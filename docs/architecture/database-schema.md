@@ -251,7 +251,10 @@ grant), `created_at`.
   today only, children in `educator_child_ids()`; corrections with a reason (`entry_error|forgot|other`) for today;
   managers any past day. Undo: recorder within 10 s, no reason. The child must be enrolled that day. Append-only for every
   role (`ATTENDANCE_APPEND_ONLY`); voids and corrections audited. Select: managers and `educator_child_ids()`; guardians
-  read status through the D3-C read model. Handover columns exist but are not set until D-38.
+  read status through the D3-C read model. **D3-H (D-38 b):** handover columns are set only through `api.record_attendance`
+  (`p_handover_child_guardian_id` or `p_handover_pickup_id`, at most one) and checked against `private.handover_list`
+  (guardians linked that day — restricted ones included and marked — and pickup persons valid that day); staff read the
+  list through `api.handover_candidates(child)`; a correction keeps the person; guardians never see it.
 - **Sens.** R3
 
 ### 5.15 `absence_records` — implemented in D3-B (`20261115110000_absence_records.sql`)
