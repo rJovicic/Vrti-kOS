@@ -138,6 +138,15 @@ shows the procedure text (FR-05-4) and records nothing; "Evidentiraj bez osobe" 
 input. Names stay in component state; the offline queue stores only the kind and id of the person, and the server checks
 it again on replay (`HANDOVER_INVALID` → shown as a failed item).
 
+**D4-D notification centre (2026-11-15):** a new destination "Obavijesti" for guardians (Početna · Obavijesti · Poruke ·
+Profil, as the prototype) and educators (Danas · Evidencija · Obavijesti · Profil). It lists the announcements the
+database lets the person read now (published, audience computed from current relationships) with "Novo" for unread
+notifications and "uređeno"; opening one shows it (a view inside the destination) and marks its notifications read;
+"Označi … pročitanim" marks all. Educators also see absence reports of their groups (FR-06-5), resolved under the
+absence RLS; a report that is no longer readable shows "Sadržaj više nije dostupan." Profile: push on/off per type
+(stored in `notification_preferences`), with the note that the kindergarten has not enabled push yet (D-40). Nothing of
+this is stored on the device. Render tests 6; the i18n notification types are checked against the DB enum at compile time.
+
 ## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an
