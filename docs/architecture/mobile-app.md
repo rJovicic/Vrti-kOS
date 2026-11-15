@@ -77,6 +77,17 @@ Kindergarten switching is not needed: every list shows the kindergarten per item
   persons and Back, access withdrawn between list and detail, educator names per group); Vitest label test for the
   child without a group. Visual check on a device is still open (R-44).
 
+### D3-F: guardian status and absences (2026-11-15)
+- Parent Home cards show today's status from `api.child_day_status` (present since / departed at / reported absence
+  with its range / expected; "unavailable" for a child without a group), never the staff member.
+- "Prijavi izostanak" (only with `can_report_absence`) opens `AbsenceReportView`: day chips for today … +30 days (the
+  allowed range, FR-06-1), inclusive end, summary with the number of days, "Pošalji vrtiću"; success returns to Parent
+  Home with "Prijava izostanka poslana vrtiću." (receipt only). Without a connection: an explanation, no confirmation,
+  nothing queued (spec §8). No reason field, nothing sent besides child and dates.
+- "Pregledaj izostanak" opens the child view: active absences from today on; "Otkaži" only for reports this account
+  made, after a confirmation (FS-06 cancel rules are enforced by the server).
+- Tests: `home.render.test.tsx` D3-F block (7).
+
 ## 2. Planned (not implemented)
 - Showing and acknowledging the privacy notice text in the app (the gate exists; the content and the write of
   `notice_ack_version` follow with the privacy work).
