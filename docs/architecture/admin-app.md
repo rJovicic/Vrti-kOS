@@ -53,6 +53,13 @@ only, D-34). Technical decisions: secondary forms sit behind native `<details>` 
 client JavaScript, keyboard accessible, the effect text is shown before the confirmation checkbox); a separate guardian
 directory route is not built (guardians are managed from the child, which is where links and rights live).
 
+**Implemented in D3-G (2026-11-15):** `attendance/` (prototype "Dolasci"): group and day selector (no future days),
+counts, table (child, status, arrival, departure, "Ispravljeno" / late absence); per child "Evidencija i ispravak":
+record now (today only), correction of an event with a reason category and optional exact time of that day (the
+original stays; the server refuses an order that breaks arrival → departure), missed event with a reason; absences
+from that day on with cancel of days not passed; absence on behalf of a guardian (managers only, FR-06-7). Times typed
+by managers are converted from the kindergarten's time zone with `zonedTimeToIso` (DST-aware).
+
 Organization context comes from the URL slug; every server call still filters by `organization_id` and RLS decides.
 A manager of two kindergartens sees an org switcher; caches are keyed by org.
 

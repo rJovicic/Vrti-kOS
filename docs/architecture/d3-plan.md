@@ -59,7 +59,7 @@
 | D3-D | Mobile educator attendance screen (online): list per group, one tap, undo 10 s, absence confirmation, conflict warning, states | render tests; Expo export | **Done 2026-11-15:** render tests 10 + unit 3, Expo export iOS + Android. See mobile-app.md §4. |
 | D3-E | Offline queue (ADR-0012): encrypted, IDs only, replay with server re-authorization, wipe on sign-out with warning | unit + render tests; AC-05-5 | **Done 2026-11-15:** domain queue (7 unit), mobile adapter (`lib/attendanceQueue.ts`), screen integration, sign-out warning; render tests 6 offline cases. Storage: chunked SecureStore instead of expo-sqlite (ADR-0012 note). |
 | D3-F | Guardian mobile: status on Parent Home and child view; absence report and cancel flow | render tests | **Done 2026-11-15:** status from `child_day_status` on the cards; `AbsenceReportView` (day chips today…+30, summary, send, "Prijava izostanka poslana vrtiću.", no offline queue); absences in the child view with cancel for own reports after confirmation; render tests 7. Technical: day chips instead of a date-picker dependency. |
-| D3-G | Admin: attendance by group and day, corrections with reason, absence on behalf | e2e |
+| D3-G | Admin: attendance by group and day, corrections with reason, absence on behalf | e2e | **Done 2026-11-15:** `/[org]/attendance` (group + day, counts, status table, per child: record now (today), correction with reason and optional time, missed event; absences from that day with cancel; absence on behalf), DST-aware `zonedTimeToIso` (domain, 4 tests), Zod schemas (3 tests), e2e flow. |
 | D3-H | Handover person selection (after D-38) | pgTAP + render |
 | D3-I | Docs, NEG coverage, privacy (DI-14…16), risks | CI green |
 
