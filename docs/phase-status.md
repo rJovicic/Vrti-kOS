@@ -2,11 +2,11 @@
 
 **Trenutna faza:** sloj **D3** (dolasci i izostanci) — **u tijeku od 2026-11-15**; plan: [architecture/d3-plan.md](architecture/d3-plan.md). Sloj **D2 je izveden 2026-11-15** (D2-A…D2-I, D-31…D-37); preostali rizici R-44, R-49, R-53, R-54, R-55 i R-45/D-27 ostaju otvoreni i dokumentirani. Sloj **D1 je zaključen 2026-11-12** odlukom vlasnika
 **Zadnja provjera:** 2026-11-15 (D3-I) — lint, typecheck, 180 unit testova (Vitest) + 52 render testa (Jest), **799 pgTAP** (23 datoteke), RLS spike 14/14, **105 integracijskih**, **10 Playwright e2e** (admin, uključuje tok D3-G), Deno check/lint, Expo export iOS + Android
-**CI:** GitHub Actions runovi #19–#29 (D2-A…D2-H, commit `d65f3f1`) — sva 4 posla zelena u svakom; [run #29](https://github.com/rJovicic/Vrti-kOS/actions/runs/43231854753) zadnji za D2-H
+**CI:** GitHub Actions runovi #30–#41 (D2-I, D3-A…D3-I) — sva 4 posla zelena za svaki završeni paket; run #40 (D3-G) pao je jednom na izgubljenoj e-pošti s kodom u integracijskom testu (ne u D3-G kodu), uzrok ublažen u pomoćnoj funkciji testa; [run #41](https://github.com/rJovicic/Vrti-kOS/actions/runs/43718121587) zelen na `ed515fa`
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
-**Zadnje ažuriranje:** 2026-11-12
+**Zadnje ažuriranje:** 2026-11-15
 
 ## ✅ Završeno
 - Inspekcija repozitorija (prazan, samo README) i okruženja (Node 22.23, npm 10.9, pnpm 10.28, Python 3.13, Git 2.43, Claude Code 2.1.322)
