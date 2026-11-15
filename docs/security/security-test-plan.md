@@ -201,6 +201,7 @@ pojavi nakon releasea tretira se kao potencijalni incident (vidi [incident-respo
 | D4-D mobile notification centre (render: announcements with "Novo"/"uređeno" and one correlation id per load; opening marks only its notifications read; mark-all; empty and error with retry; guardians have no absence section; educators see absence reports, an unreadable one as "no longer available"; push preference upserts the own row and says sending is not enabled) | `apps/mobile/src/features/notices/notices.render.test.tsx` | ✅ 2026-11-15 |
 | D4-E daily overview (28 assertions: RLS, RPC-only writes, invoker, no child/media/health column (FR-10-4), anon none; AC-10-2 educator of another group, manager, other kindergarten, guardian cannot write; limits and fixed tags; draft read by the group's educator and managers only; AC-10-1 readers incl. without can_view, restricted, other group, child moved today, B, platform admin excluded; notifications exactly to those guardians; earlier day visible to guardians of children in the group on that day (FR-10-3); same-day edit stays published and marked, no new notification; audit without text; NEG-01/07/09/10. Mutation: audience by today's enrolment instead of the entry date → 1 fail. Integration through the API; render: editor with warning, counter, tags, draft/publish/edit, error; guardian "Danas" row, reading view with earlier days and no author name) | `supabase/tests/database/26_daily_entries.test.sql`, `tests/integration/src/daily-entries.test.ts`, `apps/mobile/src/features/daily-entry/daily.render.test.tsx` | ✅ 2026-11-15 |
 | D4-F conversations (36 assertions: RLS, RPC-only writes, invokers, no attachment column, anon none; AC-11-3 manager has no access (open, read, display RPC); AC-11-1 guardian without receives_messages, restricted guardian (NEG-05), other family (NEG-03), educator of another group (NEG-07), other kindergarten (NEG-01) cannot open; one conversation per child; limits; notifications to the other participants only; FR-11-2 participants (guardians by name, educators as group); staff messages by role; platform admin nothing (NEG-10); no direct insert; withdraw only by the sender, once, within 5 minutes, text removed; audit without text; AC-11-2 former educator loses everything; NEG-09. Mutation: managers as participants → 4 fail. Integration through the API; render: list by messaging right, who-sees and response note, send, withdraw, removed, denied, error, educator "Razgovori") | `supabase/tests/database/27_conversations.test.sql`, `tests/integration/src/conversations.test.ts`, `apps/mobile/src/features/conversations/conversations.render.test.tsx` | ✅ 2026-11-15 |
+| D4-G negative cases on the D4 tables (10 assertions: NEG-02 one account as guardian in two kindergartens reads announcements, overviews and conversations per kindergarten, a restriction in A leaves B untouched; NEG-06 ended link removes everything; NEG-08 a moved child's conversation goes to the new group's educator and leaves the old one; NEG-01) | `supabase/tests/database/28_d4_negative.test.sql` | ✅ 2026-11-15 |
 
 ## NEG coverage after D2 (2026-11-15, D2-I)
 Evidence = test files that exercise the scenario and run in CI. "Partial" means the scenario is proven for the tables
@@ -208,19 +209,19 @@ that exist; it must be re-proven for each new table (D3+).
 
 | NEG | Status | Evidence | Gap / next |
 |---|---|---|---|
-| NEG-01 cross-tenant | ✅ all tenant tables of D1–D3 | pgTAP 01, 02, 05, 09–17, 19, 20, 21; integration `invitations`, `guardian-invitations`, `transfer-withdrawal`, `cancel-future-records`; admin e2e (foreign URL 404) | each D4 table |
-| NEG-02 member of two kindergartens | ✅ | pgTAP 01 (structure), 18 (guardian in two kindergartens: children, groups, links, records, pickup persons; restriction and ended link act per kindergarten), 22 (day status and absences per kindergarten) | — |
-| NEG-03 guardian without link | ✅ | pgTAP 09, 10, 19, 20, 21; integration `guardians`, `absences` | — |
-| NEG-04 missing flag | ✅ | pgTAP 10 (`can_view`), 13, 20 (`can_report_absence` for absence reports); integration `absences` | — |
-| NEG-05 active restriction | ✅ | pgTAP 11, 12, 13, 20 (absence report), 21 (day status), 22 (per kindergarten); integration `access-restrictions`, `guardian-invitations` | — |
-| NEG-06 expired link | ✅ | pgTAP 10, 13; integration `guardians` | — |
-| NEG-07 educator outside groups | ✅ | pgTAP 02, 09, 12, 13, 19, 20, 21 | — |
-| NEG-08 after schedule / transfer | ✅ | pgTAP 02, 09, 12, 13, 14, 19 (assignment ended), 22 (transfer during the day) | — |
-| NEG-09 revoked membership | ✅ | pgTAP 01, 02, 04, 09, 10, 22 (attendance, absences, day status) | — |
-| NEG-10 platform admin | ✅ | pgTAP 01, 09–15, 19, 20, 21 | — |
+| NEG-01 cross-tenant | ✅ all tenant tables of D1–D4 | pgTAP 01, 02, 05, 09–17, 19, 20, 21, 23–28; integration `invitations`, `guardian-invitations`, `transfer-withdrawal`, `cancel-future-records`; admin e2e (foreign URL 404) | each D4 table |
+| NEG-02 member of two kindergartens | ✅ | pgTAP 01 (structure), 18 (guardian in two kindergartens: children, groups, links, records, pickup persons; restriction and ended link act per kindergarten), 22 (day status and absences per kindergarten), 28 (announcements, daily overviews, conversations per kindergarten) | — |
+| NEG-03 guardian without link | ✅ | pgTAP 09, 10, 19, 20, 21, 25, 26, 27; integration `guardians`, `absences`, `announcements`, `daily-entries` | — |
+| NEG-04 missing flag | ✅ | pgTAP 10 (`can_view`), 13, 20 (`can_report_absence` for absence reports), 26 (`can_view` for daily overviews), 27 (`receives_messages` for conversations); integration `absences`, `conversations` | — |
+| NEG-05 active restriction | ✅ | pgTAP 11, 12, 13, 20 (absence report), 21 (day status), 22 (per kindergarten), 25, 26, 27, 28 (communication); integration `access-restrictions`, `guardian-invitations` | — |
+| NEG-06 expired link | ✅ | pgTAP 10, 13, 28 (communication); integration `guardians` | — |
+| NEG-07 educator outside groups | ✅ | pgTAP 02, 09, 12, 13, 19, 20, 21, 23, 24, 26, 27 | — |
+| NEG-08 after schedule / transfer | ✅ | pgTAP 02, 09, 12, 13, 14, 19 (assignment ended), 22 (transfer during the day), 25 (announcement after transfer), 26 (overview by the day's group), 27 (former educator), 28 (conversation follows the child) | — |
+| NEG-09 revoked membership | ✅ | pgTAP 01, 02, 04, 09, 10, 22 (attendance, absences, day status), 24–27 (communication) | — |
+| NEG-10 platform admin | ✅ | pgTAP 01, 09–15, 19, 20, 21, 23–27 | — |
 | NEG-11 own role/flags | ✅ | pgTAP 01, 02, 10 | — |
 | NEG-12 Storage | n/a | no bucket exists yet (photos are post-MVP) | first bucket |
 | NEG-13 audit immutable | ✅ | pgTAP 06 (append-only for every role), 01 | — |
-| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15, 19, 20, 21 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
-| NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14, 19, 20, 21 | — |
+| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15, 19–27 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
+| NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14, 19–27 | — |
 

@@ -92,7 +92,7 @@ vidi pravila u [../product/validation-plan.md](../product/validation-plan.md) §
 - Koji alat se koristi za korisničku podršku i bilješke s intervjua i gdje su podaci (DI-26, DI-28)?
 - Jesu li podaci o djelatnicima (rasporedi) obrada u svrhu radnog odnosa za koju vrtić treba zasebnu obavijest zaposlenicima? ⚖️
 
-## 6. Stanje provedbe nakon D2 i D3 (2026-11-15)
+## 6. Stanje provedbe nakon D2, D3 i D4 (2026-11-15)
 Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09, R-53).
 
 | Redak | Gdje se nalazi | Tko čita (provedeno u bazi) | Što se namjerno ne pohranjuje | Brisanje |
@@ -113,6 +113,8 @@ Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09
 | DI-05 pozivnica | `invitations.guardian_id` | uprava | podaci o djetetu u poruci | R-53 (otvoreno) |
 
 Skrbnik u aplikaciji vidi samo stanje svog djeteta za danas (stiglo u, otišlo u, izostanak), nikad tko je zabilježio; uprava u administraciji vidi i izvor (aplikacija, administracija). Obavijesti o izostanku (FS-08) ne postoje — nema push pružatelja ni tablice obavijesti.
+
+**D4 bez novih podizvršitelja:** obavijesti, dnevni pregledi i razgovori ostaju u bazi; push token se ne prikuplja i ništa se ne šalje vanjskom pružatelju dok vlasnik ne odluči D-40 (ADR-0007). Registar podizvršitelja (README, red 10) zato se u D4 ne mijenja.
 
 Audit (DI-22) za sve navedeno bilježi ID-jeve, nazive stupaca, uloge i kodove razloga, nikad imena ni vrijednosti.
 

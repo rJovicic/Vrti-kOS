@@ -59,8 +59,28 @@ As schema §5.16–5.22 with these technical choices:
 | D4-D | Mobile: notification centre (list, unread, open resource under RLS, "no longer available"), announcements, push preferences per type | render tests, Expo export | **Done 2026-11-15:** destination "Obavijesti" (guardian and educator), announcement view, absence reports for educators, push preferences in the profile; render tests 6; Expo export iOS + Android. |
 | D4-E | Daily overview: table, RPCs (draft, publish, same-day edit), RLS; mobile educator editor and guardian view; fan-out | pgTAP AC-10-1/2 + NEG, integration, render | **Done 2026-11-15:** `20261116130000_daily_entries.sql` (one RPC `save_daily_entry`), pgTAP 26 (28; mutation → 1 fail), integration `daily-entries.test.ts` (1), render 5; Parent Home "Danas" now shows real activities. Technical: fixed tag list (the prototype's four) until an organization list exists. |
 | D4-F | Conversations: tables, `can_access_conversation`, open/send/withdraw RPCs, participants view; mobile for guardians and educators; managers denied | pgTAP AC-11-1/2/3 + NEG, integration, render | **Done 2026-11-15:** `20261116140000_conversations.sql`, pgTAP 27 (36; mutation → 4 fail), integration `conversations.test.ts` (2), render 5. Response hours not shown (Q-T05). |
-| D4-G | Docs, NEG coverage, privacy (DI-07, DI-17…19), subprocessor register unchanged (no push provider), risks, closure | CI green |
+| D4-G | Docs, NEG coverage, privacy (DI-07, DI-17…19), subprocessor register unchanged (no push provider), risks, closure | CI green | **Done 2026-11-15:** pgTAP 28 (10: NEG-02/06/08 for the D4 tables), NEG matrix with D4 tables, inventory §6 (DI-07, DI-17…19, no new subprocessor), R-53 extended, R-55 extended, new R-56 (no push yet). |
 
 ## 6. Out of scope for D4 (recorded, not built)
 Push delivery and device tokens (D-40); quiet period (Q-T05 with D-40); read receipts (Q-T15); attachments, photos,
 comments, polls, scheduled announcements (FS-07 out of scope); menu and calendar (FS-12/13).
+
+## 7. Closure of D4 (2026-11-15) — what is proven and what is not
+**Proven by automated tests (CI green):**
+- Database: `notifications`, `notification_preferences`, `announcements`, `announcement_revisions`, `daily_entries`,
+  `conversations`, `messages` — RLS, grants, invoker wrappers, audit without content, audiences computed at read time,
+  managers without access to conversations; pgTAP 24–28 (26 + 43 + 28 + 36 + 10), NEG-01…NEG-15 for these tables
+  (NEG-12 n/a). Mutation checks: fan-out scope, audience rules, daily entry date, managers as participants — all caught.
+- API: integration `notifications` (3), `announcements` (3), `daily-entries` (1), `conversations` (2).
+- Admin: announcements e2e (draft, warning, publish, edit with history, archive).
+- Mobile: render tests — notification centre (6), daily overview (5), conversations (5); push payloads (3 unit, ST-PUSH-01);
+  Expo export iOS + Android.
+
+**Not verified (owner deferred device testing):** the D4 mobile screens on a phone or simulator (R-44, R-55).
+
+**Not built:** push delivery and device tokens (D-40, R-56); quiet period (Q-T05, with D-40); read receipts (Q-T15);
+response hours in conversations (Q-T05 — the screen says only "u svoje radno vrijeme"); organization-defined activity tags
+(fixed list of four); educators publishing announcements (matrix, denied); manager access to conversations (Q-T16, denied).
+
+**Open:** D-40, Q-T05, Q-T15, Q-T16, matrix "***", D-10 (validation of the conversation model), R-44, R-45/D-27, R-49,
+R-53, R-54, R-55, R-56.
