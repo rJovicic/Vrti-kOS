@@ -12,6 +12,7 @@ let beta: Awaited<ReturnType<typeof createKindergarten>>;
 let manager: Client;
 let edu1: Client;
 let edu2: Client;
+let managerB: Client | undefined;
 const ids: Record<string, string> = {};
 const accounts: Record<string, string> = {};
 
@@ -102,6 +103,7 @@ describe('D3-A: attendance through the API', () => {
     expect((await parent.from('attendance_records').select('id')).data).toEqual([]);
     const mgrB = await signInWithCode(beta.managerEmail);
     await enrolMfa(mgrB.client);
+    managerB = mgrB.client;
     expect((await record(mgrB.client, ids.Lea!, 'check_out')).error?.code).toBe('42501');
     expect((await mgrB.client.from('attendance_records').select('id').eq('organization_id', alfa.orgId)).data).toEqual([]);
   });
@@ -125,5 +127,50 @@ describe('D3-A: attendance through the API', () => {
     expect(upd.error).not.toBeNull();
     const del = await manager.from('attendance_records').delete().eq('child_id', ids.Lea!);
     expect(del.error).not.toBeNull();
+  });
+});
+
+describe('D3-H: handover person through the API (D-38 b)', () => {
+  it('the list offers the restricted guardian with the mark; only listed persons are accepted; at most one', async () => {
+    const { data: child } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: 'Mak', last_name: 'Predaja' }).select('id').single().throwOnError();
+    const mak = child!.id as string;
+    await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: mak, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+    const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: 'Bea', last_name: 'Predaja' }).select('id').single().throwOnError();
+    const { data: link } = await manager
+      .from('child_guardians')
+      .insert({ organization_id: alfa.orgId, child_id: mak, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' })
+      .select('id')
+      .single()
+      .throwOnError();
+    await manager.from('access_restrictions').insert({ organization_id: alfa.orgId, child_guardian_id: link!.id, valid_during: '[2026-09-01,)' }).throwOnError();
+    const { data: pickup } = await manager
+      .from('pickup_authorizations')
+      .insert({ organization_id: alfa.orgId, child_id: mak, first_name: 'Oto', last_name: 'Predaja', valid_during: '[2026-09-01,)' })
+      .select('id')
+      .single()
+      .throwOnError();
+
+    const list = await edu1.schema('api').rpc('handover_candidates', { p_child_id: mak });
+    expect(list.error).toBeNull();
+    expect(list.data).toEqual([
+      { kind: 'guardian', id: link!.id, first_name: 'Bea', last_name: 'Predaja', restricted: true },
+      { kind: 'pickup', id: pickup!.id, first_name: 'Oto', last_name: 'Predaja', restricted: false },
+    ]);
+
+    const withPerson = (kind: 'check_in' | 'check_out', person: Record<string, string>) =>
+      edu1.schema('api').rpc('record_attendance', { p_child_id: mak, p_kind: kind, p_idempotency_key: randomUUID(), ...person });
+    expect((await withPerson('check_in', { p_handover_pickup_id: pickup!.id })).error).toBeNull();
+    expect((await withPerson('check_out', { p_handover_pickup_id: randomUUID() })).error?.message).toBe('HANDOVER_INVALID');
+    expect((await withPerson('check_out', { p_handover_child_guardian_id: link!.id, p_handover_pickup_id: pickup!.id })).error?.message).toBe('HANDOVER_INVALID');
+    expect((await withPerson('check_out', { p_handover_child_guardian_id: link!.id })).error).toBeNull();
+
+    const { data: rows } = await manager.from('attendance_records').select('kind, handover_child_guardian_id, handover_pickup_id').eq('child_id', mak).order('occurred_at');
+    expect(rows).toEqual([
+      { kind: 'check_in', handover_child_guardian_id: null, handover_pickup_id: pickup!.id },
+      { kind: 'check_out', handover_child_guardian_id: link!.id, handover_pickup_id: null },
+    ]);
+    // The other kindergarten's manager (with MFA, signed in by the test above) reads no list.
+    expect(managerB).toBeDefined();
+    expect((await managerB!.schema('api').rpc('handover_candidates', { p_child_id: mak })).error?.code).toBe('42501');
   });
 });

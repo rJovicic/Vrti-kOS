@@ -69,7 +69,7 @@ select ok(not has_table_privilege('authenticated', 'public.attendance_records', 
 select ok(not has_table_privilege('anon', 'public.attendance_records', 'SELECT'), 'anon reads nothing (NEG-15)');
 select ok(not (select bool_or(prosecdef) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'api' and p.proname like '%attendance%'),
   'the exposed attendance RPCs are SECURITY INVOKER (SR-API-01)');
-select ok(not has_function_privilege('anon', 'api.record_attendance(uuid, public.attendance_kind, uuid, timestamptz, text)', 'EXECUTE'), 'anon cannot record');
+select ok(not has_function_privilege('anon', 'api.record_attendance(uuid, public.attendance_kind, uuid, timestamptz, text, uuid, uuid)', 'EXECUTE'), 'anon cannot record');
 select is((select count(*)::int from information_schema.columns where table_schema = 'public' and table_name = 'attendance_records'
   and column_name ~* 'note|comment|text|reason_text|name'), 0, 'no free-text column');
 

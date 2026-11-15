@@ -30,11 +30,16 @@ export type Database = {
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
                            },
+"handover_candidates":
+{ Args: { "p_child_id": string }; Returns: {
+              "first_name": string,"id": string,"kind": string,"last_name": string,"restricted": boolean
+            }[]
+                           },
 "record_absence_on_behalf":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
                            },
 "record_attendance":
-{ Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at"?: string,"p_source"?: string }; Returns: {
+{ Args: { "p_child_id": string,"p_handover_child_guardian_id"?: string,"p_handover_pickup_id"?: string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at"?: string,"p_source"?: string }; Returns: {
               "kind": Database["public"]['Enums']["attendance_kind"],"occurred_at": string,"record_id": string,"replayed": boolean
             }[]
                            },
