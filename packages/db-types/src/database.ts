@@ -30,6 +30,16 @@ export type Database = {
               "absence_is_late": boolean,"absence_reported": boolean,"arrived_at": string,"child_id": string,"departed_at": string,"group_id": string,"last_record_id": string,"last_record_kind": Database["public"]['Enums']["attendance_kind"],"local_date": string,"organization_id": string,"status": string
             }[]
                            },
+"conversation_messages":
+{ Args: { "p_conversation_id": string }; Returns: {
+              "body": string,"created_at": string,"id": string,"mine": boolean,"sender_kind": string,"sender_name": string,"withdrawn": boolean
+            }[]
+                           },
+"conversation_participants":
+{ Args: { "p_conversation_id": string }; Returns: {
+              "is_me": boolean,"kind": string,"name": string
+            }[]
+                           },
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
                            },
@@ -43,6 +53,9 @@ export type Database = {
                            },
 "mark_notifications_read":
 { Args: { "p_ids"?: (string)[] }; Returns: number
+                           },
+"open_conversation":
+{ Args: { "p_child_id": string }; Returns: string
                            },
 "publish_announcement":
 { Args: { "p_id": string }; Returns: string
@@ -70,6 +83,9 @@ export type Database = {
 "save_daily_entry":
 { Args: { "p_body": string,"p_group_id": string,"p_publish"?: boolean,"p_tags"?: (string)[] }; Returns: string
                            },
+"send_message":
+{ Args: { "p_body": string,"p_conversation_id": string }; Returns: string
+                           },
 "transfer_child":
 { Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
                            },
@@ -78,6 +94,9 @@ export type Database = {
                            },
 "withdraw_child":
 { Args: { "p_child_id": string,"p_last_day": string }; Returns: undefined
+                           },
+"withdraw_message":
+{ Args: { "p_message_id": string }; Returns: string
                            }
           }
           Enums: {
@@ -374,6 +393,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"conversations": {
+                  Row: {
+                    "child_id": string,"created_at": string,"id": string,"organization_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "child_id": string,"created_at"?: string,"id"?: string,"organization_id": string
+                  }
+                  Update: {
+                    "child_id"?: string,"created_at"?: string,"id"?: string,"organization_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversations_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: true
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "conversations_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"daily_entries": {
                   Row: {
                     "activity_tags": (string)[],"author_id": string | null,"body": string,"created_at": string,"edited_at": string | null,"entry_date": string,"group_id": string,"id": string,"organization_id": string,"published_at": string | null,"status": string,"updated_at": string
@@ -605,6 +650,38 @@ isOneToOne: false
     },{
       foreignKeyName: "memberships_profile_id_fkey"
       columns: ["profile_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"messages": {
+                  Row: {
+                    "body": string | null,"conversation_id": string,"created_at": string,"id": string,"organization_id": string,"sender_id": string,"withdrawn_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body"?: string | null,"conversation_id": string,"created_at"?: string,"id"?: string,"organization_id": string,"sender_id": string,"withdrawn_at"?: string | null
+                  }
+                  Update: {
+                    "body"?: string | null,"conversation_id"?: string,"created_at"?: string,"id"?: string,"organization_id"?: string,"sender_id"?: string,"withdrawn_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "messages_organization_id_conversation_id_fkey"
+      columns: ["organization_id","conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "messages_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_sender_id_fkey"
+      columns: ["sender_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
