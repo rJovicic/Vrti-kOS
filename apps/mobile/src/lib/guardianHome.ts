@@ -1,6 +1,6 @@
 import { orgLocalDate, parseDateRange, spanContains } from '@vrticos/domain';
 import { formatTime } from '@vrticos/i18n';
-import type { ChildAttendance, ChildSummary, GuardianHomeData } from '../features/guardian-home/model/types';
+import type { ChildAttendance, ChildSummary, GuardianHomeData, HomeActivity } from '../features/guardian-home/model/types';
 import { CORRELATION_HEADER, newCorrelationId } from './correlation';
 import { supabase } from './supabase';
 
@@ -38,7 +38,7 @@ async function base(correlationId: string) {
     const g = e ? group.get(e.group_id) : undefined;
     return { groupName: g?.name ?? null, locationName: g ? (facility.get(g.facility_id) ?? null) : null };
   };
-  return { children: children.data ?? [], org, placement };
+  return { children: children.data ?? [], org, placement, group };
 }
 
 interface DayStatus {
@@ -81,9 +81,48 @@ async function currentAbsences(correlationId: string): Promise<AbsenceRow[]> {
   return (r.data ?? []) as AbsenceRow[];
 }
 
-/** Parent Home: the authorized children with today's status (D3-C); activities stay empty until D4. */
+/**
+ * "Danas" (D4-E, D4-B): today's published daily overviews of the children's groups and today's or still unread
+ * announcements — all read under RLS (only what this guardian may see). Newest first.
+ */
+async function todayActivities(org: Map<string, Org>, group: Map<string, { id: string; name: string }>, correlationId: string): Promise<HomeActivity[]> {
+  const days = [...new Set([...org.values()].map((o) => todayIn(o)))];
+  const [entries, announcements, unread] = await Promise.all([
+    supabase.from('daily_entries').select('id, group_id, organization_id, entry_date, published_at').in('entry_date', days).eq('status', 'published').setHeader(CORRELATION_HEADER, correlationId),
+    supabase.from('announcements').select('id, organization_id, title, published_at').eq('status', 'published').order('published_at', { ascending: false }).setHeader(CORRELATION_HEADER, correlationId),
+    supabase.from('notifications').select('resource_id, read_at').eq('type', 'announcement.published').setHeader(CORRELATION_HEADER, correlationId),
+  ]);
+  for (const r of [entries, announcements, unread]) if (r.error) throw r.error;
+  const unreadIds = new Set(((unread.data ?? []) as { resource_id: string; read_at: string | null }[]).filter((n) => n.read_at === null).map((n) => n.resource_id));
+  const items: { at: string; activity: HomeActivity }[] = [];
+  for (const e of (entries.data ?? []) as { id: string; group_id: string; organization_id: string; entry_date: string; published_at: string }[]) {
+    const o = org.get(e.organization_id);
+    if (e.entry_date !== todayIn(o)) continue;
+    items.push({
+      at: e.published_at,
+      activity: {
+        id: `daily:${e.id}`,
+        kind: 'dailyReport',
+        groupId: e.group_id,
+        entryId: e.id,
+        groupName: group.get(e.group_id)?.name ?? '',
+        organizationName: o?.name ?? '',
+        publishedTime: formatTime(new Date(e.published_at), o?.timezone),
+      },
+    });
+  }
+  for (const a of (announcements.data ?? []) as { id: string; organization_id: string; title: string; published_at: string }[]) {
+    const o = org.get(a.organization_id);
+    const isUnread = unreadIds.has(a.id);
+    if (!isUnread && orgLocalDate(new Date(a.published_at), o?.timezone) !== todayIn(o)) continue;
+    items.push({ at: a.published_at, activity: { id: `announcement:${a.id}`, kind: 'announcement', title: a.title, organizationName: o?.name ?? '', isUnread } });
+  }
+  return items.sort((x, y) => y.at.localeCompare(x.at)).map((x) => x.activity);
+}
+
+/** Parent Home: the authorized children with today's status (D3-C) and today's activities (D4). */
 export async function loadGuardianHome(correlationId: string = newCorrelationId()): Promise<GuardianHomeData> {
-  const [{ children, org, placement }, links, status, absences] = await Promise.all([
+  const [{ children, org, placement, group }, links, status, absences] = await Promise.all([
     base(correlationId),
     supabase.from('child_guardians').select('child_id, can_report_absence, valid_during').setHeader(CORRELATION_HEADER, correlationId),
     supabase.schema('api').rpc('child_day_status', {}).setHeader(CORRELATION_HEADER, correlationId),
@@ -104,7 +143,7 @@ export async function loadGuardianHome(correlationId: string = newCorrelationId(
       canReportAbsence: (links.data ?? []).some((l) => l.child_id === c.id && l.can_report_absence && validOn(l.valid_during, today)),
     };
   });
-  return { children: summaries, activities: [] };
+  return { children: summaries, activities: await todayActivities(org, group, correlationId) };
 }
 
 export interface ChildDetail {

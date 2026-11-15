@@ -1,6 +1,8 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AbsenceReportView } from '../../features/guardian-home/AbsenceReportView';
+import { DailyEntryView } from '../../features/daily-entry/DailyEntryView';
 import { ChildDetailView } from '../../features/guardian-home/ChildDetailView';
 import { GuardianHomeScreen } from '../../features/guardian-home/GuardianHomeScreen';
 import type { GuardianHomeData, HomeScreenState } from '../../features/guardian-home/model/types';
@@ -24,6 +26,13 @@ function GuardianHomeRoute() {
   const [refreshing, setRefreshing] = useState(false);
   const [openChild, setOpenChild] = useState<string | null>(null);
   const closeChild = useCallback(() => setOpenChild(null), []);
+  const [openDaily, setOpenDaily] = useState<{ groupId: string; groupName: string; entryId: string } | null>(null);
+  const closeDaily = useCallback(() => setOpenDaily(null), []);
+  const expired = useCallback((e: unknown) => {
+    if (!isSessionExpiredError(e)) return false;
+    void signOut('expired');
+    return true;
+  }, []);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -59,6 +68,7 @@ function GuardianHomeRoute() {
       />
     );
   }
+  if (openDaily) return <DailyEntryView {...openDaily} onBack={closeDaily} onSessionExpired={expired} />;
   if (openChild) return <ChildDetailView childId={openChild} userId={userId} onBack={closeChild} onReportAbsence={setReportFor} />;
   return (
     <GuardianHomeScreen
@@ -67,6 +77,13 @@ function GuardianHomeRoute() {
       onRetry={() => void load()}
       onRefresh={() => void load(true)}
       refreshing={refreshing}
+      onOpenActivity={(id) => {
+        const a = data?.activities.find((x) => x.id === id);
+        setMessage(null);
+        if (a?.kind === 'dailyReport') setOpenDaily({ groupId: a.groupId, groupName: a.groupName, entryId: a.entryId });
+        // An announcement opens in the notification centre (D4-D), where reading it marks it read.
+        else if (a?.kind === 'announcement') router.navigate('/notices');
+      }}
       onOpenChild={(id) => {
         setMessage(null);
         setOpenChild(id);

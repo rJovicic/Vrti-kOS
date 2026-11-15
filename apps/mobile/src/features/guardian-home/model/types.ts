@@ -27,7 +27,7 @@ export interface ChildSummary {
 }
 
 export type HomeActivity =
-  | { id: string; kind: 'dailyReport'; groupName: string; organizationName: string; publishedTime: string }
+  | { id: string; kind: 'dailyReport'; groupId: string; entryId: string; groupName: string; organizationName: string; publishedTime: string }
   | { id: string; kind: 'announcement'; title: string; organizationName: string; isUnread: boolean };
 
 export type HomeScreenState = 'loading' | 'success' | 'empty' | 'error' | 'partialError' | 'offline';

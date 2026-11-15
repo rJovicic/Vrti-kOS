@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View }
 import { useTranslation } from 'react-i18next';
 import { formatDay, formatLongDate } from '@vrticos/i18n';
 import { radius, space, type } from '@vrticos/tokens';
+import { DailyEntryEditor } from '../../features/daily-entry/DailyEntryEditor';
 import { loadHome, type HomeGroup } from '../../lib/home';
 import { signOut, useSession } from '../../lib/session';
 import { isSessionExpiredError } from '../../shell/navigation';
@@ -21,6 +22,13 @@ function TodayScreen() {
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const userId = session?.user.id;
+  const [writing, setWriting] = useState<HomeGroup | null>(null);
+  const closeWriting = useCallback(() => setWriting(null), []);
+  const expired = useCallback((e: unknown) => {
+    if (!isSessionExpiredError(e)) return false;
+    void signOut('expired');
+    return true;
+  }, []);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -40,6 +48,7 @@ function TodayScreen() {
     void load();
   }, [load]);
 
+  if (writing) return <DailyEntryEditor group={writing} onBack={closeWriting} onSessionExpired={expired} />;
   return (
     <ScrollView
       contentContainerStyle={shellStyles.screen}
@@ -84,6 +93,7 @@ function TodayScreen() {
                     <Text style={[shellStyles.meta, { color: c.textSecondary }]}>{t('mobile.groupEmpty')}</Text>
                   )}
                 </View>
+                <Button variant="secondary" label={t('daily.open', { group: g.name })} onPress={() => setWriting(g)} />
               </View>
             ))}
           </View>

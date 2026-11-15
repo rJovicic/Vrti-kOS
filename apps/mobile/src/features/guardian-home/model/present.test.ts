@@ -95,7 +95,7 @@ describe('today section (spec §5)', () => {
   it('keeps daily reports and at most two newest announcements', () => {
     const items: HomeActivity[] = [
       { id: 'n1', kind: 'announcement', title: 'A', organizationName: 'X', isUnread: true },
-      { id: 'r1', kind: 'dailyReport', groupName: 'G', organizationName: 'X', publishedTime: '14:20' },
+      { id: 'r1', kind: 'dailyReport', groupId: 'g', entryId: 'e', groupName: 'G', organizationName: 'X', publishedTime: '14:20' },
       { id: 'n2', kind: 'announcement', title: 'B', organizationName: 'X', isUnread: false },
       { id: 'n3', kind: 'announcement', title: 'C', organizationName: 'X', isUnread: false },
     ];

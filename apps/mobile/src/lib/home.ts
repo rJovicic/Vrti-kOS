@@ -7,6 +7,8 @@ export interface HomeGroup {
   name: string;
   facility: string | null;
   organization: string;
+  /** Today in the kindergarten's calendar (`YYYY-MM-DD`), e.g. for today's daily overview (D4-E). */
+  today: string;
   substituteUntil: string | null;
   /** First and last names of the children enrolled in the group today (D2-H; D-31 scope, decided by RLS). */
   children: string[];
@@ -64,6 +66,7 @@ export async function loadHome(userId: string, correlationId: string = newCorrel
         name: x.name,
         facility: facility.get(x.facility_id) ?? null,
         organization: org?.name ?? '',
+        today,
         substituteUntil: substitute?.toInclusive ?? null,
         children: (e ?? [])
           .filter((en) => {

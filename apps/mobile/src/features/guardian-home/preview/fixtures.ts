@@ -35,7 +35,7 @@ export function previewGuardianHome(today: string): GuardianHomeData {
       },
     ],
     activities: [
-      { id: 'preview-fixture-report-1', kind: 'dailyReport', groupName: 'Galebovi', organizationName: 'Vrtić Alfa', publishedTime: '14:20' },
+      { id: 'preview-fixture-report-1', kind: 'dailyReport', groupId: 'preview-group', entryId: 'preview-entry', groupName: 'Galebovi', organizationName: 'Vrtić Alfa', publishedTime: '14:20' },
       { id: 'preview-fixture-notice-1', kind: 'announcement', title: 'Roditeljski sastanak u četvrtak', organizationName: 'Vrtić Alfa', isUnread: true },
     ],
   };
