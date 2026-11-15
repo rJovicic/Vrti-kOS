@@ -67,6 +67,9 @@ export type Database = {
 "save_announcement_draft":
 { Args: { "p_audience_ids": (string)[],"p_audience_roles": (string)[],"p_audience_scope": string,"p_body": string,"p_id"?: string,"p_organization_id": string,"p_title": string }; Returns: string
                            },
+"save_daily_entry":
+{ Args: { "p_body": string,"p_group_id": string,"p_publish"?: boolean,"p_tags"?: (string)[] }; Returns: string
+                           },
 "transfer_child":
 { Args: { "p_child_id": string,"p_effective_on": string,"p_group_id": string }; Returns: string
                            },
@@ -369,6 +372,38 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "organizations"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"daily_entries": {
+                  Row: {
+                    "activity_tags": (string)[],"author_id": string | null,"body": string,"created_at": string,"edited_at": string | null,"entry_date": string,"group_id": string,"id": string,"organization_id": string,"published_at": string | null,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "activity_tags"?: (string)[],"author_id"?: string | null,"body": string,"created_at"?: string,"edited_at"?: string | null,"entry_date": string,"group_id": string,"id"?: string,"organization_id": string,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "activity_tags"?: (string)[],"author_id"?: string | null,"body"?: string,"created_at"?: string,"edited_at"?: string | null,"entry_date"?: string,"group_id"?: string,"id"?: string,"organization_id"?: string,"published_at"?: string | null,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "daily_entries_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "daily_entries_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "daily_entries_organization_id_group_id_fkey"
+      columns: ["organization_id","group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["organization_id","id"]
     }
                   ]
                 },"enrollments": {

@@ -583,6 +583,7 @@ export const hr = {
     ATTENDANCE_UNDO_EXPIRED: 'Poništavanje je moguće samo u prvih 10 sekundi. Za kasniji ispravak odaberite razlog.',
     ATTENDANCE_ALREADY_VOIDED: 'Ovaj unos je već poništen.',
     HANDOVER_INVALID: 'Odabrana osoba više nije na popisu za ovo dijete. Osvježite popis.',
+    DAILY_ENTRY_CONTENT_INVALID: 'Tekst dnevnog pregleda je obavezan i može imati najviše 1.000 znakova.',
     ANNOUNCEMENT_CONTENT_INVALID: 'Naslov (do 120 znakova) i tekst (do 4.000 znakova) su obavezni.',
     ANNOUNCEMENT_AUDIENCE_INVALID: 'Odaberite publiku: cijeli vrtić, objekte ili skupine ovog vrtića te skrbnike, djelatnike ili oboje.',
     ANNOUNCEMENT_STATE_INVALID: 'Obavijest je u međuvremenu promijenjena. Osvježite stranicu.',
