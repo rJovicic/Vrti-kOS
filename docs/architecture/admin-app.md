@@ -53,6 +53,13 @@ only, D-34). Technical decisions: secondary forms sit behind native `<details>` 
 client JavaScript, keyboard accessible, the effect text is shown before the confirmation checkbox); a separate guardian
 directory route is not built (guardians are managed from the child, which is where links and rights live).
 
+**Implemented in D4-C (2026-11-15):** `announcements/` ("Obavijesti", nav item from the prototype; no dedicated screen in
+the prototype, built from the existing patterns): list of all announcements of the kindergarten with status, audience and
+"uređeno"; per announcement: edit draft (content and audience), publish with the authoring warning (AC-07-5), edit after
+publishing (content only, audience fixed) with the previous versions listed, archive; new draft form (title ≤ 120, text
+≤ 4,000, whole kindergarten / facilities / groups × guardians / staff). Shared Zod schemas (`announcements.ts`, 3 tests);
+the D4-B RPCs decide.
+
 **Implemented in D3-G (2026-11-15):** `attendance/` (prototype "Dolasci"): group and day selector (no future days),
 counts, table (child, status, arrival, departure, "Ispravljeno" / late absence); per child "Evidencija i ispravak":
 record now (today only), correction of an event with a reason category and optional exact time of that day (the
