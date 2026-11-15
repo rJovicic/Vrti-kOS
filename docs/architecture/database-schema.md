@@ -310,14 +310,22 @@ grant), `created_at`.
 - **RLS** S: manager of the org; platform admin only for rows with `action like 'organization.%'` · I/U/D: **no grants** — written only by `private.write_audit()` from triggers/Edge Functions (SR-AUD-02)
 - **Sens.** R3
 
-### 5.21 `notifications`
+### 5.21 `notifications` — implemented in D4-A (`20261116110000_notifications.sql`)
 `id`, `organization_id`, `recipient_id`, `type` (`announcement.published|absence.reported|message.received|daily_entry.published`), `resource_type`, `resource_id`, `created_at`, `read_at`, `push_status` (`not_applicable|pending|sent|failed`), `push_attempts`.
 **No title or body is stored** — the client fetches the resource under its own RLS (SR-PUSH-01).
 - **FK** `recipient_id → profiles` RESTRICT · **IX** `(recipient_id, read_at, created_at desc)`
 - **RLS** S: `recipient_id = auth.uid()` · U: own rows, column grant `update (read_at)` only · I: none (definer triggers on source tables) · D: none
 - **Sens.** R2
 
-### 5.22 `notification_preferences`
+- **As implemented (D4-A):** written only by `private.notify(org, recipients, type, resource_type, resource_id)` (definer,
+  called by source-table triggers): distinct recipients, never the actor, only active members today; `push_status` =
+  `pending` when the recipient's preference for the type is on (default on, FR-08-4), else `not_applicable`. Select
+  policy additionally requires an active membership in that kindergarten today (NEG-09). Marking read only through
+  `api.mark_notifications_read(ids default null)`; no client insert/update/delete grants. First source:
+  `absence_records` insert → educators assigned to a group the child is enrolled in during the absence period (FR-06-5).
+  Push delivery is not built (D-40, ADR-0007).
+
+### 5.22 `notification_preferences` — implemented in D4-A
 PK `(profile_id, type)`, `push_enabled bool`.
 - **FK** `profile_id → profiles` **CASCADE** (pure preference, no evidentiary value)
 - **RLS** S/I/U: `profile_id = auth.uid()` · **Sens.** R2
