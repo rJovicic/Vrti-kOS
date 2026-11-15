@@ -30,6 +30,8 @@ export interface GuardianHomeScreenProps {
   onReportAbsence?: (childId: string) => void;
   onReviewAbsence?: (childId: string) => void;
   onOpenActivity?: (activityId: string) => void;
+  /** Confirmation after an action elsewhere (e.g. "Prijava izostanka poslana vrtiću."). */
+  message?: string | null;
 }
 
 const MAX_CONTENT_WIDTH = 720; // spec §7
@@ -65,6 +67,7 @@ export function GuardianHomeScreen(props: GuardianHomeScreenProps) {
         </View>
 
         {plan.showOfflineBanner ? <InlineBanner text={t('guardianHome.offline')} /> : null}
+        {props.message ? <InlineBanner text={props.message} /> : null}
 
         {plan.fullError ? (
           <View style={styles.section}>

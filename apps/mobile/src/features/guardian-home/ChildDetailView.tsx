@@ -3,38 +3,48 @@ import { ActivityIndicator, BackHandler, RefreshControl, ScrollView, StyleSheet,
 import { useTranslation } from 'react-i18next';
 import { radius, space, type } from '@vrticos/tokens';
 import { raised } from './components/surface';
-import { loadChildDetail, type ChildDetail } from '../../lib/guardianHome';
+import { businessCode } from '../../lib/attendanceKeys';
+import { cancelAbsence, loadChildDetail, type ChildDetail } from '../../lib/guardianHome';
 import { signOut } from '../../lib/session';
 import { isSessionExpiredError } from '../../shell/navigation';
 import { shellStyles } from '../../shell/ShellScreens';
 import { Button } from '../../ui/Button';
 import { Notice } from '../../ui/Notice';
 import { useColors } from '../../ui/theme';
+import { formatAbsenceRange } from './model/present';
 
 /**
  * Guardian: one child — kindergarten, facility, today's group and the pickup persons (read-only, FR-04-8).
  * A view inside the Parent Home destination (not a route of its own): the tab navigator of this Expo Router version
  * does not open hidden nested routes, and deep links to a child are not part of the MVP. Back returns to the list.
  */
-export function ChildDetailView({ childId: id, onBack }: { childId: string; onBack: () => void }) {
+export function ChildDetailView({ childId: id, userId, onBack, onReportAbsence }: {
+  childId: string;
+  userId: string;
+  onBack: () => void;
+  /** Opens the FS-06 form for this child (only offered with can_report_absence). */
+  onReportAbsence?: (child: { id: string; name: string }) => void;
+}) {
   const { t } = useTranslation();
   const c = useColors();
   const [child, setChild] = useState<ChildDetail | null | undefined>(undefined);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmCancel, setConfirmCancel] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ tone: 'error' | 'neutral'; text: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setFailed(false);
     try {
-      setChild(await loadChildDetail(String(id)));
+      setChild(await loadChildDetail(String(id), userId));
     } catch (e) {
       if (isSessionExpiredError(e)) return void signOut('expired');
       setFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, userId]);
 
   useEffect(() => {
     void load();
@@ -48,6 +58,19 @@ export function ChildDetailView({ childId: id, onBack }: { childId: string; onBa
     });
     return () => sub.remove();
   }, [onBack]);
+
+  const cancel = async (absenceId: string) => {
+    setConfirmCancel(null);
+    try {
+      await cancelAbsence(absenceId);
+      setMessage({ tone: 'neutral', text: t('childDetail.absenceCancelled') });
+      await load();
+    } catch (e) {
+      if (isSessionExpiredError(e)) return void signOut('expired');
+      const code = businessCode(e);
+      setMessage({ tone: 'error', text: code ? t(`errors.${code}`) : t('errors.PERMISSION_DENIED') });
+    }
+  };
 
   const row = (label: string, value: string) => (
     <View style={styles.kv} accessible accessibilityLabel={`${label}: ${value}`}>
@@ -85,6 +108,39 @@ export function ChildDetailView({ childId: id, onBack }: { childId: string; onBa
           </View>
           <View style={shellStyles.section}>
             <Text accessibilityRole="header" style={[styles.h2, { color: c.textPrimary }]}>
+              {t('childDetail.absences')}
+            </Text>
+            {message ? <Notice tone={message.tone} title={message.text} /> : null}
+            {child.absences.length ? (
+              <View style={[styles.card, raised, { backgroundColor: c.bgSurface, borderColor: c.borderSubtle }]}>
+                {child.absences.map((a, i) => (
+                  <View key={a.id} style={[styles.absence, { borderTopColor: c.borderSubtle }, i > 0 && styles.divider]}>
+                    <Text style={[styles.person, { color: c.textPrimary }]}>
+                      {formatAbsenceRange(a.startsOn, a.endsOn)}
+                      {a.isLate ? ` · ${t('childDetail.lateReport')}` : ''}
+                    </Text>
+                    {a.mine && confirmCancel !== a.id ? (
+                      <Button variant="text" label={t('childDetail.cancelAbsence')} onPress={() => setConfirmCancel(a.id)} />
+                    ) : null}
+                    {confirmCancel === a.id ? (
+                      <View style={shellStyles.section} accessibilityRole="alert">
+                        <Text style={[shellStyles.meta, { color: c.textSecondary }]}>{t('childDetail.cancelAbsenceConfirm')}</Text>
+                        <Button label={t('childDetail.cancelAbsenceYes')} onPress={() => void cancel(a.id)} />
+                        <Button variant="secondary" label={t('attendance.cancel')} onPress={() => setConfirmCancel(null)} />
+                      </View>
+                    ) : null}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Notice title={t('childDetail.absencesEmpty')} />
+            )}
+            {child.canReportAbsence && onReportAbsence ? (
+              <Button variant="secondary" label={t('guardianHome.reportAbsence')} onPress={() => onReportAbsence({ id: child.id, name: `${child.firstName} ${child.lastName}` })} />
+            ) : null}
+          </View>
+          <View style={shellStyles.section}>
+            <Text accessibilityRole="header" style={[styles.h2, { color: c.textPrimary }]}>
               {t('childDetail.pickups')}
             </Text>
             <Text style={[shellStyles.meta, { color: c.textSecondary }]}>{t('childDetail.pickupsNote')}</Text>
@@ -115,4 +171,5 @@ const styles = StyleSheet.create({
   h2: { fontSize: type.title3.size, lineHeight: type.title3.lineHeight, fontWeight: type.title3.weight },
   person: { fontSize: type.body.size, lineHeight: type.body.lineHeight, paddingVertical: space[3] },
   divider: { borderTopWidth: StyleSheet.hairlineWidth },
+  absence: { paddingVertical: space[1] },
 });

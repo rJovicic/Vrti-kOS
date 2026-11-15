@@ -1,5 +1,6 @@
 import { orgLocalDate, parseDateRange, spanContains } from '@vrticos/domain';
-import type { ChildSummary, GuardianHomeData } from '../features/guardian-home/model/types';
+import { formatTime } from '@vrticos/i18n';
+import type { ChildAttendance, ChildSummary, GuardianHomeData } from '../features/guardian-home/model/types';
 import { CORRELATION_HEADER, newCorrelationId } from './correlation';
 import { supabase } from './supabase';
 
@@ -40,13 +41,57 @@ async function base(correlationId: string) {
   return { children: children.data ?? [], org, placement };
 }
 
-/** Parent Home: the authorized children; attendance stays `unavailable` and activities empty until D3. */
+interface DayStatus {
+  child_id: string;
+  status: 'expected' | 'absent' | 'present' | 'departed' | 'not_enrolled';
+  arrived_at: string | null;
+  departed_at: string | null;
+}
+export interface AbsenceRow {
+  id: string;
+  child_id: string;
+  starts_on: string;
+  ends_on: string;
+  reported_by: string;
+  is_late: boolean;
+}
+
+/** Today's status from the D3-C read model (no staff data for guardians) plus the absence covering today. */
+function attendanceOf(s: DayStatus | undefined, absences: AbsenceRow[], today: string, timeZone: string): ChildAttendance {
+  if (!s || s.status === 'not_enrolled') return { status: 'unavailable' };
+  if (s.status === 'present' && s.arrived_at) return { status: 'present', time: formatTime(new Date(s.arrived_at), timeZone) };
+  if (s.status === 'departed' && s.departed_at) return { status: 'departed', time: formatTime(new Date(s.departed_at), timeZone) };
+  if (s.status === 'absent') {
+    const a = absences.find((x) => x.child_id === s.child_id && x.starts_on <= today && x.ends_on >= today);
+    return a ? { status: 'absent', absenceStart: a.starts_on, absenceEnd: a.ends_on } : { status: 'absent' };
+  }
+  return { status: 'expected' };
+}
+
+/** Active absences of today or later that the guardian may see (RLS: can_view, no restriction). */
+async function currentAbsences(correlationId: string): Promise<AbsenceRow[]> {
+  const today = orgLocalDate(new Date());
+  const r = await supabase
+    .from('absence_records')
+    .select('id, child_id, starts_on, ends_on, reported_by, is_late')
+    .eq('status', 'active')
+    .gte('ends_on', today)
+    .setHeader(CORRELATION_HEADER, correlationId);
+  if (r.error) throw r.error;
+  return (r.data ?? []) as AbsenceRow[];
+}
+
+/** Parent Home: the authorized children with today's status (D3-C); activities stay empty until D4. */
 export async function loadGuardianHome(correlationId: string = newCorrelationId()): Promise<GuardianHomeData> {
-  const [{ children, org, placement }, links] = await Promise.all([
+  const [{ children, org, placement }, links, status, absences] = await Promise.all([
     base(correlationId),
     supabase.from('child_guardians').select('child_id, can_report_absence, valid_during').setHeader(CORRELATION_HEADER, correlationId),
+    supabase.schema('api').rpc('child_day_status', {}).setHeader(CORRELATION_HEADER, correlationId),
+    currentAbsences(correlationId),
   ]);
   if (links.error) throw links.error;
+  if (status.error) throw status.error;
+  const byChild = new Map(((status.data ?? []) as DayStatus[]).map((s) => [s.child_id, s]));
   const summaries: ChildSummary[] = children.map((c) => {
     const today = todayIn(org.get(c.organization_id));
     return {
@@ -55,7 +100,7 @@ export async function loadGuardianHome(correlationId: string = newCorrelationId(
       lastName: c.last_name,
       kindergartenName: org.get(c.organization_id)?.name ?? '',
       ...placement(c.id, c.organization_id),
-      attendance: { status: 'unavailable' },
+      attendance: attendanceOf(byChild.get(c.id), absences, today, org.get(c.organization_id)?.timezone ?? 'Europe/Zagreb'),
       canReportAbsence: (links.data ?? []).some((l) => l.child_id === c.id && l.can_report_absence && validOn(l.valid_during, today)),
     };
   });
@@ -71,15 +116,21 @@ export interface ChildDetail {
   locationName: string | null;
   /** Persons authorized to pick up the child today (read-only, FR-04-8). */
   pickups: { id: string; name: string }[];
+  /** Active absences of today or later; `mine` = reported by this account (only those can be cancelled, FS-06). */
+  absences: { id: string; startsOn: string; endsOn: string; isLate: boolean; mine: boolean }[];
+  canReportAbsence: boolean;
 }
 
 /** One authorized child; null when the account may not see it (same answer as an unknown id). */
-export async function loadChildDetail(childId: string, correlationId: string = newCorrelationId()): Promise<ChildDetail | null> {
-  const [{ children, org, placement }, pickups] = await Promise.all([
+export async function loadChildDetail(childId: string, me: string, correlationId: string = newCorrelationId()): Promise<ChildDetail | null> {
+  const [{ children, org, placement }, pickups, absences, links] = await Promise.all([
     base(correlationId),
     supabase.from('pickup_authorizations').select('id, child_id, first_name, last_name').eq('child_id', childId).setHeader(CORRELATION_HEADER, correlationId),
+    currentAbsences(correlationId),
+    supabase.from('child_guardians').select('child_id, can_report_absence, valid_during').eq('child_id', childId).setHeader(CORRELATION_HEADER, correlationId),
   ]);
   if (pickups.error) throw pickups.error;
+  if (links.error) throw links.error;
   const c = children.find((x) => x.id === childId);
   if (!c) return null;
   return {
@@ -92,5 +143,23 @@ export async function loadChildDetail(childId: string, correlationId: string = n
       .filter((p) => p.child_id === childId)
       .map((p) => ({ id: p.id, name: `${p.first_name} ${p.last_name}` }))
       .sort((a, b) => a.name.localeCompare(b.name, 'hr')),
+    absences: absences
+      .filter((a) => a.child_id === childId)
+      .sort((a, b) => a.starts_on.localeCompare(b.starts_on))
+      .map((a) => ({ id: a.id, startsOn: a.starts_on, endsOn: a.ends_on, isLate: a.is_late, mine: a.reported_by === me })),
+    canReportAbsence: (links.data ?? []).some((l) => l.child_id === childId && l.can_report_absence),
   };
+}
+
+export async function reportAbsence(childId: string, startsOn: string, endsOn: string, correlationId: string = newCorrelationId()): Promise<void> {
+  const { error } = await supabase
+    .schema('api')
+    .rpc('report_absence', { p_child_id: childId, p_starts_on: startsOn, p_ends_on: endsOn })
+    .setHeader(CORRELATION_HEADER, correlationId);
+  if (error) throw error;
+}
+
+export async function cancelAbsence(absenceId: string, correlationId: string = newCorrelationId()): Promise<void> {
+  const { error } = await supabase.schema('api').rpc('cancel_absence', { p_absence_id: absenceId }).setHeader(CORRELATION_HEADER, correlationId);
+  if (error) throw error;
 }

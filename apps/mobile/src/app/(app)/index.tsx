@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AbsenceReportView } from '../../features/guardian-home/AbsenceReportView';
 import { ChildDetailView } from '../../features/guardian-home/ChildDetailView';
 import { GuardianHomeScreen } from '../../features/guardian-home/GuardianHomeScreen';
 import type { GuardianHomeData, HomeScreenState } from '../../features/guardian-home/model/types';
 import { loadGuardianHome } from '../../lib/guardianHome';
-import { signOut } from '../../lib/session';
+import { signOut, useSession } from '../../lib/session';
 import { ModeGuard } from '../../shell/ModeGuard';
 import { isSessionExpiredError } from '../../shell/navigation';
 
@@ -12,6 +14,11 @@ import { isSessionExpiredError } from '../../shell/navigation';
  * children come back; attendance stays "unavailable" and the "Danas" section empty until D3 — never sample data.
  */
 function GuardianHomeRoute() {
+  const { t } = useTranslation();
+  const { session } = useSession();
+  const userId = session?.user.id ?? '';
+  const [reportFor, setReportFor] = useState<{ id: string; name: string } | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [state, setState] = useState<HomeScreenState>('loading');
   const [data, setData] = useState<GuardianHomeData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -37,7 +44,22 @@ function GuardianHomeRoute() {
     void load();
   }, [load]);
 
-  if (openChild) return <ChildDetailView childId={openChild} onBack={closeChild} />;
+  const closeReport = useCallback(() => setReportFor(null), []);
+  if (reportFor) {
+    return (
+      <AbsenceReportView
+        child={reportFor}
+        onBack={closeReport}
+        onDone={() => {
+          setReportFor(null);
+          setOpenChild(null);
+          setMessage(t('absence.sent'));
+          void load(true);
+        }}
+      />
+    );
+  }
+  if (openChild) return <ChildDetailView childId={openChild} userId={userId} onBack={closeChild} onReportAbsence={setReportFor} />;
   return (
     <GuardianHomeScreen
       state={state}
@@ -45,7 +67,20 @@ function GuardianHomeRoute() {
       onRetry={() => void load()}
       onRefresh={() => void load(true)}
       refreshing={refreshing}
-      onOpenChild={setOpenChild}
+      onOpenChild={(id) => {
+        setMessage(null);
+        setOpenChild(id);
+      }}
+      onReportAbsence={(id) => {
+        const child = data?.children.find((x) => x.id === id);
+        setMessage(null);
+        if (child) setReportFor({ id, name: `${child.firstName} ${child.lastName}` });
+      }}
+      onReviewAbsence={(id) => {
+        setMessage(null);
+        setOpenChild(id);
+      }}
+      message={message}
     />
   );
 }

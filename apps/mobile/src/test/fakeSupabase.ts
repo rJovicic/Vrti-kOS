@@ -43,6 +43,7 @@ export function createFakeSupabase(state: FakeState) {
       order: () => api,
       eq: (col: string, value: unknown) => (filters.push((r) => r[col] === undefined || r[col] === value), api),
       in: (col: string, values: unknown[]) => (filters.push((r) => r[col] === undefined || values.includes(r[col])), api),
+      gte: (col: string, value: string) => (filters.push((r) => r[col] === undefined || String(r[col]) >= value), api),
       update: (values: Row) => ((request.op = 'update'), (request.values = values), api),
       setHeader: (name: string, value: string) => ((request.headers[name] = value), api),
       then: (resolve: (r: { data: Row[] | null; error: unknown }) => unknown, reject?: (e: unknown) => unknown) => {
@@ -72,7 +73,8 @@ export function createFakeSupabase(state: FakeState) {
           return Promise.resolve({ data: null, error }).then(resolve, reject);
         }
         const handler = state.rpc?.[fn];
-        const result = handler ? handler(args, state) : { data: null, error: { code: 'PGRST202', message: `no fake for ${fn}` } };
+        // Without a handler an RPC answers like a read with the rows in `tables['rpc:<name>']` (none by default).
+        const result = handler ? handler(args, state) : { data: state.tables[`rpc:${fn}`] ?? [], error: null };
         return Promise.resolve(result).then(resolve, reject);
       },
     };
