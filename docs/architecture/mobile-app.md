@@ -104,12 +104,20 @@ These follow the module table below and arrive with D2–D4.
 | Dnevni pregled | read published entries of child's group | write/publish today's entry for own group | FS-10 |
 | Profil / postavke | sessions, notifications, language, account deletion request | same | FS-01, FS-08 |
 
-## 4. Core screen: educator attendance (planned for D3)
+## 4. Core screen: educator attendance (online part implemented in D3-D, 2026-11-15)
 - List of children enrolled today (FlashList), status chip per row: očekuje se / prijavljen izostanak / u vrtiću / otišlo.
 - One tap toggles state; optional handover sheet (guardians + pickup authorizations; "osoba nije na popisu"
   shows the kindergarten procedure — FR-05-4); snackbar "Poništi" for 10 s.
 - No "all present" action (FR-05-6). Sync indicator per row (queued / synced / failed).
 - Target: 20 children < 30 s (NFR-PERF-02) — measured in Phase 4 prototype test.
+- **As implemented (D3-D):** `features/attendance/AttendanceScreen.tsx` + route `(app)/attendance.tsx`. Groups assigned
+  today (switcher when more than one), tiles in two columns ("Lana B." + status text), filter with counts (Svi /
+  Očekuje se / U vrtiću / Otišlo), one tap → `api.record_attendance` with a fresh UUID v4 idempotency key and a
+  correlation id; snackbar with "Poništi" for 10 s (`api.undo_attendance`); a child with a reported absence asks for
+  confirmation; a conflict shows `errors.ATTENDANCE_STATE_CONFLICT` and reloads the current state; a departed child is
+  not changed by a tap (domain `nextAction`); load error with the correlation id as reference and retry; "Sve je
+  spremljeno · HH:MM". Handover sheet waits for D-38; offline queue is D3-E. Tests: `attendance.render.test.tsx` (10),
+  `lib/attendance.test.ts` (3). Plain `ScrollView` instead of FlashList (no new dependency; group sizes ≤ 30).
 
 ## 5. Data and offline (target; today only memory state, no offline queue)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
