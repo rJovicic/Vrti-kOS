@@ -193,6 +193,7 @@ pojavi nakon releasea tretira se kao potencijalni incident (vidi [incident-respo
 | D3-D/E mobile attendance and offline queue (render 16: one tap with UUID v4 key and correlation id, undo 10 s and expiry, absence confirmation, conflict → current state, departed inert, no all-present; offline: queued with ids only (no names in storage), replay with original key/time/`offline_sync`, refused replay visible until dismissed, undo of unsent tap local only, foreign account's queue discarded, sign-out warns and wipes (AC-05-5, SR-MOB-02); unit: queue sanitizing, account binding, order, network stop, refusal) | `apps/mobile/src/features/attendance/attendance.render.test.tsx`, `packages/domain/src/attendance-queue.test.ts`, `apps/mobile/src/lib/attendance.test.ts` | ✅ 2026-11-15 |
 | D3-F guardian mobile (render 7: status without staff data; review of a reported absence; report sends only child and dates, no reason, receipt-only confirmation; no confirmation and no queue without a connection; refusal shown by catalogued code; cancel only own report after confirmation; no report action without `can_report_absence`) | `apps/mobile/src/features/guardian-home/home.render.test.tsx` | ✅ 2026-11-15 |
 | D3-G admin attendance (e2e: manager with MFA records now, corrects with a reason keeping the original ("Ispravljeno"), records an absence on behalf and cancels it; schemas refuse free-text reasons and malformed times; DST-aware time conversion) | `tests/integration/src/admin.e2e.test.ts`, `packages/validation/src/attendance.test.ts`, `packages/domain/src/domain.test.ts` | ✅ 2026-11-15 |
+| D3-I negative cases on the D3 tables (20 assertions: NEG-02 one account as guardian in two kindergartens — statuses and absences per kindergarten, a restriction in A does not affect B; NEG-08 transfer during the day — the old group's educator loses status, recording and reading of events and absences on the next request, the new group's educator continues from the same state; NEG-09 suspended educator records and reads nothing). Mutation check: transfer from tomorrow instead of today → 7 of 20 fail | `supabase/tests/database/22_d3_negative.test.sql` | ✅ 2026-11-15 |
 
 ## NEG coverage after D2 (2026-11-15, D2-I)
 Evidence = test files that exercise the scenario and run in CI. "Partial" means the scenario is proven for the tables
@@ -200,19 +201,19 @@ that exist; it must be re-proven for each new table (D3+).
 
 | NEG | Status | Evidence | Gap / next |
 |---|---|---|---|
-| NEG-01 cross-tenant | ✅ all tenant tables of D1–D2 | pgTAP 01, 02, 05, 09–17; integration `invitations`, `guardian-invitations`, `transfer-withdrawal`, `cancel-future-records`; admin e2e (foreign URL 404) | each D3 table |
-| NEG-02 member of two kindergartens | ✅ | pgTAP 01 (structure), 18 (guardian in two kindergartens: children, groups, links, records, pickup persons; restriction and ended link act per kindergarten) | attendance (D3) |
-| NEG-03 guardian without link | ✅ | pgTAP 09, 10; integration `guardians` | attendance/absences (D3) |
+| NEG-01 cross-tenant | ✅ all tenant tables of D1–D3 | pgTAP 01, 02, 05, 09–17, 19, 20, 21; integration `invitations`, `guardian-invitations`, `transfer-withdrawal`, `cancel-future-records`; admin e2e (foreign URL 404) | each D4 table |
+| NEG-02 member of two kindergartens | ✅ | pgTAP 01 (structure), 18 (guardian in two kindergartens: children, groups, links, records, pickup persons; restriction and ended link act per kindergarten), 22 (day status and absences per kindergarten) | — |
+| NEG-03 guardian without link | ✅ | pgTAP 09, 10, 19, 20, 21; integration `guardians`, `absences` | — |
 | NEG-04 missing flag | ✅ | pgTAP 10 (`can_view`), 13, 20 (`can_report_absence` for absence reports); integration `absences` | — |
-| NEG-05 active restriction | ✅ | pgTAP 11, 12, 13; integration `access-restrictions`, `guardian-invitations` | attendance status for restricted guardian (D3) |
+| NEG-05 active restriction | ✅ | pgTAP 11, 12, 13, 20 (absence report), 21 (day status), 22 (per kindergarten); integration `access-restrictions`, `guardian-invitations` | — |
 | NEG-06 expired link | ✅ | pgTAP 10, 13; integration `guardians` | — |
-| NEG-07 educator outside groups | ✅ | pgTAP 02, 09, 12, 13 | attendance (D3) |
-| NEG-08 after schedule / transfer | ✅ | pgTAP 02, 09, 12, 13, 14 | attendance (D3) |
-| NEG-09 revoked membership | ✅ | pgTAP 01, 02, 04, 09, 10 | — |
-| NEG-10 platform admin | ✅ | pgTAP 01, 09–15 | — |
+| NEG-07 educator outside groups | ✅ | pgTAP 02, 09, 12, 13, 19, 20, 21 | — |
+| NEG-08 after schedule / transfer | ✅ | pgTAP 02, 09, 12, 13, 14, 19 (assignment ended), 22 (transfer during the day) | — |
+| NEG-09 revoked membership | ✅ | pgTAP 01, 02, 04, 09, 10, 22 (attendance, absences, day status) | — |
+| NEG-10 platform admin | ✅ | pgTAP 01, 09–15, 19, 20, 21 | — |
 | NEG-11 own role/flags | ✅ | pgTAP 01, 02, 10 | — |
 | NEG-12 Storage | n/a | no bucket exists yet (photos are post-MVP) | first bucket |
 | NEG-13 audit immutable | ✅ | pgTAP 06 (append-only for every role), 01 | — |
-| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
-| NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14 | — |
+| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15, 19, 20, 21 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
+| NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14, 19, 20, 21 | — |
 

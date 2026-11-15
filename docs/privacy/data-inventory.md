@@ -38,7 +38,7 @@ Lokacija: **DB** = baza (Supabase EU, ADR-0003 — prijedlog), **Auth** = Supaba
 | DI-11 | Skrbnička veza | djeca, skrbnici | dijete, skrbnik, zastavice dozvola, valjanost | kontrola pristupa skrbnika | uprava | U; S (vlastita veza); O (D-31: samo ime i prezime skrbnika i prava za djecu iz svojih skupina danas, bez kontakata; vidi skrbnike djece u skupini za predaju) | R3 | DB | Da |
 | DI-12 | Ograničenje pristupa | djeca, skrbnici | veza, opseg ograničenja, valjanost, interna referenca na dokument | zaštita djeteta, provedba odluka | uprava | **samo U**; Sys za provedbu; O vidi samo oznaku „Ograničeno” za djecu svoje skupine danas (D-33), bez reference, razloga i autora | **R4** | DB | Da |
 | DI-13 | Ovlaštena osoba za preuzimanje | treće osobe | ime, prezime, valjanost po djetetu (D2-D); **telefon i odnos se ne prikupljaju niti pohranjuju** (Q-T13 zatvoren, D-34); bez korisničkog računa | sigurno preuzimanje djeteta | uprava (na zahtjev skrbnika) | U (unos/izmjena, MFA); O (samo danas valjane osobe za djecu svoje skupine danas, D-31); S (samo pregled, danas valjane osobe, uz pravo pregleda i bez aktivnog ograničenja) | R3 | DB | Da |
-| DI-14 | Dolasci i odlasci | djeca, skrbnici/ovlaštene osobe (predaja), djelatnici (akter) | vrijeme, vrsta, akter, osoba predaje (referenca), izvor | evidencija prisutnosti i sigurnost djeteta | odgojitelj | U; O; S (status svog djeteta) | R3 | DB | Da |
+| DI-14 | Dolasci i odlasci | djeca, skrbnici/ovlaštene osobe (predaja), djelatnici (akter) | vrijeme, vrsta, akter, osoba predaje (referenca — **još nije provedeno**, čeka D-38), izvor | evidencija prisutnosti i sigurnost djeteta | odgojitelj | U; O; S (status svog djeteta) | R3 | DB | Da |
 | DI-15 | Ispravci dolazaka | isto | izvorni događaj, kategorija razloga, akter | točnost evidencije, odgovornost | odgojitelj, uprava | U; O (svoje) | R3 | DB | Da |
 | DI-16 | Prijava izostanka | djeca, skrbnici | razdoblje, prijavitelj, vrijeme, izvor, status — **bez razloga** | informiranje vrtića o izostanku | skrbnik, uprava | U; O (skupina u razdoblju); S (sa `can_view`) | R3 | DB | Da |
 | DI-17 | Obavijesti vrtića | autori (djelatnici) | naslov, tekst, autor, publika, verzije | informiranje skrbnika i djelatnika | uprava (odgojitelj?) | publika obavijesti, U | R2 (R3 ako tekst spominje dijete — upozorenje autoru) | DB | Da |
@@ -92,7 +92,7 @@ vidi pravila u [../product/validation-plan.md](../product/validation-plan.md) §
 - Koji alat se koristi za korisničku podršku i bilješke s intervjua i gdje su podaci (DI-26, DI-28)?
 - Jesu li podaci o djelatnicima (rasporedi) obrada u svrhu radnog odnosa za koju vrtić treba zasebnu obavijest zaposlenicima? ⚖️
 
-## 6. Stanje provedbe nakon D2 (2026-11-15)
+## 6. Stanje provedbe nakon D2 i D3 (2026-11-15)
 Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09, R-53).
 
 | Redak | Gdje se nalazi | Tko čita (provedeno u bazi) | Što se namjerno ne pohranjuje | Brisanje |
@@ -104,8 +104,11 @@ Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09
 | DI-13 ovlaštena osoba | `pickup_authorizations` | uprava; odgojitelj i skrbnik samo danas valjane osobe | telefon, odnos prema djetetu, račun (D-34) | nema; samo planirano ovlaštenje prije početka (D-37) |
 | DI-14/15 dolasci i ispravci (D3-A) | `attendance_records` | uprava; odgojitelj za djecu svoje skupine danas; skrbnik ne čita retke (samo status kroz D3-C, bez djelatnika) | slobodan tekst, napomene; razlog ispravka samo kao kategorija | nema (samo dodavanje); R-53 |
 | DI-16 izostanak (D3-B) | `absence_records` | uprava; odgojitelj djece svoje skupine danas; skrbnik s pravom pregleda (i drugi skrbnik) | razlog, dijagnoza, slobodan tekst (FR-06-2, Q-P16) | nema; otkazivanje čuva povijest; R-53 |
+| DI-14 osoba predaje | — | — | **nije provedeno**: odabir osobe kojoj se dijete predaje čeka odluku D-38; dok se ne odluči, odlazak se bilježi bez osobe predaje | — |
 | DI-14 na uređaju (D3-E) | šifrirani SecureStore odgojitelja (Keychain/Keystore, samo ovaj uređaj) | samo prijavljeni odgojitelj | imena, skupine, slobodan tekst — red sadrži samo ID djeteta, vrstu, vrijeme, ključ i stanje slanja | pri svakoj odjavi; red drugog računa se odbacuje |
 | DI-05 pozivnica | `invitations.guardian_id` | uprava | podaci o djetetu u poruci | R-53 (otvoreno) |
+
+Skrbnik u aplikaciji vidi samo stanje svog djeteta za danas (stiglo u, otišlo u, izostanak), nikad tko je zabilježio; uprava u administraciji vidi i izvor (aplikacija, administracija). Obavijesti o izostanku (FS-08) ne postoje — nema push pružatelja ni tablice obavijesti.
 
 Audit (DI-22) za sve navedeno bilježi ID-jeve, nazive stupaca, uloge i kodove razloga, nikad imena ni vrijednosti.
 
