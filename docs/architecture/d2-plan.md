@@ -1,7 +1,7 @@
 # D2 — Children, enrolments and guardians: specification and implementation plan
 
 - Version: 0.1 · Date: 2026-11-12 · Status: **in progress.** D-28 approved by the owner on 2026-11-12; the owner lifted the
-  D-27 precondition for work on the working branch the same day. **D2-A…D2-H are implemented** (2026-11-12); D2-I (final documentation pass) is not started.
+  D-27 precondition for work on the working branch the same day. **D2 is implemented (D2-A…D2-I, closed 2026-11-15).** See §10 for what is proven and what is not.
 - Scope source: FS-04 (FR-04-1…10), FR-01-1 (guardian invitations), AC-04-*, NEG-03…08, NEG-10, NEG-11, NEG-14.
 - Builds on: [database-schema.md](database-schema.md) §5.7–5.12 (Phase 3 sketch), ADR-0004/0005/0014/0017, D1 code
   (invitations, guard triggers, audit schema, error catalog, mobile shell).
@@ -159,7 +159,7 @@ All loaders send one correlation id per user action (as in D1) and treat 401 as 
 | D2-F | Guardian invitation and acceptance link | integration flow in §7 green; R-48/R-50 tests still green | **Done 2026-11-12:** `20261112150000_guardian_invitations.sql`, pgTAP 16 (33), integration `guardian-invitations.test.ts` (8, full flow through the Edge Functions). |
 | D2-G | Admin screens | e2e green; build green | **Done 2026-11-12:** `children/`, `children/[childId]`, `20261112160000_guardian_directory.sql` (pgTAP 17), e2e flow (9/9). See admin-app.md §2. |
 | D2-H | Mobile Parent Home with real data, child detail, educator group list | render tests green; Expo export green; R-44 check on a device still required | **Done 2026-11-12:** `lib/guardianHome.ts`, `ChildDetailView`, educator names per group; render tests (10). Device check (R-44) open. See mobile-app.md §1. |
-| D2-I | Docs, risks (NEG coverage), privacy inventory (DI rows for children, guardians, restrictions, pickup) | docs updated; CI green |
+| D2-I | Docs, risks (NEG coverage), privacy inventory (DI rows for children, guardians, restrictions, pickup) | docs updated; CI green | **Done 2026-11-15:** NEG matrix (security-test-plan), data-inventory §6, risks R-04/R-05 updated, R-54/R-55 added, §10 below. |
 
 Order: A → B → C → D → E → F → G/H in parallel → I. Each package is one or more small commits with CI green before
 the next one starts. Estimate: about 2–3 working days of implementation and review for A–F, and 2 for G–H.
@@ -171,3 +171,23 @@ the next one starts. Estimate: about 2–3 working days of implementation and re
 - **Performance of helpers on lists.** Indexes on `(child_id)` and `(guardian_id)`; `EXPLAIN` checked in pgTAP for
   the guardian home query (target p95 < 50 ms at DB level, database-schema §8).
 - **R-53 (retention)** stays open: withdrawn children and ended links are kept until Q-P09 is decided.
+
+## 10. Closure of D2 (2026-11-15): proven vs. not yet proven
+**Implemented and proven by automated tests in CI** (pgTAP 658, integration 92, admin e2e 9, mobile render 29):
+- children, enrolments, guardians, links with rights, restrictions (incl. D-33 flag), pickup persons (D-34);
+- transfer, withdrawal (D-35, D-36), cancellation of not-yet-effective records (D-37);
+- guardian invitation and account attachment through the Edge Functions (D2-F);
+- admin screens for the whole child record (browser e2e against the local stack);
+- mobile data layer and screens for guardians and educators (render tests on the real router, Expo export).
+
+**Implemented but not yet verified outside automated tests:**
+- mobile app on a simulator or device — R-44 (D1 functions) and R-55 (D2-H screens); deferred by the owner;
+- admin visual check done only at 1440 px and 390 px in Chromium (screenshots), not on other browsers.
+
+**Known residuals (open, documented):**
+- R-54: D-36 is enforced in the database for enrolments only; links, pickup authorizations and restrictions rely on
+  the admin UI for "no end in the past" (owner decision needed to extend);
+- R-53 retention (Q-P09), R-49 password path, R-45/D-27 branch protection of `main`;
+- NEG-04 is partial until D3 adds the absence action (NEG-02 closed by pgTAP 18 in D2-I);
+- open questions not decided here: Q-P05 (identity check before inviting), Q-T04 (CSV import), Q-T12.
+

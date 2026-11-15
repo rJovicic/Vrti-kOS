@@ -187,3 +187,26 @@ pojavi nakon releasea tretira se kao potencijalni incident (vidi [incident-respo
 | D2-F guardian invitation and acceptance (33 assertions: record of another kindergarten, ended or attached record refused; authorization first; no client reads/sets `profile_id`; attachment only for a free record, refusals audited; one record per person and kindergarten; R-48 and R-50 unchanged; guardian sees exactly the linked child after acceptance) | `supabase/tests/database/16_guardian_invitations.test.sql`, `tests/integration/src/guardian-invitations.test.ts` | ✅ 2026-11-12 |
 | D2-G admin screens (pgTAP 10: `guardian_directory` exposes only a manager-only `has_account` flag, never the account; e2e: full child flow as a manager with MFA, transfer into the past refused, restriction needs confirmation and stores only a reference, invitation mail without link or child name; other kindergarten's URL 404) | `supabase/tests/database/17_guardian_directory.test.sql`, `tests/integration/src/admin.e2e.test.ts` | ✅ 2026-11-12 |
 | D2-H mobile (render tests 10: the app shows exactly the children the server returns, no sample attendance, read-only pickup persons without edit actions, access withdrawn between list and detail shows nothing, educator sees names only, one correlation id per load, 401 ends the session; data scope itself proven by pgTAP 09–13) | `apps/mobile/src/features/guardian-home/home.render.test.tsx` | ✅ 2026-11-12 |
+
+## NEG coverage after D2 (2026-11-15, D2-I)
+Evidence = test files that exercise the scenario and run in CI. "Partial" means the scenario is proven for the tables
+that exist; it must be re-proven for each new table (D3+).
+
+| NEG | Status | Evidence | Gap / next |
+|---|---|---|---|
+| NEG-01 cross-tenant | ✅ all tenant tables of D1–D2 | pgTAP 01, 02, 05, 09–17; integration `invitations`, `guardian-invitations`, `transfer-withdrawal`, `cancel-future-records`; admin e2e (foreign URL 404) | each D3 table |
+| NEG-02 member of two kindergartens | ✅ | pgTAP 01 (structure), 18 (guardian in two kindergartens: children, groups, links, records, pickup persons; restriction and ended link act per kindergarten) | attendance (D3) |
+| NEG-03 guardian without link | ✅ | pgTAP 09, 10; integration `guardians` | attendance/absences (D3) |
+| NEG-04 missing flag | ⚠ partial | pgTAP 10 (`can_view`), 13; flag `can_report_absence` exists but no absence action yet | absence report RPC (D3) |
+| NEG-05 active restriction | ✅ | pgTAP 11, 12, 13; integration `access-restrictions`, `guardian-invitations` | attendance status for restricted guardian (D3) |
+| NEG-06 expired link | ✅ | pgTAP 10, 13; integration `guardians` | — |
+| NEG-07 educator outside groups | ✅ | pgTAP 02, 09, 12, 13 | attendance (D3) |
+| NEG-08 after schedule / transfer | ✅ | pgTAP 02, 09, 12, 13, 14 | attendance (D3) |
+| NEG-09 revoked membership | ✅ | pgTAP 01, 02, 04, 09, 10 | — |
+| NEG-10 platform admin | ✅ | pgTAP 01, 09–15 | — |
+| NEG-11 own role/flags | ✅ | pgTAP 01, 02, 10 | — |
+| NEG-12 Storage | n/a | no bucket exists yet (photos are post-MVP) | first bucket |
+| NEG-13 audit immutable | ✅ | pgTAP 06 (append-only for every role), 01 | — |
+| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
+| NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14 | — |
+

@@ -33,7 +33,7 @@ Lokacija: **DB** = baza (Supabase EU, ADR-0003 — prijedlog), **Auth** = Supaba
 | DI-06 | Sesije i uređaji | korisnici | ID sesije, tip uređaja/OS, zadnja aktivnost, IP u auth logu | sigurnost računa | Sys | Sam, Sys | R2 | Auth | Da |
 | DI-07 | Push token i postavke obavijesti | korisnici | token uređaja, platforma, postavke | dostava obavijesti | uređaj | Sys, Sam | R2 | DB, Push | Da |
 | DI-08 | Struktura vrtića | — (pretežno nije osobni podatak) | vrtić, objekt (adresa objekta), ped. godina, skupina | organizacija rada | uprava, P | svi članovi u opsegu | R1 | DB | Da |
-| DI-09 | Identifikacija djeteta | djeca | ime, prezime, interna oznaka, status (upisano/ispisano) | identifikacija djeteta u svim funkcijama | uprava | U; O (svoje skupine); S (svoje dijete) | R3 | DB | Da |
+| DI-09 | Identifikacija djeteta | djeca | ime, prezime, interna oznaka, status (upisano/ispisano) i zadnji dan (D2-E, D-35) | identifikacija djeteta u svim funkcijama | uprava | U; O (svoje skupine); S (svoje dijete) | R3 | DB | Da |
 | DI-10 | Upis | djeca | skupina, od–do (premještaj zatvara stari i otvara novi upis, povijest se čuva; ispis zatvara upis, veze i ovlaštenja sa zadnjim danom — D-35) | određivanje skupine i pristupa | uprava | U; O; S | R3 | DB | Da |
 | DI-11 | Skrbnička veza | djeca, skrbnici | dijete, skrbnik, zastavice dozvola, valjanost | kontrola pristupa skrbnika | uprava | U; S (vlastita veza); O (D-31: samo ime i prezime skrbnika i prava za djecu iz svojih skupina danas, bez kontakata; vidi skrbnike djece u skupini za predaju) | R3 | DB | Da |
 | DI-12 | Ograničenje pristupa | djeca, skrbnici | veza, opseg ograničenja, valjanost, interna referenca na dokument | zaštita djeteta, provedba odluka | uprava | **samo U**; Sys za provedbu; O vidi samo oznaku „Ograničeno” za djecu svoje skupine danas (D-33), bez reference, razloga i autora | **R4** | DB | Da |
@@ -87,7 +87,22 @@ vidi pravila u [../product/validation-plan.md](../product/validation-plan.md) §
 
 ## 5. Otvorena pitanja iz inventara
 - Je li skrbniku potrebno prikazati ime djelatnika (DI-02) ili je dovoljna uloga ("odgojiteljica skupine")?
-- Vidi li odgojitelj sve skrbnike djeteta ili samo one s pravom preuzimanja (DI-11)?
+- ~~Vidi li odgojitelj sve skrbnike djeteta ili samo one s pravom preuzimanja (DI-11)?~~ Odlučeno D-31: odgojitelj vidi imena i prava svih skrbnika djece svoje skupine danas, bez kontakata; za ograničenu vezu samo oznaku (D-33).
 - Smije li tekst obavijesti spominjati dijete (DI-17)? Prijedlog: ne; upozorenje autoru.
 - Koji alat se koristi za korisničku podršku i bilješke s intervjua i gdje su podaci (DI-26, DI-28)?
 - Jesu li podaci o djelatnicima (rasporedi) obrada u svrhu radnog odnosa za koju vrtić treba zasebnu obavijest zaposlenicima? ⚖️
+
+## 6. Stanje provedbe nakon D2 (2026-11-15)
+Tehnički nacrt; pravne osnove, uloge i rokovi i dalje su otvoreni (Q-P01, Q-P09, R-53).
+
+| Redak | Gdje se nalazi | Tko čita (provedeno u bazi) | Što se namjerno ne pohranjuje | Brisanje |
+|---|---|---|---|---|
+| DI-09 dijete | `children` | uprava (MFA); odgojitelj samo djecu svoje skupine danas; skrbnik samo povezanu djecu s pravom pregleda i bez aktivnog ograničenja | datum rođenja, OIB, adresa, fotografija, zdravstveni podaci (Q-P03, D-9) | nema; ispis = status + zadnji dan |
+| DI-10 upis | `enrollments` | isto; odgojitelj samo današnje upise svojih skupina | — | nema; samo planirani upis prije početka (D-37) |
+| DI-11 veza skrbnik–dijete | `guardians`, `child_guardians`, view `guardian_directory` | uprava; odgojitelj imena i prava (D-31) i oznaka „Ograničeno” (D-33); skrbnik samo vlastite neograničene veze | e-pošta i telefon skrbnika (e-pošta samo u pozivnici i Auth); veza na račun nije čitljiva nijednom klijentu, uprava vidi samo ima li račun | nema; samo planirana veza prije početka (D-37) |
+| DI-12 ograničenje | `access_restrictions` | **samo uprava**; odgojitelj samo oznaku; skrbnik ništa | razlog i sadržaj odluke; samo interna oznaka predmeta (≤100) | nema; završava se valjanošću |
+| DI-13 ovlaštena osoba | `pickup_authorizations` | uprava; odgojitelj i skrbnik samo danas valjane osobe | telefon, odnos prema djetetu, račun (D-34) | nema; samo planirano ovlaštenje prije početka (D-37) |
+| DI-05 pozivnica | `invitations.guardian_id` | uprava | podaci o djetetu u poruci | R-53 (otvoreno) |
+
+Audit (DI-22) za sve navedeno bilježi ID-jeve, nazive stupaca, uloge i kodove razloga, nikad imena ni vrijednosti.
+
