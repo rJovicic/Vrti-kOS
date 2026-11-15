@@ -20,15 +20,16 @@ interface MailpitMessage {
 }
 
 /**
- * Polls Mailpit for the newest matching message. Up to 15 s: on a loaded CI runner delivery has taken longer than the
- * former 5 s window (run #33, 2026-11-15: "no login code e-mail"). Returns as soon as the message is there.
+ * Polls Mailpit for the newest matching message for up to `timeoutMs` (250 ms steps) and returns as soon as it is there.
  */
-export async function latestMail(to: string, subjectIncludes: string, after = 0): Promise<{ subject: string; text: string } | null> {
-  for (let i = 0; i < 60; i++) {
-    const r = (await (await fetch(`${stack.MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`)).json()) as {
-      messages: MailpitMessage[];
-    };
-    const m = r.messages.find((x) => x.Subject.includes(subjectIncludes) && Date.parse(x.Created) >= after);
+export async function latestMail(
+  to: string,
+  subjectIncludes: string,
+  after = 0,
+  timeoutMs = 15_000,
+): Promise<{ subject: string; text: string } | null> {
+  for (let waited = 0; waited < timeoutMs; waited += 250) {
+    const m = (await mailsTo(to)).find((x) => x.Subject.includes(subjectIncludes) && Date.parse(x.Created) >= after);
     if (m) {
       const full = (await (await fetch(`${stack.MAILPIT_URL}/api/v1/message/${m.ID}`)).json()) as { Text: string };
       return { subject: m.Subject, text: full.Text };
@@ -38,20 +39,45 @@ export async function latestMail(to: string, subjectIncludes: string, after = 0)
   return null;
 }
 
-/** Real e-mail OTP sign-in: request code, read it from Mailpit, verify. Returns a signed-in client + code. */
-export async function signInWithCode(address: string): Promise<{ client: SupabaseClient; code: string; token: string }> {
-  const client = anonClient();
-  const before = Date.now() - 1000;
+async function mailsTo(to: string): Promise<MailpitMessage[]> {
+  const r = (await (await fetch(`${stack.MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`)).json()) as {
+    messages: MailpitMessage[];
+  };
+  return r.messages;
+}
+
+async function requestCode(client: SupabaseClient, address: string): Promise<void> {
   // GoTrue throttles code requests per address (auth.email.max_frequency); back off like a real client would.
   for (let attempt = 0; ; attempt++) {
     const { error } = await client.auth.signInWithOtp({ email: address, options: { shouldCreateUser: false } });
-    if (!error) break;
+    if (!error) return;
     if (error.status !== 429 || attempt >= 5) throw new Error(`signInWithOtp failed: ${error.message}`);
     await new Promise((res) => setTimeout(res, 1100));
   }
-  const mail = await latestMail(address, 'Kod za prijavu', before);
+}
+
+/**
+ * Real e-mail OTP sign-in: request code, read it from Mailpit, verify. Returns a signed-in client + code.
+ *
+ * CI runs #33 and #40 (2026-11-15): the first sign-in of the suite once received no message within 15 s although the
+ * request succeeded, while every later sign-in took about 1 s; not reproducible locally (also not right after an Auth
+ * restart). Like a person who taps "Pošalji ponovno", the helper requests one more code after 8 s, and a failure now
+ * reports what Mailpit holds for the address. These tests prove authorization, not e-mail latency.
+ */
+export async function signInWithCode(address: string): Promise<{ client: SupabaseClient; code: string; token: string }> {
+  const client = anonClient();
+  const before = Date.now() - 1000;
+  await requestCode(client, address);
+  let mail = await latestMail(address, 'Kod za prijavu', before, 8_000);
+  if (!mail) {
+    await requestCode(client, address);
+    mail = await latestMail(address, 'Kod za prijavu', before);
+  }
   const code = mail?.text.match(/\b(\d{6})\b/)?.[1];
-  if (!code) throw new Error('no login code e-mail');
+  if (!code) {
+    const seen = (await mailsTo(address)).map((m) => `${m.Created} "${m.Subject}"`).join('; ') || 'none';
+    throw new Error(`no login code e-mail (requested twice since ${new Date(before).toISOString()}; Mailpit has: ${seen})`);
+  }
   const { data, error: vErr } = await client.auth.verifyOtp({ email: address, token: code, type: 'email' });
   if (vErr || !data.session) throw new Error(`verifyOtp failed: ${vErr?.message}`);
   return { client, code, token: data.session.access_token };
