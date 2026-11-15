@@ -11,9 +11,10 @@ export interface FakeSession {
 export interface FakeRequest {
   /** Table name, or `rpc:<function>` for an RPC in the api schema. */
   table: string;
-  op: 'select' | 'update' | 'rpc';
+  op: 'select' | 'update' | 'upsert' | 'rpc';
   headers: Record<string, string>;
   values?: Row;
+  conflict?: string;
 }
 
 export interface FakeState {
@@ -45,6 +46,8 @@ export function createFakeSupabase(state: FakeState) {
       in: (col: string, values: unknown[]) => (filters.push((r) => r[col] === undefined || values.includes(r[col])), api),
       gte: (col: string, value: string) => (filters.push((r) => r[col] === undefined || String(r[col]) >= value), api),
       update: (values: Row) => ((request.op = 'update'), (request.values = values), api),
+      /** Upsert keyed by `onConflict` columns (comma-separated), like PostgREST. */
+      upsert: (values: Row, opts?: { onConflict?: string }) => ((request.op = 'upsert'), (request.values = values), (request.conflict = opts?.onConflict), api),
       setHeader: (name: string, value: string) => ((request.headers[name] = value), api),
       then: (resolve: (r: { data: Row[] | null; error: unknown }) => unknown, reject?: (e: unknown) => unknown) => {
         requests.push(request);
@@ -52,6 +55,14 @@ export function createFakeSupabase(state: FakeState) {
           const error = state.failNext.error;
           state.failNext = undefined;
           return Promise.resolve({ data: null, error }).then(resolve, reject);
+        }
+        if (request.op === 'upsert') {
+          const keys = (request.conflict ?? 'id').split(',');
+          const list = (state.tables[table] ??= []);
+          const hit = list.find((r) => keys.every((k) => r[k] === request.values![k]));
+          if (hit) Object.assign(hit, request.values);
+          else list.push({ ...request.values });
+          return Promise.resolve({ data: null, error: null }).then(resolve, reject);
         }
         const rows = (state.tables[table] ?? []).filter((r) => filters.every((f) => f(r)));
         if (request.op === 'update') for (const r of rows) Object.assign(r, request.values);

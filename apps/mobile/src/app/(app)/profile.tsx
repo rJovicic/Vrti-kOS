@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { PushPreferences } from '../../features/notices/PushPreferences';
 import { queueFor } from '../../lib/attendanceQueue';
 import { signOut, useSession } from '../../lib/session';
 import { useShell } from '../../shell/ShellProvider';
@@ -67,6 +68,13 @@ export default function Profile() {
             />
           ))}
         </View>
+      ) : null}
+
+      {session && (mode === 'educator' || mode === 'guardian') ? (
+        <PushPreferences
+          userId={session.user.id}
+          types={mode === 'educator' ? ['announcement.published', 'absence.reported', 'message.received'] : ['announcement.published', 'message.received', 'daily_entry.published']}
+        />
       ) : null}
 
       {unsent > 0 ? (

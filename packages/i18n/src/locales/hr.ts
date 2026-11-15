@@ -158,6 +158,32 @@ export const hr = {
     needsConnection: 'Za slanje prijave potrebna je internetska veza. Prijava nije poslana.',
   },
   // Mobile app shell (D1-10): navigation destinations and states of the signed-in app.
+  notices: {
+    title: 'Obavijesti',
+    lede: 'Službene obavijesti vrtića',
+    announcements: 'Obavijesti vrtića',
+    absences: 'Prijave izostanka u vašoj skupini',
+    absenceItem: '{{name}}: izostanak {{range}}',
+    unavailable: 'Sadržaj više nije dostupan.',
+    new: 'Novo',
+    edited: 'uređeno',
+    back: 'Natrag na obavijesti',
+    markAll_one: 'Označi {{count}} obavijest pročitanom',
+    markAll_few: 'Označi {{count}} obavijesti pročitanima',
+    markAll_other: 'Označi {{count}} obavijesti pročitanima',
+    empty: 'Nema obavijesti.',
+    emptyHelp: 'Ovdje će se pojaviti obavijesti vrtića namijenjene vama.',
+    loadError: 'Obavijesti se trenutačno ne mogu učitati.',
+    pushTitle: 'Push obavijesti',
+    pushNote: 'Push obavijesti ne sadrže imena ni sadržaj. Vrtić ih još nije uključio; postavke vrijede od uključenja. Obavijesti u aplikaciji uvijek su vidljive.',
+    pushError: 'Postavka nije spremljena. Pokušajte ponovno.',
+    pushType: {
+      'announcement.published': 'Nove obavijesti vrtića',
+      'absence.reported': 'Nove prijave izostanka',
+      'message.received': 'Nove poruke',
+      'daily_entry.published': 'Novi dnevni pregledi',
+    },
+  },
   push: {
     title: 'VrtićOS',
     types: {
@@ -172,6 +198,7 @@ export const hr = {
     today: 'Danas',
     attendance: 'Dolasci',
     messages: 'Poruke',
+    notices: 'Obavijesti',
     profile: 'Profil',
   },
   shell: {
@@ -191,7 +218,7 @@ export const hr = {
     modeCurrent: 'Trenutačni način rada',
     comingLater: {
       attendance: 'Evidencija dolazaka dolazi u sljedećoj fazi razvoja (D3). Do tada ovdje nema podataka.',
-      messages: 'Obavijesti i poruke vrtića dolaze u kasnijoj fazi razvoja (D4). Do tada ovdje nema podataka.',
+      messages: 'Razgovori s odgojiteljima dolaze u sljedećem koraku razvoja. Do tada ovdje nema podataka.',
     },
   },
   /** Parent Home (docs/design/parent-home-spec.md). State copy follows spec §8; full-load error reuses mobile.loadError / loadErrorHelp. */

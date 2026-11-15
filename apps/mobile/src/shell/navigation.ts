@@ -2,17 +2,18 @@
 import type { Access, MobileMode } from './access';
 
 /** Destinations of the signed-in app. `home` (Parent Home) is the `index` route at `/`; the others match their file. */
-export type TabName = 'home' | 'messages' | 'today' | 'attendance' | 'info' | 'profile';
+export type TabName = 'home' | 'notices' | 'messages' | 'today' | 'attendance' | 'info' | 'profile';
 export type ShellMode = MobileMode | 'none';
-export const ALL_TABS: readonly TabName[] = ['today', 'attendance', 'home', 'messages', 'info', 'profile'];
+export const ALL_TABS: readonly TabName[] = ['today', 'attendance', 'home', 'notices', 'messages', 'info', 'profile'];
 
 /**
- * Destinations per mode (DESIGN.md Layout: 3–5). `attendance` (D3) and `messages` (D4) are controlled placeholders
- * until their features exist; `info` is the landing page for people without a mobile role (managers).
+ * Destinations per mode (DESIGN.md Layout: 3–5; prototype: guardian Početna · Obavijesti · Poruke · Profil). `notices` is
+ * the notification centre with the kindergarten's announcements (D4-D); `messages` stays a controlled placeholder until
+ * conversations exist (D4-F); `info` is the landing page for people without a mobile role (managers).
  */
 export const TABS_BY_MODE: Record<ShellMode, readonly TabName[]> = {
-  educator: ['today', 'attendance', 'profile'],
-  guardian: ['home', 'messages', 'profile'],
+  educator: ['today', 'attendance', 'notices', 'profile'],
+  guardian: ['home', 'notices', 'messages', 'profile'],
   none: ['info', 'profile'],
 };
 
