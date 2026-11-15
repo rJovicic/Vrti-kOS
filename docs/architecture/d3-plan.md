@@ -44,8 +44,8 @@
 | N-10/H-04 (existing) | May educators record absences on behalf? | Validation | Denied |
 
 ## 4. Data model (one migration per package)
-- `attendance_records` exactly as schema §5.14, plus `void` only through the undo/correction RPCs. Read model:
-  `public.attendance_day` (security_invoker view) — per child and local date: status (`expected|absent|present|departed`),
+- `attendance_records` exactly as schema §5.14, plus `void` only through the undo/correction RPCs. Read model
+  (implemented as `api.child_day_status`, D3-C) — per child and local date: status (`expected|absent|present|departed`),
   arrival and departure time, and for staff the source; `recorded_by` never exposed to guardians.
 - `absence_records` exactly as schema §5.15; cancel = set `status = cancelled` for a not-yet-started record, or shorten
   `ends_on` to yesterday and keep the past part (split), via RPC.
@@ -55,7 +55,7 @@
 |---|---|---|
 | D3-A | `attendance_records` + RPCs `record_attendance`, `undo_attendance`, `correct_attendance` + state machine, idempotency, per-child lock, `local_date` | pgTAP: RLS matrix, NEG-01/03/05/07/08/10, idempotency, double entry, undo window, correction rules; integration through the API | **Done 2026-11-15:** `20261115100000_attendance_records.sql`, pgTAP 19 (53), integration `attendance.test.ts` (6, incl. two educators at once). Also `api.record_missed_attendance` (FS-05 edge case: forgotten departure, manager next day). |
 | D3-B | `absence_records` + RPCs `report_absence`, `cancel_absence`, `record_absence_on_behalf`; late flag | pgTAP: NEG-04 (missing flag), NEG-05, AC-06-3, split cancel; integration | **Done 2026-11-15:** `20261115110000_absence_records.sql`, pgTAP 20 (44), integration `absences.test.ts` (6). Technical: start today or later; no overlapping active reports; educators read via today's group scope. |
-| D3-C | Read model `attendance_day` for staff and guardians (status, times; no recorder for guardians) | pgTAP: guardian sees status without `recorded_by`; restricted guardian nothing |
+| D3-C | Read model `attendance_day` for staff and guardians (status, times; no recorder for guardians) | pgTAP: guardian sees status without `recorded_by`; restricted guardian nothing | **Done 2026-11-15:** implemented as `api.child_day_status(day, group)` (a function, not a view: guardians must not read event rows), `20261115120000_child_day_status.sql`, pgTAP 21 (24), integration case in `attendance.test.ts`. Statuses: expected, absent, present, departed, not_enrolled. |
 | D3-D | Mobile educator attendance screen (online): list per group, one tap, undo 10 s, absence confirmation, conflict warning, states | render tests; Expo export |
 | D3-E | Offline queue (ADR-0012): encrypted, IDs only, replay with server re-authorization, wipe on sign-out with warning | unit + render tests; AC-05-5 |
 | D3-F | Guardian mobile: status on Parent Home and child view; absence report and cancel flow | render tests |
