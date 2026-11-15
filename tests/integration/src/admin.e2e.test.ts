@@ -251,6 +251,41 @@ describe('admin app (browser)', () => {
     await expect(page.locator('.flash.ok').textContent()).resolves.toContain('otkazana');
   });
 
+  it('D4-C: announcements — draft for a group, warning, publish, edit with history, archive', async () => {
+    await page.goto(`${ADMIN}/${slug}/announcements`);
+    const create = page.locator('section', { has: page.getByRole('heading', { name: 'Nova obavijest' }) });
+    await expect(create.getByText('Ne navodite imena djece ni zdravstvene podatke.', { exact: false }).isVisible()).resolves.toBe(true);
+    await create.locator('input[name=title]').fill('Izlet Dupina');
+    await create.locator('textarea[name=body]').fill('Polazak u 9 sati.');
+    await create.getByLabel('Odabrane skupine').check();
+    await create.getByLabel('Dupini', { exact: true }).check();
+    await submit(page, create.getByRole('button', { name: 'Spremi nacrt' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Nacrt obavijesti je spremljen.');
+    const item = page.locator('details.manage', { hasText: 'Izlet Dupina' });
+    // A server action re-renders in place, so a <details> may still be open: open it only when closed.
+    const expand = async () => {
+      if ((await item.getAttribute('open')) === null) await item.locator('summary').click();
+    };
+    await expect(item.locator('summary').textContent()).resolves.toMatch(/Nacrt.*Izlet Dupina.*Dupini · Skrbnici/);
+
+    await expand();
+    await submit(page, item.getByRole('button', { name: 'Objavi' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toContain('Obavijest je objavljena');
+    await expect(item.locator('summary').textContent()).resolves.toContain('Objavljeno');
+
+    await expand();
+    await item.locator('textarea[name=body]').fill('Polazak u 10 sati.');
+    await submit(page, item.getByRole('button', { name: 'Spremi izmjenu' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toContain('prethodna verzija ostaje');
+    await expect(item.locator('summary').textContent()).resolves.toContain('uređeno');
+    await expand();
+    await expect(item.getByText('Polazak u 9 sati.').isVisible()).resolves.toBe(true);
+
+    await submit(page, item.getByRole('button', { name: 'Arhiviraj' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Obavijest je arhivirana.');
+    await expect(item.locator('summary').textContent()).resolves.toContain('Arhivirano');
+  });
+
   it('another kindergarten’s URL is not found (NEG-01, no existence leak)', async () => {
     const res = await page.goto(`${ADMIN}/alfa-demo/staff`);
     expect(res!.status()).toBe(404);
