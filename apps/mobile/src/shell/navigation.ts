@@ -8,11 +8,11 @@ export const ALL_TABS: readonly TabName[] = ['today', 'attendance', 'home', 'not
 
 /**
  * Destinations per mode (DESIGN.md Layout: 3–5; prototype: guardian Početna · Obavijesti · Poruke · Profil). `notices` is
- * the notification centre with the kindergarten's announcements (D4-D); `messages` stays a controlled placeholder until
- * conversations exist (D4-F); `info` is the landing page for people without a mobile role (managers).
+ * the notification centre with the kindergarten's announcements (D4-D); `messages` holds the conversations (D4-F; the
+ * educator's label is "Razgovori", as in the prototype); `info` is the landing page for people without a mobile role.
  */
 export const TABS_BY_MODE: Record<ShellMode, readonly TabName[]> = {
-  educator: ['today', 'attendance', 'notices', 'profile'],
+  educator: ['today', 'attendance', 'notices', 'messages', 'profile'],
   guardian: ['home', 'notices', 'messages', 'profile'],
   none: ['info', 'profile'],
 };

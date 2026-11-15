@@ -109,10 +109,10 @@ describe('roles and tabs', () => {
   });
 
   it('an educator cannot open a guardian destination by deep link', async () => {
-    const r = await start({ session: session(ME), tables: tables([membership(ME, 'educator', ALFA)], { groups: [], facilities: [], staff_assignments: [] }) }, '/messages');
+    // Parent Home stays guardian-only (D4-F made "Poruke"/"Razgovori" a destination of both modes).
+    const r = await start({ session: session(ME), tables: tables([membership(ME, 'educator', ALFA)], { groups: [], facilities: [], staff_assignments: [] }) }, '/');
     expect(await screen.findByText(hr.mobile.myGroups)).toBeTruthy();
-    expect(r.getPathname()).not.toBe('/messages');
-    expect(screen.queryByText(hr.shell.comingLater.messages)).toBeNull();
+    expect(r.getPathname()).not.toBe('/');
   });
 
   it('a person with both roles switches between educator and guardian mode in Profil', async () => {

@@ -87,7 +87,11 @@ describe('navigation: tabs per mode', () => {
     expect(tabAllowed('today', 'guardian')).toBe(false);
     expect(tabAllowed('attendance', 'guardian')).toBe(false);
     expect(tabAllowed('home', 'educator')).toBe(false);
-    expect(tabAllowed('messages', 'educator')).toBe(false);
+    // D4: notifications and conversations belong to both modes (educator label "Razgovori"), never to "none".
+    expect(tabAllowed('messages', 'educator')).toBe(true);
+    expect(tabAllowed('notices', 'educator')).toBe(true);
+    expect(tabAllowed('messages', 'none')).toBe(false);
+    expect(tabAllowed('notices', 'none')).toBe(false);
     expect(tabAllowed('home', 'none')).toBe(false);
     expect(tabAllowed('today', 'none')).toBe(false);
   });

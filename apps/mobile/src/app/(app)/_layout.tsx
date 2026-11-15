@@ -52,7 +52,7 @@ function AppTabs() {
       <Tabs.Screen name="attendance" options={tab('attendance', 'nav.attendance')} />
       <Tabs.Screen name="index" options={tab('home', 'nav.home')} />
       <Tabs.Screen name="notices" options={tab('notices', 'nav.notices')} />
-      <Tabs.Screen name="messages" options={tab('messages', 'nav.messages')} />
+      <Tabs.Screen name="messages" options={tab('messages', mode === 'educator' ? 'nav.conversations' : 'nav.messages')} />
       <Tabs.Screen name="info" options={tab('info', 'nav.home')} />
       <Tabs.Screen name="profile" options={tab('profile', 'nav.profile')} />
     </Tabs>
