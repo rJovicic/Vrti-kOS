@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { businessCode, displayName, newIdempotencyKey } from './attendanceKeys';
+import { businessCode, classify, displayName, newIdempotencyKey } from './attendanceKeys';
 
 describe('attendance helpers (D3-D)', () => {
   it('tile names are first name and last initial, diacritics kept', () => {
@@ -18,5 +18,12 @@ describe('attendance helpers (D3-D)', () => {
     expect(businessCode({ code: '42501', message: 'PERMISSION_DENIED' })).toBeNull();
     expect(businessCode({ code: 'P0001', message: 'some prose with spaces' })).toBeNull();
     expect(businessCode(null)).toBeNull();
+  });
+  it('offline queue: undelivered requests stay queued, server refusals become visible failures', () => {
+    expect(classify({ code: '', message: 'TypeError: Network request failed' })).toEqual({ ok: false, network: true });
+    expect(classify({ code: 'PGRST303', status: 401, message: 'JWT expired' })).toEqual({ ok: false, network: true });
+    expect(classify({ code: 'P0001', message: 'ATTENDANCE_STATE_CONFLICT' })).toEqual({ ok: false, network: false, code: 'ATTENDANCE_STATE_CONFLICT' });
+    expect(classify({ code: '42501', message: 'PERMISSION_DENIED' })).toEqual({ ok: false, network: false, code: 'PERMISSION_DENIED' });
+    expect(classify({ code: '23505', message: 'duplicate' })).toEqual({ ok: false, network: false, code: 'INTERNAL' });
   });
 });

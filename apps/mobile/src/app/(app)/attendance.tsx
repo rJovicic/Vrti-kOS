@@ -49,7 +49,7 @@ function AttendanceRoute() {
     );
   }
   if (!groups) return <ActivityIndicator style={shellStyles.screen} color={c.accent} accessibilityLabel={t('common.loading')} />;
-  return <AttendanceScreen groups={groups} onSessionExpired={expired} />;
+  return <AttendanceScreen userId={userId!} groups={groups} onSessionExpired={expired} />;
 }
 
 export default function Attendance() {

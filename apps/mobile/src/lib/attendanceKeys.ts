@@ -1,3 +1,5 @@
+import type { SendResult } from '@vrticos/domain';
+
 // Pure helpers of the attendance screen (no client imports, so Vitest can load them).
 
 /** "Lana B." — first name and initial of the last name, as in the prototype tiles. */
@@ -17,3 +19,21 @@ export function businessCode(error: unknown): string | null {
   const e = error as { code?: string; message?: string } | null;
   return e?.code === 'P0001' && typeof e.message === 'string' && /^[A-Z_]+$/.test(e.message) ? e.message : null;
 }
+
+/** SecureStore key of the offline attendance queue (ADR-0012); wiped on every sign-out (SR-MOB-02). */
+export const ATTENDANCE_QUEUE_KEY = 'vrticos.attendance-queue';
+
+/**
+ * A request that reached the server and was refused is a refusal (shown, never retried silently); anything without a
+ * server code is treated as "not delivered" and stays queued. An expired session also stays queued: sending would
+ * fail again, and the sign-out that follows wipes the queue (SR-MOB-02).
+ */
+export function classify(error: unknown): SendResult {
+  const e = error as { code?: string; message?: string; status?: number } | null;
+  const code = e?.code ?? '';
+  if (!code || code === 'PGRST301' || code === 'PGRST303' || e?.status === 401) return { ok: false, network: true };
+  if (code === 'P0001' && typeof e?.message === 'string' && /^[A-Z_]{3,60}$/.test(e.message)) return { ok: false, network: false, code: e.message };
+  if (code === '42501') return { ok: false, network: false, code: 'PERMISSION_DENIED' };
+  return { ok: false, network: false, code: 'INTERNAL' };
+}
+

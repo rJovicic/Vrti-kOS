@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { sessionEnd, type SessionEnd } from '../shell/navigation';
 import { SESSION_KEY, sessionStorage, supabase } from './supabase';
+import { ATTENDANCE_QUEUE_KEY } from './attendanceKeys';
 
 interface SessionState {
   session: Session | null;
@@ -46,5 +47,7 @@ export async function signOut(reason: SessionEnd = 'signedOut'): Promise<void> {
     await supabase.auth.signOut({ scope: 'local' });
   } finally {
     await sessionStorage.removeItem(SESSION_KEY);
+    // SR-MOB-02: unsent attendance taps never outlive the session (the app warns before a sign-out by choice).
+    await sessionStorage.removeItem(ATTENDANCE_QUEUE_KEY);
   }
 }

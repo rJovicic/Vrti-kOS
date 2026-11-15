@@ -60,6 +60,13 @@ export const hr = {
     saveError: 'Unos nije spremljen.',
     tileHintDeparted: 'Dijete je otišlo. Promjena je moguća samo ispravkom.',
     reference: 'Oznaka: {{ref}}',
+    queuedSaved: '{{name}} — čeka slanje (nema veze)',
+    sendNow: 'Pošalji ponovno',
+    notSent: 'Nije poslano: {{name}}, {{time}}',
+    dismiss: 'Ukloni s popisa',
+    signOutQueuedTitle: 'Na uređaju ima neposlanih unosa dolazaka.',
+    signOutQueuedBody: 'Odjavom se brišu i neće biti poslani. Ako je moguće, pričekajte vezu i pošaljite ih.',
+    signOutQueuedConfirm: 'Odjavi se i obriši unose',
   },
   auth: {
     signInTitle: 'Prijava',

@@ -70,10 +70,19 @@ export async function recordAttendance(
   kind: 'check_in' | 'check_out',
   idempotencyKey: string = newIdempotencyKey(),
   correlationId: string = newCorrelationId(),
+  /** The instant of the tap (replays from the offline queue send the original time). */
+  occurredAt?: string,
+  source: 'app' | 'offline_sync' = 'app',
 ): Promise<Recorded> {
   const { data, error } = await supabase
     .schema('api')
-    .rpc('record_attendance', { p_child_id: childId, p_kind: kind, p_idempotency_key: idempotencyKey })
+    .rpc('record_attendance', {
+      p_child_id: childId,
+      p_kind: kind,
+      p_idempotency_key: idempotencyKey,
+      ...(occurredAt ? { p_occurred_at: occurredAt } : {}),
+      p_source: source,
+    })
     .setHeader(CORRELATION_HEADER, correlationId);
   if (error) throw error;
   const row = (data as { record_id: string; occurred_at: string }[])[0]!;

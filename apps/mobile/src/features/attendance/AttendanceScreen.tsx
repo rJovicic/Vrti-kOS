@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, AppState, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { nextAction, type AttendanceState } from '@vrticos/domain';
+import { nextAction, type AttendanceState, type QueuedAttendance } from '@vrticos/domain';
 import { formatLongDate, formatTime } from '@vrticos/i18n';
 import type { ColorRoles } from '@vrticos/tokens';
 import { radius, space, type } from '@vrticos/tokens';
-import { businessCode, loadGroupDay, recordAttendance, undoAttendance, type AttendanceTile, type GroupDay } from '../../lib/attendance';
+import { loadGroupDay, newIdempotencyKey, undoAttendance, type AttendanceTile, type GroupDay } from '../../lib/attendance';
+import { enqueue, flushAttendance, removeFromQueue } from '../../lib/attendanceQueue';
 import { newCorrelationId } from '../../lib/correlation';
 import type { HomeGroup } from '../../lib/home';
 import { Button } from '../../ui/Button';
@@ -14,11 +15,17 @@ import { useColors } from '../../ui/theme';
 
 /** Undo window (FR-05-5): the server enforces the same 10 seconds. */
 export const UNDO_WINDOW_MS = 10_000;
+/** While unsent taps exist, the screen retries this often (and whenever the app comes to the foreground). */
+export const RETRY_INTERVAL_MS = 30_000;
 
 type Filter = 'all' | 'expected' | 'present' | 'departed';
 interface Snack {
   text: string;
-  undo?: { recordId: string; name: string; kind: 'check_in' | 'check_out' };
+  /** `recordId` for a sent event (server undo), `queuedKey` for a tap not sent yet (removed locally). */
+  undo?: { recordId?: string; queuedKey?: string; name: string; kind: 'check_in' | 'check_out' };
+}
+interface ShownTile extends AttendanceTile {
+  pending: boolean;
 }
 
 function tone(c: ColorRoles, state: AttendanceState) {
@@ -35,6 +42,7 @@ function tone(c: ColorRoles, state: AttendanceState) {
 }
 
 export interface AttendanceScreenProps {
+  userId: string;
   groups: HomeGroup[];
   /** Ends the session on 401 (handled by the route). */
   onSessionExpired: (error: unknown) => boolean;
@@ -44,9 +52,9 @@ export interface AttendanceScreenProps {
 /**
  * Educator attendance (FS-05, prototype "Evidencija dolazaka"): one tap per child, no "all present" (FR-05-6), undo for
  * 10 s (FR-05-5), confirmation before recording a child with a reported absence (FR-05-7), conflict → current state
- * (FR-05-8). Online in this package; the offline queue follows in D3-E.
+ * (FR-05-8). Every tap goes through the encrypted offline queue (D3-E, ADR-0012) and is sent at once when possible.
  */
-export function AttendanceScreen({ groups, onSessionExpired, now = () => new Date() }: AttendanceScreenProps) {
+export function AttendanceScreen({ userId, groups, onSessionExpired, now = () => new Date() }: AttendanceScreenProps) {
   const { t } = useTranslation();
   const c = useColors();
   const [groupId, setGroupId] = useState(groups[0]?.id ?? null);
@@ -58,6 +66,7 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [snack, setSnack] = useState<Snack | null>(null);
+  const [queue, setQueue] = useState<QueuedAttendance[]>([]);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const group = groups.find((g) => g.id === groupId) ?? null;
 
@@ -66,6 +75,8 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
     setLoading(true);
     const correlationId = newCorrelationId();
     try {
+      // Unsent taps go first, in tap order (ADR-0012); the list then shows the server's state.
+      setQueue((await flushAttendance(userId)).remaining);
       setDay(await loadGroupDay(groupId, correlationId));
       setLoadError(null);
     } catch (e) {
@@ -73,11 +84,22 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
     } finally {
       setLoading(false);
     }
-  }, [groupId, onSessionExpired]);
+  }, [groupId, userId, onSessionExpired]);
 
   useEffect(() => {
     void load();
   }, [load]);
+  // Retry unsent taps when the app returns to the foreground and periodically while any are waiting.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => (s === 'active' ? void load() : undefined));
+    return () => sub.remove();
+  }, [load]);
+  const waiting = queue.some((x) => x.state === 'queued');
+  useEffect(() => {
+    if (!waiting) return;
+    const id = setInterval(() => void load(), RETRY_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [waiting, load]);
   useEffect(() => () => (undoTimer.current ? clearTimeout(undoTimer.current) : undefined), []);
 
   const showSnack = (next: Snack) => {
@@ -87,27 +109,33 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
     if (next.undo) undoTimer.current = setTimeout(() => setSnack((s) => (s ? { text: s.text } : s)), UNDO_WINDOW_MS);
   };
 
-  const fail = async (e: unknown) => {
-    if (onSessionExpired(e)) return;
-    const code = businessCode(e);
-    setNotice(code ? t(`errors.${code}`) : t('attendance.saveError'));
-    await load();
-  };
-
   const perform = async (tile: AttendanceTile, kind: 'check_in' | 'check_out') => {
     setConfirm(null);
     setNotice(null);
     setBusy(tile.childId);
+    const item: QueuedAttendance = { key: newIdempotencyKey(), childId: tile.childId, kind, occurredAt: now().toISOString(), attempts: 0, state: 'queued' };
     try {
-      const r = await recordAttendance(tile.childId, kind);
-      const time = formatTime(new Date(r.occurredAt));
-      showSnack({
-        text: t(kind === 'check_in' ? 'attendance.savedCheckIn' : 'attendance.savedCheckOut', { name: tile.displayName, time }),
-        undo: { recordId: r.recordId, name: tile.displayName, kind },
-      });
-      await load();
-    } catch (e) {
-      await fail(e);
+      await enqueue(userId, item);
+      const report = await flushAttendance(userId);
+      const result = report.results.get(item.key);
+      if (result?.ok) {
+        const time = formatTime(new Date(item.occurredAt));
+        showSnack({
+          text: t(kind === 'check_in' ? 'attendance.savedCheckIn' : 'attendance.savedCheckOut', { name: tile.displayName, time }),
+          undo: { recordId: result.recordId, name: tile.displayName, kind },
+        });
+        setQueue(report.remaining);
+        await load();
+      } else if (result && !result.network) {
+        // Refused at once (e.g. another educator was faster): nothing is queued, the current state is shown.
+        setQueue(await removeFromQueue(userId, item.key));
+        setNotice(t(`errors.${result.code}`));
+        await load();
+      } else {
+        // Not delivered: the tap stays on this device, encrypted, and is sent later (FR-05-8).
+        setQueue(report.remaining);
+        showSnack({ text: t('attendance.queuedSaved', { name: tile.displayName }), undo: { queuedKey: item.key, name: tile.displayName, kind } });
+      }
     } finally {
       setBusy(null);
     }
@@ -116,14 +144,25 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
   const undo = async (u: NonNullable<Snack['undo']>) => {
     if (undoTimer.current) clearTimeout(undoTimer.current);
     setSnack(null);
+    const text = t(u.kind === 'check_in' ? 'attendance.undoneCheckIn' : 'attendance.undoneCheckOut', { name: u.name });
+    if (u.queuedKey) {
+      setQueue(await removeFromQueue(userId, u.queuedKey));
+      showSnack({ text });
+      return;
+    }
     try {
-      await undoAttendance(u.recordId);
-      showSnack({ text: t(u.kind === 'check_in' ? 'attendance.undoneCheckIn' : 'attendance.undoneCheckOut', { name: u.name }) });
+      await undoAttendance(u.recordId!);
+      showSnack({ text });
       await load();
     } catch (e) {
-      await fail(e);
+      if (onSessionExpired(e)) return;
+      const code = (e as { code?: string; message?: string }).code === 'P0001' ? (e as { message: string }).message : null;
+      setNotice(code ? t(`errors.${code}`) : t('attendance.saveError'));
+      await load();
     }
   };
+
+  const dismissFailed = async (key: string) => setQueue(await removeFromQueue(userId, key));
 
   const tap = (tile: AttendanceTile) => {
     const action = nextAction(tile.state);
@@ -139,7 +178,17 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
     );
   }
 
-  const tiles = day?.tiles ?? [];
+  // Server state with unsent taps on top (shown as "Čeka slanje").
+  const tiles: ShownTile[] = (day?.tiles ?? []).map((x) => {
+    const mine = queue.filter((q) => q.childId === x.childId && q.state === 'queued').sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
+    const last = mine.at(-1);
+    return last
+      ? { ...x, state: last.kind === 'check_in' ? 'present' : 'departed', time: last.occurredAt, pending: true }
+      : { ...x, pending: false };
+  });
+  const queuedCount = queue.filter((q) => q.state === 'queued').length;
+  const failed = queue.filter((q) => q.state === 'failed');
+  const nameOf = (childId: string) => day?.tiles.find((x) => x.childId === childId)?.displayName ?? '—';
   const count = (s: AttendanceState) => tiles.filter((x) => x.state === s).length;
   const shown = filter === 'all' ? tiles : tiles.filter((x) => x.state === filter);
   const filters: { key: Filter; label: string; n: number }[] = [
@@ -148,12 +197,13 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
     { key: 'present', label: t('attendance.present'), n: count('present') },
     { key: 'departed', label: t('attendance.departed'), n: count('departed') },
   ];
-  const statusText = (x: AttendanceTile) =>
-    x.state === 'present' && x.time
+  const statusText = (x: ShownTile) =>
+    (x.pending ? `${t('attendance.pendingSync')} · ` : '') +
+    (x.state === 'present' && x.time
       ? t('attendance.presentSince', { time: formatTime(new Date(x.time)) })
       : x.state === 'departed' && x.time
         ? t('attendance.departedAt', { time: formatTime(new Date(x.time)) })
-        : t(`attendance.${x.state}`);
+        : t(`attendance.${x.state}`));
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bgCanvas }}>
@@ -214,6 +264,16 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
 
             {notice ? <Notice tone="error" title={notice} /> : null}
 
+            {failed.map((f) => (
+              <View key={f.key} style={[styles.confirm, { backgroundColor: c.bgSurface, borderColor: c.dangerFg }]} accessibilityRole="alert">
+                <Text style={[styles.confirmTitle, { color: c.textPrimary }]}>
+                  {t('attendance.notSent', { name: nameOf(f.childId), time: formatTime(new Date(f.occurredAt)) })}
+                </Text>
+                <Text style={[styles.meta, { color: c.textSecondary }]}>{t(`errors.${f.errorCode ?? 'INTERNAL'}`, { correlationId: '—' })}</Text>
+                <Button variant="secondary" label={t('attendance.dismiss')} onPress={() => void dismissFailed(f.key)} />
+              </View>
+            ))}
+
             {confirm ? (
               <View style={[styles.confirm, { backgroundColor: c.bgSurface, borderColor: c.borderControl }]} accessibilityRole="alert">
                 <Text style={[styles.confirmTitle, { color: c.textPrimary }]}>{t('attendance.confirmAbsentTitle', { name: confirm.fullName })}</Text>
@@ -249,7 +309,14 @@ export function AttendanceScreen({ groups, onSessionExpired, now = () => new Dat
                 );
               })}
             </View>
-            <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.allSaved', { time: formatTime(day.loadedAt) })}</Text>
+            {queuedCount > 0 ? (
+              <View style={styles.section}>
+                <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.queued', { count: queuedCount })}</Text>
+                <Button variant="secondary" label={t('attendance.sendNow')} onPress={() => void load()} />
+              </View>
+            ) : (
+              <Text style={[styles.meta, { color: c.textSecondary }]}>{t('attendance.allSaved', { time: formatTime(day.loadedAt) })}</Text>
+            )}
           </>
         ) : null}
       </ScrollView>
