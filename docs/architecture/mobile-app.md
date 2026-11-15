@@ -119,7 +119,7 @@ These follow the module table below and arrive with D2–D4.
   spremljeno · HH:MM". Handover sheet waits for D-38; offline queue is D3-E. Tests: `attendance.render.test.tsx` (10),
   `lib/attendance.test.ts` (3). Plain `ScrollView` instead of FlashList (no new dependency; group sizes ≤ 30).
 
-## 5. Data and offline (target; today only memory state, no offline queue)
+## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
 - Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an
   "offline" banner; caches are memory-only (no persisted query cache with child data).

@@ -27,3 +27,21 @@ Option 1:
 ## Consequences
 + Small, testable feature; no third-party sync service.
 − If the device is lost before sync, the unsent events are lost → kindergarten's manual fallback (NFR-REL-02).
+
+## Implementation note (D3-E, 2026-11-15)
+- **Storage:** the queue is stored with the app's existing chunked SecureStore storage (iOS Keychain / Android
+  Keystore, `WHEN_UNLOCKED_THIS_DEVICE_ONLY`) instead of `expo-sqlite` + a separate key: the platform store is already
+  encrypted at rest, the queue is small (ids only), and no new dependency is needed. Same guarantees as the decision:
+  encrypted, ids only (`childId`, `kind`, `occurredAt`, idempotency key, attempts, sync state, refusal code), wiped on
+  every sign-out.
+- **Flow:** every tap is queued and sent at once; a delivery failure keeps it ("Čeka slanje"); replays are in tap order
+  with the original `occurred_at`, the same idempotency key and source `offline_sync`; the server re-authorizes each
+  replay (D3-A). A refusal on replay is shown as "Nije poslano" with its reason until the educator dismisses it — no
+  silent drop. Retries: when the app returns to the foreground, every 30 s while items wait, and on "Pošalji ponovno".
+- **Max age:** not enforced on the device; the server refuses taps of a past day for educators
+  (`ATTENDANCE_TIME_INVALID`), which then show as "Nije poslano".
+- **Sign-out:** a sign-out by choice warns when unsent taps exist (AC-05-5); every sign-out, including a forced one
+  after session expiry, wipes the queue (SR-MOB-02). A queue of another account is discarded on load, never replayed.
+- **Tests:** `packages/domain/src/attendance-queue.test.ts` (7), `apps/mobile/src/lib/attendance.test.ts` (classify),
+  `apps/mobile/src/features/attendance/attendance.render.test.tsx` (6 offline cases).
+
