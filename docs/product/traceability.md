@@ -46,3 +46,12 @@ tablica, FR → AC) prolazi bez grešaka. Skripta se trenutno pokreće izvan rep
 | 6 | Zabranjene kategorije | Nema zdravstvenih podataka, biometrije ni AI analize. Rizične točke: slobodni tekst u FS-07, FS-10, FS-11 (ublaženo upozorenjem autoru, bez automatske analize). | R-20 ostaje otvoren. |
 | 7 | Proturječje | FR-07-3 (verzije u auditu) vs. FR-09-2 (audit bez sadržaja). | Razriješeno: `announcement_revision`. |
 | 8 | Uloge | Specifikacije koriste samo MVP uloge (DD-05). Ćelije "Otvoreno" u matrici tretiraju se kao "Ne" (FR-06-7 za odgojitelja, FR-07-1 za odgojitelja). | — |
+
+## 3. Odluke nakon D5 → provedba → testovi (2026-11-16)
+
+| Odluka | FR / AC | Provedba | Testovi |
+|---|---|---|---|
+| D-41 / D-41a (D-36 proširen) | FR-04 (upisi, veze, ograničenja, ovlaštene osobe) | `20261118100000_relationship_history_guard.sql`; admin `children/actions.ts` | pgTAP `30_relationship_history`, `11_access_restrictions`, `14_transfer_withdrawal`; integracija `relationship-history.test.ts`; e2e D2-G |
+| D-41b (plan) | — | [architecture/d41b-plan.md](../architecture/d41b-plan.md) | planirano |
+| D-42 (Q-T16, Q-T20) | FR-11-1, FR-11-6, FR-11-8; AC-11-1, AC-11-3, AC-11-4 | `20261118110000_conversation_per_guardian.sql`; mobilni `lib/conversations.ts`, `ConversationsScreen`, `ConversationView` | pgTAP `27_conversations`, `28_d4_negative`, `31_conversation_per_guardian`; integracija `conversations.test.ts`; render `conversations.render.test.tsx` |
+

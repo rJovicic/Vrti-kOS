@@ -62,8 +62,8 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-T14 | Do kada se javlja izostanak za isti dan i koliko unaprijed? Utječe li na prehranu/naplatu? | 🏫 |
 | Q-T15 | Trebaju li potvrde pročitanosti obavijesti? (privatnost vs. potreba vrtića) | 🏫 |
 | ~~Q-T16~~ | ~~Smije li uprava čitati razgovore skrbnika i odgojitelja (nadzor kvalitete vs. privatnost)?~~ **Odgovoreno odlukom D-42 (2026-11-16):** uprava nema pristup privatnim razgovorima. Svaka buduća promjena traži novu odluku. | 🏫 ⚖️ |
-| Q-T17 | D-41: tko smije izvršiti povijesni ispravak odnosa — samo `org_admin` ili i `director`? (prijedlog: samo `org_admin` uz MFA) | 🏫 |
-| Q-T18 | D-41: razlog ispravka samo kao kod ili i slobodna bilješka? Postoji li granica unatrag (npr. tekuća pedagoška godina)? (prijedlog: samo kod, kao D-37) | 🏫 ⚖️ |
+| ~~Q-T17~~ | ~~D-41: tko smije izvršiti povijesni ispravak odnosa?~~ **Odgovoreno (vlasnik, 2026-11-16):** `director` i `org_admin` unutar vlastitog vrtića; `platform_admin` nema pravo; ovlast u bazi/API-ju, MFA/AAL2 i audit obvezni. | 🏫 |
+| ~~Q-T18~~ | ~~D-41: razlog ispravka i vremenski opseg?~~ **Odgovoreno (vlasnik, 2026-11-16):** obvezan strukturirani kod razloga **i** obvezna slobodna bilješka; bez proizvoljne granice unatrag; samo postojeći zapisi; bilježi prethodno i novo stanje, izvršitelja, vrijeme, vrtić, razlog i zahvaćene zapise; operacija se ne smije koristiti za prikrivanje ili brisanje povijesti. | 🏫 ⚖️ |
 | Q-T19 | D-42: pravilo za postojeću zajedničku povijest razgovora ako okruženje sa stvarnim podacima postoji prije promjene modela (danas ne postoji; migracija se do odluke prekida) | 🏫 ⚖️ |
-| Q-T20 | D-42: na strani vrtića razgovor vide svi odgojitelji skupine djeteta (sada) ili jedan određeni odgojitelj? (prijedlog: tim skupine, nepromijenjeno) | 🏫 |
-| Q-T21 | D-41: obuhvaća li operacija povijesnog ispravka i upise (D-36 najavio poseban postupak)? (prijedlog: da, isti mehanizam) | 🏫 |
+| ~~Q-T20~~ | ~~D-42: tko na strani vrtića vidi razgovor?~~ **Odgovoreno (vlasnik, 2026-11-16):** svi odgojitelji trenutačno dodijeljeni skupini djeteta; pristup dinamički, prestaje s dodjelom; bivši odgojitelji ne zadržavaju povijest; uprava nema pristup sadržaju. Izvedeno u D-42. | 🏫 |
+| ~~Q-T21~~ | ~~D-41: obuhvaća li povijesni ispravak i upise?~~ **Odgovoreno (vlasnik, 2026-11-16):** da, uz ista pravila ovlasti, MFA-a, razloga, audita i zaštite u bazi/API-ju; obične operacije i dalje ne mijenjaju prošle datume. | 🏫 |

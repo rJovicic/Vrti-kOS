@@ -218,3 +218,25 @@ Razlog redoslijeda: D-41a je najmanji i odmah uklanja zaobilaženje; D-42 uklanj
 između skrbnika; D-41b ovisi o odgovorima vlasnika, a do tada stvarnih podataka ni potrebe za ispravcima nema.
 
 Svaki paket čeka odobrenje vlasnika za implementaciju.
+
+## 8. Provedba nakon odobrenja (2026-11-16)
+
+Vlasnik je istog dana odobrio D-41a i D-42 te odgovorio na Q-T17, Q-T18, Q-T20 i Q-T21 (zapisano u
+[open-questions.md](../open-questions.md) i [phase-status.md](../phase-status.md)). D-41b ostaje plan.
+
+| Paket | Stanje | Dokaz |
+|---|---|---|
+| **D-41a** | ✅ izveden | migracija `20261118100000_relationship_history_guard.sql`; pgTAP 30 (49; bez okidača pada 18); integracija `relationship-history.test.ts`; administracija bez slanja početnog datuma pri završetku |
+| **D-42** | ✅ izveden | migracija `20261118110000_conversation_per_guardian.sql` (prekida se ako postoje razgovori, Q-T19); pgTAP 31 (54; pravilo po djetetu obara 10); pgTAP 27/28, integracija i render prilagođeni |
+| **D-41b** | 📄 samo plan | [architecture/d41b-plan.md](../architecture/d41b-plan.md) — konačan tehnički plan (arhitektura, transakcija, MFA, ovlasti, razlog i bilješka, audit, utjecaj na pristup, testovi, povrat) |
+
+**Tehničke odluke donesene u provedbi (konzervativno, bez promjene poslovnog ponašanja):**
+- D-41a zadržava postojeću D-36 semantiku: promjena smije vrijediti od danas (zapis u tijeku smije završiti „od danas”);
+  nijedan dan prije današnjeg ne mijenja se. Pravilo „zapis koji vrijedi danas ne smije prestati danas” razmotreno je i
+  odbačeno jer bi promijenilo dosadašnje, testirano ponašanje D-36.
+- D-41a dodatno brani preimenovanje ovlaštene osobe koja je već vrijedila (evidencija predaje/preuzimanja upućuje na
+  nju); ispravak imena ide kroz D-41b.
+- Posljedica D-41a: pri prvom unosu postojećeg vrtića povijesni početni datumi (npr. upis od rujna) ne mogu se unijeti
+  redovnim putem — unosi se od danas, a povijest kroz D-41b kad bude odobren.
+- D-42: nakon ograničenja ili gubitka prava skrbnik gubi pristup vlastitom razgovoru, a odgojitelji skupine i dalje vide
+  povijest tog razgovora (bez skrbnika na popisu sudionika) i ne mogu ga ponovno otvoriti s tim skrbnikom.

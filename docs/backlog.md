@@ -104,8 +104,8 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 
 #### Nakon odluka D-41 i D-42 (2026-11-16) — čeka odobrenje implementacije; plan: [product/decision-followup.md](product/decision-followup.md)
 - [x] [D-41a] (izvedeno 2026-11-16) Baza odbija izmjenu prošlosti na vezama, ograničenjima i ovlaštenim osobama (okidač, `HISTORY_IMMUTABLE`); administracija ne nudi početak u prošlosti; pgTAP s kontrolnom provjerom (R-54)
-- [ ] [D-42] Razgovor po djetetu i skrbniku: `conversations.guardian_id`, sudionici po razgovoru, RLS, RPC, obavijesti, mobilni popis za odgojitelja, seed, negativni testovi (AC-11-4); migracija se prekida ako postoje razgovori (Q-T19)
-- [ ] [D-41b] Zasebna operacija povijesnog ispravka (`history_corrections`, RPC uz MFA i kod razloga, administracijski postupak, audit) — nakon Q-T17, Q-T18, Q-T21
+- [x] [D-42] (izvedeno 2026-11-16) Razgovor po djetetu i skrbniku: `conversations.guardian_id`, sudionici po razgovoru, RLS, RPC, obavijesti, mobilni popis za odgojitelja, seed, negativni testovi (AC-11-4); migracija se prekida ako postoje razgovori (Q-T19)
+- [ ] [D-41b] Zasebna operacija povijesnog ispravka (`history_corrections`, RPC uz MFA, kod razloga i bilješku, administracijski postupak, audit) — Q-T17/18/21 odgovoreni; konačan plan: [architecture/d41b-plan.md](architecture/d41b-plan.md); čeka odobrenje implementacije
 
 ## Faza 5 (unaprijed zabilježeno)
 - [P5-1] CI provjera: tablica bez RLS-a ruši build
