@@ -12,6 +12,11 @@ const accounts: Record<string, string> = {};
 const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
 const today = day(0);
 
+// Records "entered on an earlier day" (start in the past): written with the service key, as D-41a refuses them from clients.
+async function fixture(table: string, row: Record<string, unknown>): Promise<string> {
+  const { data } = await service.from(table).insert(row).select('id').single().throwOnError();
+  return data!.id as string;
+}
 async function insert(table: string, row: Record<string, unknown>): Promise<string> {
   const { data, error } = await manager.from(table).insert(row).select('id').single();
   if (error) throw error;
@@ -60,13 +65,13 @@ beforeAll(async () => {
   await manager.from('staff_assignments').insert({ organization_id: alfa.orgId, membership_id: ids.edu2Membership, group_id: ids.s2, valid_during: '[2026-01-01,)' }).throwOnError();
   for (const name of ['Ivo', 'Ola']) {
     ids[name] = await insert('children', { organization_id: alfa.orgId, first_name: name, last_name: 'Premjestaj' });
-    await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+    await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   }
   ids.guardian = await insert('guardians', { organization_id: alfa.orgId, first_name: 'Ana', last_name: 'Skrbnik' });
   await service.from('guardians').update({ profile_id: parentId }).eq('id', ids.guardian).throwOnError();
   for (const child of ['Ivo', 'Ola']) {
-    ids[`link${child}`] = await insert('child_guardians', { organization_id: alfa.orgId, child_id: ids[child], guardian_id: ids.guardian, can_view: true, can_report_absence: false, receives_messages: true, valid_during: '[2026-09-01,)' });
-    ids[`pickup${child}`] = await insert('pickup_authorizations', { organization_id: alfa.orgId, child_id: ids[child], first_name: 'Mara', last_name: 'Baka', valid_during: '[2026-09-01,)' });
+    ids[`link${child}`] = await fixture('child_guardians', { organization_id: alfa.orgId, child_id: ids[child], guardian_id: ids.guardian, can_view: true, can_report_absence: false, receives_messages: true, valid_during: '[2026-09-01,)' });
+    ids[`pickup${child}`] = await fixture('pickup_authorizations', { organization_id: alfa.orgId, child_id: ids[child], first_name: 'Mara', last_name: 'Baka', valid_during: '[2026-09-01,)' });
   }
 });
 

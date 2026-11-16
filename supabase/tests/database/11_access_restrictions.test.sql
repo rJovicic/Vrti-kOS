@@ -4,7 +4,7 @@
 -- D-31 and D-32 keep working. Synthetic fixtures, rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(47);
+select plan(48);
 
 insert into auth.users (id, email, aud, role, email_confirmed_at)
 select ('d2c00000-0000-4000-8000-0000000000' || x)::uuid, 'ogr-' || x || '@t.test', 'authenticated', 'authenticated', now()
@@ -84,8 +84,13 @@ select lives_ok($$insert into public.access_restrictions (organization_id, child
 select is((select created_by::text || ' ' || scope::text from public.access_restrictions where reference = 'INT-2026-001'), 'd2c00000-0000-4000-8000-0000000000a1 full', 'creator and scope are set by the database');
 select lives_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, reference)
   values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c003', daterange(current_date + 1, null), 'INT-2026-002')$$, 'a restriction for Bruno–D1 starting tomorrow');
-select lives_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, reference)
-  values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c002', daterange(current_date - 10, current_date), 'INT-2026-003')$$, 'a restriction for Ana–D2 that ended yesterday');
+select throws_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, reference)
+  values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c002', daterange(current_date - 10, current_date), 'INT-2026-003')$$, 'P0001', 'HISTORY_IMMUTABLE', 'a restriction cannot be entered for past days (D-41a)');
+reset role;
+-- Fixture: a restriction for Ana–D2 that ended yesterday, as entered on an earlier day.
+insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, reference, created_by)
+  values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c002', daterange(current_date - 10, current_date), 'INT-2026-003', 'd2c00000-0000-4000-8000-0000000000a1');
+select pg_temp.login(pg_temp.uid('a1'), 'aal2');
 select throws_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, reference)
   values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c002', daterange(current_date, null), repeat('x', 101))$$, '23514', null, 'the reference is limited to 100 characters');
 select throws_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, scope, valid_during) values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c002', 'full', daterange(current_date, null))$$,
@@ -143,7 +148,12 @@ reset role;
 -- Activity over time ----------------------------------------------------------------------------------------------------
 -- The manager ends Ana's restriction: access returns immediately.
 select pg_temp.login(pg_temp.uid('a1'), 'aal2');
-select lives_ok($$update public.access_restrictions set valid_during = daterange(current_date - 1, current_date) where reference = 'INT-2026-001'$$, 'the manager ends the restriction');
+select throws_ok($$update public.access_restrictions set valid_during = daterange(current_date - 1, current_date) where reference = 'INT-2026-001'$$, 'P0001', 'HISTORY_IMMUTABLE', 'ending a restriction cannot rewrite a day before today (D-41a)');
+reset role;
+-- As if the restriction had been entered three days ago (time passes; fixture as the owner).
+update public.access_restrictions set valid_during = daterange(current_date - 3, null) where reference = 'INT-2026-001';
+select pg_temp.login(pg_temp.uid('a1'), 'aal2');
+select lives_ok($$update public.access_restrictions set valid_during = daterange(current_date - 3, current_date) where reference = 'INT-2026-001'$$, 'the manager ends the restriction as of today');
 reset role;
 select pg_temp.login(pg_temp.uid('f1'));
 select is(pg_temp.reach(), 'children=Dva,Jedan | view=2 | absence=1 | messages=1 | links=2 | enrollments=1 | groups=1', 'Ana has both children with their rights again on the next request');
@@ -167,12 +177,12 @@ reset role;
 select is((select string_agg(can_view::text || can_report_absence::text || receives_messages::text, ',' order by id) from public.child_guardians where organization_id = 'd2c00000-0000-4000-8000-00000000000a'),
   'truetruetrue,truefalsefalse,truetruetrue', 'restrictions never rewrite the rights stored on the links');
 -- One restriction per check: more than one active restriction on a link is harmless.
-select lives_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, created_by) values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c003', daterange(current_date - 1, null), null)$$, 'a second restriction on Bruno–D1 (overlap allowed)');
+select lives_ok($$insert into public.access_restrictions (organization_id, child_guardian_id, valid_during, created_by) values ('d2c00000-0000-4000-8000-00000000000a', 'd2c00000-0000-4000-8000-00000000c003', daterange(current_date, null), null)$$, 'a second restriction on Bruno–D1 (overlap allowed)');
 select pg_temp.login(pg_temp.uid('f2'));
 select is(pg_temp.reach(), 'children= | view=0 | absence=0 | messages=0 | links=0 | enrollments=0 | groups=0', 'Bruno still has nothing');
 reset role;
-select is((select count(*)::int from audit.audit_events where target_table = 'access_restrictions' and organization_id = 'd2c00000-0000-4000-8000-00000000000a'), 7,
-  'every insert (5) and change (2) of a restriction is audited');
+select is((select count(*)::int from audit.audit_events where target_table = 'access_restrictions' and organization_id = 'd2c00000-0000-4000-8000-00000000000a'), 8,
+  'every insert (5) and change (3) of a restriction is audited');
 
 select * from finish();
 rollback;

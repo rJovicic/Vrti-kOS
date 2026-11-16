@@ -13,6 +13,11 @@ const ids: Record<string, string> = {};
 const parent = email('roditelj-poziv');
 const today = new Date().toISOString().slice(0, 10);
 
+// Records "entered on an earlier day" (start in the past): written with the service key, as D-41a refuses them from clients.
+async function fixture(table: string, row: Record<string, unknown>): Promise<string> {
+  const { data } = await service.from(table).insert(row).select('id').single().throwOnError();
+  return data!.id as string;
+}
 async function insert(table: string, row: Record<string, unknown>): Promise<string> {
   const { data, error } = await manager.from(table).insert(row).select('id').single();
   if (error) throw error;
@@ -29,9 +34,9 @@ beforeAll(async () => {
   managerToken = await enrolMfa(m.client);
   ids.lea = await insert('children', { organization_id: alfa.orgId, first_name: 'Lea', last_name: 'Pozivnica' });
   ids.mia = await insert('children', { organization_id: alfa.orgId, first_name: 'Mia', last_name: 'Druga' });
-  await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids.lea, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids.lea, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   ids.ana = await insert('guardians', { organization_id: alfa.orgId, first_name: 'Ana', last_name: 'Skrbnik' });
-  ids.link = await insert('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.ana, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
+  ids.link = await fixture('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.ana, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
   const b = await signInWithCode(beta.managerEmail);
   await enrolMfa(b.client);
   const { data: bg } = await b.client.from('guardians').insert({ organization_id: beta.orgId, first_name: 'Beta', last_name: 'Skrbnik' }).select('id').single().throwOnError();

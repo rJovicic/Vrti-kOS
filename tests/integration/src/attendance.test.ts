@@ -45,11 +45,11 @@ beforeAll(async () => {
   for (const name of ['Lea', 'Ivo']) {
     const { data } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: name, last_name: 'Dolazak' }).select('id').single().throwOnError();
     ids[name] = data!.id as string;
-    await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+    await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   }
   const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: 'Ana', last_name: 'Dolazak' }).select('id').single().throwOnError();
   await service.from('guardians').update({ profile_id: parent.userId }).eq('id', g!.id).throwOnError();
-  await manager.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: ids.Lea, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: ids.Lea, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' }).throwOnError();
   edu1 = (await signInWithCode(alfa.educatorEmail)).client;
   edu2 = (await signInWithCode(accounts.edu2!)).client;
 });
@@ -134,16 +134,16 @@ describe('D3-H: handover person through the API (D-38 b)', () => {
   it('the list offers the restricted guardian with the mark; only listed persons are accepted; at most one', async () => {
     const { data: child } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: 'Mak', last_name: 'Predaja' }).select('id').single().throwOnError();
     const mak = child!.id as string;
-    await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: mak, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+    await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: mak, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
     const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: 'Bea', last_name: 'Predaja' }).select('id').single().throwOnError();
-    const { data: link } = await manager
+    const { data: link } = await service
       .from('child_guardians')
       .insert({ organization_id: alfa.orgId, child_id: mak, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' })
       .select('id')
       .single()
       .throwOnError();
-    await manager.from('access_restrictions').insert({ organization_id: alfa.orgId, child_guardian_id: link!.id, valid_during: '[2026-09-01,)' }).throwOnError();
-    const { data: pickup } = await manager
+    await service.from('access_restrictions').insert({ organization_id: alfa.orgId, child_guardian_id: link!.id, valid_during: '[2026-09-01,)' }).throwOnError();
+    const { data: pickup } = await service
       .from('pickup_authorizations')
       .insert({ organization_id: alfa.orgId, child_id: mak, first_name: 'Oto', last_name: 'Predaja', valid_during: '[2026-09-01,)' })
       .select('id')

@@ -33,7 +33,7 @@ beforeAll(async () => {
   ids.d2 = await insert('children', { organization_id: alfa.orgId, first_name: 'Ivo', last_name: 'Drugi' });
   ids.d3 = await insert('children', { organization_id: alfa.orgId, first_name: 'Mia', last_name: 'Bezskupine' });
   ids.d4 = await insert('children', { organization_id: alfa.orgId, first_name: 'Ana', last_name: 'Tudja' });
-  await manager.from('enrollments').insert([
+  await service.from('enrollments').insert([
     { organization_id: alfa.orgId, child_id: ids.d1, group_id: alfa.groupId, valid_during: '[2026-09-01,)' },
     { organization_id: alfa.orgId, child_id: ids.d2, group_id: alfa.groupId, valid_during: '[2026-09-01,)' },
     { organization_id: alfa.orgId, child_id: ids.d4, group_id: otherGroupId, valid_during: '[2026-09-01,)' },
@@ -63,16 +63,18 @@ describe('D2-B: guardians and links', () => {
     expect((await manager.from('guardians').select('profile_id')).error?.code).toBe('42501');
     const forged = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: 'X', last_name: 'Y', profile_id: parentId });
     expect(forged.error).not.toBeNull();
+    const today = new Date().toISOString().slice(0, 10);
     await manager.from('child_guardians').insert([
       // Petra: two children (one without a group), different rights per child.
-      { organization_id: alfa.orgId, child_id: ids.d1, guardian_id: ids.petra, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' },
-      { organization_id: alfa.orgId, child_id: ids.d3, guardian_id: ids.petra, can_view: true, can_report_absence: false, receives_messages: false, valid_during: '[2026-09-01,)' },
+      { organization_id: alfa.orgId, child_id: ids.d1, guardian_id: ids.petra, can_view: true, can_report_absence: true, receives_messages: true, valid_during: `[${today},)` },
       // Marko: a second guardian of D1.
-      { organization_id: alfa.orgId, child_id: ids.d1, guardian_id: ids.marko, can_view: true, can_report_absence: false, receives_messages: true, valid_during: '[2026-09-01,)' },
+      { organization_id: alfa.orgId, child_id: ids.d1, guardian_id: ids.marko, can_view: true, can_report_absence: false, receives_messages: true, valid_during: `[${today},)` },
       // Ana: guardian of a child in another group.
-      { organization_id: alfa.orgId, child_id: ids.d4, guardian_id: ids.ana, can_view: true, valid_during: '[2026-09-01,)' },
+      { organization_id: alfa.orgId, child_id: ids.d4, guardian_id: ids.ana, can_view: true, valid_during: `[${today},)` },
     ], { defaultToNull: false }).throwOnError();
-    const bad = await manager.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: ids.d2, guardian_id: ids.marko, can_view: false, receives_messages: true, valid_during: '[2026-09-01,)' });
+    // Petra–D3 was entered on an earlier day (it is ended "as of today" below, which needs a start before today, D-41a).
+    await service.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: ids.d3, guardian_id: ids.petra, can_view: true, can_report_absence: false, receives_messages: false, valid_during: '[2026-09-01,)' }).throwOnError();
+    const bad = await manager.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: ids.d2, guardian_id: ids.marko, can_view: false, receives_messages: true, valid_during: `[${new Date().toISOString().slice(0, 10)},)` });
     expect(bad.error?.code).toBe('23514');
   });
 
@@ -104,8 +106,9 @@ describe('D2-B: guardians and links', () => {
   });
 
   it('ending a link removes the guardian\'s access to that child on the next request (NEG-06)', async () => {
-    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-    await manager.from('child_guardians').update({ valid_during: `[2026-09-01,${yesterday})` }).eq('guardian_id', ids.petra).eq('child_id', ids.d3).throwOnError();
+    // Ended as of today (last day yesterday): no day before today changes (D-41a).
+    const today = new Date().toISOString().slice(0, 10);
+    await manager.from('child_guardians').update({ valid_during: `[2026-09-01,${today})` }).eq('guardian_id', ids.petra).eq('child_id', ids.d3).throwOnError();
     const p = await signInWithCode(parentEmail);
     expect((await p.client.from('children').select('id')).data).toEqual([{ id: ids.d1 }]);
   });
@@ -121,7 +124,8 @@ describe('D2-B: guardians and links', () => {
 
   it('guardian records and links are audited with the actor role and without names', async () => {
     const { data } = await service.from('audit_events').select('action, actor_role, details').in('target_table', ['guardians', 'child_guardians']).eq('organization_id', alfa.orgId);
-    expect(data!.length).toBeGreaterThanOrEqual(7);
+    // 3 guardian records + 3 links + the ended link by the manager; one link is a service-key fixture (D-41a).
+    expect(data!.length).toBeGreaterThanOrEqual(8);
     expect(data!.filter((r) => r.actor_role === 'org_admin').length).toBeGreaterThanOrEqual(7);
     expect(JSON.stringify(data)).not.toMatch(/Petra|Marko|Roditelj/);
   });

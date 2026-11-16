@@ -18,7 +18,7 @@ async function guardian(key: string, receivesMessages: boolean): Promise<void> {
   await service.from('memberships').insert({ organization_id: alfa.orgId, profile_id: user.user!.id, role: 'guardian', valid_during: '[2026-01-01,)' }).throwOnError();
   const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: key === 'g1' ? 'Ana' : 'Marko', last_name: 'Razgovor' }).select('id').single().throwOnError();
   await service.from('guardians').update({ profile_id: user.user!.id }).eq('id', g!.id).throwOnError();
-  await manager.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: childId, guardian_id: g!.id, can_view: true, receives_messages: receivesMessages, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: childId, guardian_id: g!.id, can_view: true, receives_messages: receivesMessages, valid_during: '[2026-09-01,)' }).throwOnError();
   parents[key] = (await signInWithCode(address)).client;
 }
 
@@ -29,7 +29,7 @@ beforeAll(async () => {
   await manager.from('staff_assignments').insert({ organization_id: alfa.orgId, membership_id: alfa.educatorMembershipId, group_id: alfa.groupId, valid_during: '[2026-01-01,)' }).throwOnError();
   const { data } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: 'Lana', last_name: 'Razgovor' }).select('id').single().throwOnError();
   childId = data!.id as string;
-  await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   await guardian('g1', true);
   await guardian('g2', false);
   educator = (await signInWithCode(alfa.educatorEmail)).client;

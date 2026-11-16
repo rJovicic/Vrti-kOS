@@ -89,11 +89,10 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
       </form>
     </Disclose>
   );
-  const EndFields = ({ recordId, span }: { recordId: string; span: DateSpan }) => (
+  const EndFields = ({ recordId }: { recordId: string }) => (
     <>
       {ids}
       <input type="hidden" name="recordId" value={recordId} />
-      <input type="hidden" name="from" value={span.from!} />
       <label className="field">
         {t('admin.children.guardians.lastDay')}
         <input name="lastDay" type="date" required min={today} defaultValue={today} />
@@ -103,16 +102,16 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
       </button>
     </>
   );
-  const EndForm = ({ action, recordId, span, title }: { action: (f: FormData) => Promise<void>; recordId: string; span: DateSpan; title: string }) => (
+  const EndForm = ({ action, recordId, title }: { action: (f: FormData) => Promise<void>; recordId: string; title: string }) => (
     <form action={action} className="stack">
       <h3>{title}</h3>
-      <EndFields recordId={recordId} span={span} />
+      <EndFields recordId={recordId} />
     </form>
   );
-  const EndDisclose = ({ action, recordId, span, label }: { action: (f: FormData) => Promise<void>; recordId: string; span: DateSpan; label: string }) => (
+  const EndDisclose = ({ action, recordId, label }: { action: (f: FormData) => Promise<void>; recordId: string; label: string }) => (
     <Disclose label={label} tone="text">
       <form action={action} className="stack">
-        <EndFields recordId={recordId} span={span} />
+        <EndFields recordId={recordId} />
       </form>
     </Disclose>
   );
@@ -292,7 +291,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                               </form>
                             ) : null}
                             {restriction ? (
-                              <EndForm action={endRestriction} recordId={restriction.id} span={restriction.span} title={t('admin.children.guardians.endRestriction')} />
+                              <EndForm action={endRestriction} recordId={restriction.id} title={t('admin.children.guardians.endRestriction')} />
                             ) : (
                               <form action={addRestriction} className="stack danger-zone">
                                 {ids}
@@ -315,7 +314,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                                 </button>
                               </form>
                             )}
-                            <EndForm action={endLink} recordId={l.id} span={l.span} title={t('admin.children.guardians.end')} />
+                            <EndForm action={endLink} recordId={l.id} title={t('admin.children.guardians.end')} />
                           </>
                         )}
                       </div>
@@ -366,7 +365,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                     </fieldset>
                     <label className="field">
                       {t('admin.children.guardians.from')}
-                      <input name="from" type="date" required defaultValue={today} />
+                      <input name="from" type="date" required min={today} defaultValue={today} />
                     </label>
                     <button className="btn primary" type="submit">
                       {t('admin.children.guardians.linkSubmit')}
@@ -436,7 +435,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                     </label>
                     <label className="field">
                       {t('admin.children.enrollments.from')}
-                      <input name="from" type="date" required defaultValue={today} />
+                      <input name="from" type="date" required min={today} defaultValue={today} />
                     </label>
                     <button className="btn primary" type="submit" disabled={!child.groups.length}>
                       {t('admin.children.enrollments.enrol')}
@@ -500,7 +499,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                     </span>
                     <span className={`pill ${statePill[p.timing]}`}>{t(`admin.children.enrollments.state.${p.timing}`)}</span>
                     {active && p.timing === 'future' ? <CancelForm kind="pickup_authorization" recordId={p.id} /> : null}
-                    {active && p.timing === 'current' ? <EndDisclose action={endPickup} recordId={p.id} span={p.span} label={t('admin.children.pickups.end')} /> : null}
+                    {active && p.timing === 'current' ? <EndDisclose action={endPickup} recordId={p.id} label={t('admin.children.pickups.end')} /> : null}
                   </div>
                 ))}
               </div>
@@ -522,7 +521,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                     </label>
                     <label className="field">
                       {t('admin.children.pickups.from')}
-                      <input name="from" type="date" required defaultValue={today} />
+                      <input name="from" type="date" required min={today} defaultValue={today} />
                     </label>
                     <label className="field">
                       {t('admin.children.pickups.to')}

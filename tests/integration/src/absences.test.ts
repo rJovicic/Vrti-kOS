@@ -18,7 +18,7 @@ async function guardian(key: string, child: string, rights: { report: boolean })
   await service.from('memberships').insert({ organization_id: alfa.orgId, profile_id: user.user!.id, role: 'guardian', valid_during: '[2026-01-01,)' }).throwOnError();
   const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: key, last_name: 'Izostanak' }).select('id').single().throwOnError();
   await service.from('guardians').update({ profile_id: user.user!.id }).eq('id', g!.id).throwOnError();
-  await manager
+  await service
     .from('child_guardians')
     .insert({ organization_id: alfa.orgId, child_id: child, guardian_id: g!.id, can_view: true, can_report_absence: rights.report, valid_during: '[2026-09-01,)' })
     .throwOnError();
@@ -34,7 +34,7 @@ beforeAll(async () => {
   for (const name of ['Lea', 'Mia']) {
     const { data } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: name, last_name: 'Izostanak' }).select('id').single().throwOnError();
     ids[name] = data!.id as string;
-    await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+    await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids[name], group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   }
   await guardian('ana', ids.Lea!, { report: true });
   await guardian('bruno', ids.Lea!, { report: false });

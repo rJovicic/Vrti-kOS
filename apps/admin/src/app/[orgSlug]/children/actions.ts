@@ -3,7 +3,7 @@
 // D2-G: children, enrolments, guardians, links, restrictions and pickup persons. Each action re-resolves the caller
 // (DAL), validates with the shared Zod schemas and writes AS THE USER: RLS, column grants, guard triggers and the RPCs
 // (transfer, withdrawal, D-37 cancellation) make the final decision. Results travel as allow-listed flash keys.
-import { toDateRange } from '@vrticos/domain';
+import { parseDateRange, toDateRange } from '@vrticos/domain';
 import {
   fromPostgrestError,
   zCancelInput,
@@ -94,7 +94,7 @@ export async function enrolChild(formData: FormData) {
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zEnrolInput.safeParse(fields(formData));
-  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  if (!parsed.success || parsed.data.from < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
   const { error } = await ctx.supabase.from('enrollments').insert({
     organization_id: ctx.org.id,
     child_id: parsed.data.childId,
@@ -144,7 +144,8 @@ export async function linkGuardian(formData: FormData) {
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zGuardianLinkInput.safeParse(fields(formData));
-  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  // D-41a: periods start today or later (the database enforces it; this only answers early).
+  if (!parsed.success || parsed.data.from < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
   let guardianId = parsed.data.guardianId;
   if (!guardianId) {
     // A new guardian record holds names only (no contact data); the account is attached later by the invitation.
@@ -185,16 +186,29 @@ export async function updateLinkRights(formData: FormData) {
   done(ctx, 'saved', childId);
 }
 
-/** Ends a link, restriction or pickup authorization: valid through the chosen last day (today or later). */
+/**
+ * Ends a link, restriction or pickup authorization: valid through the chosen last day (today or later). The start is
+ * read from the database, never from the form, so a changed form cannot move it (D-41a; the database also refuses).
+ */
 async function endRecord(formData: FormData, table: 'child_guardians' | 'access_restrictions' | 'pickup_authorizations') {
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zEndRecordInput.safeParse(fields(formData));
   // Like D-36 for enrolments: an end is never set in the past from the admin screens.
   if (!parsed.success || parsed.data.lastDay < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
+  const { data: current, error: readError } = await ctx.supabase
+    .from(table)
+    .select('valid_during')
+    .eq('organization_id', ctx.org.id)
+    .eq('id', parsed.data.recordId)
+    .maybeSingle();
+  if (readError) dbFail(ctx, readError, childId);
+  const from = current ? parseDateRange(String(current.valid_during))?.from : null;
+  if (!from) fail(ctx, 'NOT_FOUND', childId);
+  if (parsed.data.lastDay < from) fail(ctx, 'VALIDATION_FAILED', childId);
   const { data, error } = await ctx.supabase
     .from(table)
-    .update({ valid_during: toDateRange(parsed.data.from, parsed.data.lastDay) })
+    .update({ valid_during: toDateRange(from, parsed.data.lastDay) })
     .eq('organization_id', ctx.org.id)
     .eq('id', parsed.data.recordId)
     .select('id');
@@ -241,7 +255,7 @@ export async function addRestriction(formData: FormData) {
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zRestrictionInput.safeParse(fields(formData));
-  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  if (!parsed.success || parsed.data.from < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
   const { error } = await ctx.supabase.from('access_restrictions').insert({
     organization_id: ctx.org.id,
     child_guardian_id: parsed.data.linkId,
@@ -257,7 +271,7 @@ export async function addPickup(formData: FormData) {
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zPickupInput.safeParse(fields(formData));
-  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  if (!parsed.success || parsed.data.from < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
   const { error } = await ctx.supabase.from('pickup_authorizations').insert({
     organization_id: ctx.org.id,
     child_id: parsed.data.childId,

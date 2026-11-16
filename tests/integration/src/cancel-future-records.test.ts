@@ -15,6 +15,11 @@ async function insert(table: string, row: Record<string, unknown>): Promise<stri
   if (error) throw error;
   return data!.id as string;
 }
+// Records "entered on an earlier day" (start in the past): written with the service key, as D-41a refuses them from clients.
+async function fixture(table: string, row: Record<string, unknown>): Promise<string> {
+  const { data } = await service.from(table).insert(row).select('id').single().throwOnError();
+  return data!.id as string;
+}
 const cancel = (p_kind: string, p_record_id: string, p_reason = 'plan_changed', client = manager) =>
   client.schema('api').rpc('cancel_future_record', { p_kind, p_record_id, p_reason });
 
@@ -33,8 +38,8 @@ beforeAll(async () => {
     .throwOnError();
   ids.s2 = s2!.id as string;
   ids.ivo = await insert('children', { organization_id: alfa.orgId, first_name: 'Ivo', last_name: 'Ponistenje' });
-  ids.current = await insert('enrollments', { organization_id: alfa.orgId, child_id: ids.ivo, group_id: alfa.groupId, valid_during: '[2026-09-01,)' });
-  ids.pickupNow = await insert('pickup_authorizations', { organization_id: alfa.orgId, child_id: ids.ivo, first_name: 'Mara', last_name: 'Baka', valid_during: '[2026-09-01,)' });
+  ids.current = await fixture('enrollments', { organization_id: alfa.orgId, child_id: ids.ivo, group_id: alfa.groupId, valid_during: '[2026-09-01,)' });
+  ids.pickupNow = await fixture('pickup_authorizations', { organization_id: alfa.orgId, child_id: ids.ivo, first_name: 'Mara', last_name: 'Baka', valid_during: '[2026-09-01,)' });
   ids.pickupLater = await insert('pickup_authorizations', { organization_id: alfa.orgId, child_id: ids.ivo, first_name: 'Iva', last_name: 'Teta', valid_during: `[${day(3)},)` });
 });
 

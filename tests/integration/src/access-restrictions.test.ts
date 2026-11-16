@@ -13,6 +13,11 @@ const today = new Date().toISOString().slice(0, 10);
 const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
 const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
 
+// Records "entered on an earlier day" (start in the past): written with the service key, as D-41a refuses them from clients.
+async function fixture(table: string, row: Record<string, unknown>): Promise<string> {
+  const { data } = await service.from(table).insert(row).select('id').single().throwOnError();
+  return data!.id as string;
+}
 async function insert(table: string, row: Record<string, unknown>): Promise<string> {
   const { data, error } = await manager.from(table).insert(row).select('id').single();
   if (error) throw error;
@@ -49,12 +54,12 @@ beforeAll(async () => {
   await enrolMfa(m.client);
   ids.lea = await insert('children', { organization_id: alfa.orgId, first_name: 'Lea', last_name: 'Ogranicena' });
   ids.mia = await insert('children', { organization_id: alfa.orgId, first_name: 'Mia', last_name: 'Bezskupine' });
-  await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids.lea, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: ids.lea, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   ids.ana = await insert('guardians', { organization_id: alfa.orgId, first_name: 'Ana', last_name: 'Skrbnik' });
   ids.bruno = await insert('guardians', { organization_id: alfa.orgId, first_name: 'Bruno', last_name: 'Skrbnik' });
-  ids.anaLea = await insert('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.ana, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
-  ids.anaMia = await insert('child_guardians', { organization_id: alfa.orgId, child_id: ids.mia, guardian_id: ids.ana, can_view: true, can_report_absence: false, receives_messages: false, valid_during: '[2026-09-01,)' });
-  ids.brunoLea = await insert('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.bruno, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
+  ids.anaLea = await fixture('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.ana, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
+  ids.anaMia = await fixture('child_guardians', { organization_id: alfa.orgId, child_id: ids.mia, guardian_id: ids.ana, can_view: true, can_report_absence: false, receives_messages: false, valid_during: '[2026-09-01,)' });
+  ids.brunoLea = await fixture('child_guardians', { organization_id: alfa.orgId, child_id: ids.lea, guardian_id: ids.bruno, can_view: true, can_report_absence: true, receives_messages: true, valid_during: '[2026-09-01,)' });
   await guardianAccount('ana', ids.ana);
   await guardianAccount('bruno', ids.bruno);
 });
@@ -119,6 +124,9 @@ describe('D2-C: access restrictions through the API', () => {
   });
 
   it('ending the restriction restores access on the next request, rights unchanged', async () => {
+    // As if the restriction had been entered yesterday (time passes; fixture with the service key). Lifting it as of
+    // today changes no day before today (D-41a); a restriction starting today cannot be emptied the same day.
+    await service.from('access_restrictions').update({ valid_during: `[${yesterday},)` }).eq('id', ids.active).throwOnError();
     await manager.from('access_restrictions').update({ valid_during: `[${yesterday},${today})` }).eq('id', ids.active).throwOnError();
     const ana = await reach('ana');
     expect(ana.children).toEqual(['Lea', 'Mia']);
@@ -133,8 +141,9 @@ describe('D2-C: access restrictions through the API', () => {
 
   it('restrictions are audited with the actor role and without the reference text', async () => {
     const { data } = await service.from('audit_events').select('action, actor_role, details').eq('target_table', 'access_restrictions').eq('organization_id', alfa.orgId);
-    expect(data!.length).toBe(4);
-    expect(data!.every((r) => r.actor_role === 'org_admin')).toBe(true);
+    // 4 changes by the manager + 1 fixture update with the service key ("as if entered yesterday", D-41a).
+    expect(data!.filter((r) => r.actor_role === 'org_admin')).toHaveLength(4);
+    expect(data!).toHaveLength(5);
     expect(JSON.stringify(data)).not.toMatch(/INT-/);
   });
 });

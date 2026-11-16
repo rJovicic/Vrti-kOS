@@ -58,7 +58,9 @@ describe('child forms (D2-G)', () => {
 
   it('dates, ends and invitations are validated', () => {
     expect(() => zTransferInput.parse({ childId: id, groupId: id2, effectiveOn: '12. 11. 2026.' })).toThrow();
-    expect(() => zEndRecordInput.parse({ childId: id, recordId: id2, from: '2026-11-12', lastDay: '2026-11-11' })).toThrow();
+    // D-41a: the start never travels with the form.
+    expect(() => zEndRecordInput.parse({ childId: id, recordId: id2, from: '2026-11-12', lastDay: '2026-11-12' })).toThrow();
+    expect(zEndRecordInput.parse({ childId: id, recordId: id2, lastDay: '2026-11-12' }).lastDay).toBe('2026-11-12');
     expect(zGuardianInviteInput.parse({ childId: id, guardianId: id2, email: ' Ana@Example.TEST ' }).email).toBe('ana@example.test');
   });
 });

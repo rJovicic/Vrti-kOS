@@ -616,7 +616,7 @@ export const hr = {
     MEMBERSHIP_SUSPENDED: 'Ova osoba je suspendirana u toj ulozi. Umjesto nove pozivnice ponovno aktivirajte postojeće članstvo.',
     INVITATION_LIMIT_REACHED: 'Dosegnut je najveći broj pozivnica za ovaj vrtić u jednom satu. Pokušajte ponovno kasnije.',
     EFFECTIVE_DATE_IN_PAST: 'Datum ne može biti u prošlosti. Odaberite današnji ili kasniji datum.',
-    HISTORY_IMMUTABLE: 'Prošli dani upisa ne mogu se mijenjati. Promijeniti se može samo razdoblje od danas nadalje.',
+    HISTORY_IMMUTABLE: 'Prošli dani ne mogu se mijenjati. Promjena vrijedi samo od danas nadalje; ispravak pogreške u prošlosti zaseban je postupak.',
     CHILD_WITHDRAWN: 'Dijete je ispisano. Nakon zadnjeg dana ne može se upisati, premjestiti ni povezati.',
     CHILD_NOT_ENROLLED: 'Dijete na taj datum nije upisano ni u jednu skupinu.',
     TRANSFER_SAME_GROUP: 'Dijete je na taj datum već u odabranoj skupini.',

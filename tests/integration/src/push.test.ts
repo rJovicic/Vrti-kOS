@@ -22,7 +22,7 @@ beforeAll(async () => {
   await manager.from('staff_assignments').insert({ organization_id: alfa.orgId, membership_id: alfa.educatorMembershipId, group_id: alfa.groupId, valid_during: '[2026-01-01,)' }).throwOnError();
   const { data } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: 'Lea', last_name: 'Pushić' }).select('id').single().throwOnError();
   childId = data!.id as string;
-  await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   const signedIn = await signInWithCode(alfa.educatorEmail);
   educator = signedIn.client;
   educatorToken = signedIn.token;

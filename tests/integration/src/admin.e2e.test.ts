@@ -2,7 +2,7 @@
 // (ADMIN_URL, default http://localhost:3000). Fresh synthetic kindergarten per run; seed data only for negatives.
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createKindergarten, email, latestMail } from './helpers.ts';
+import { createKindergarten, email, latestMail, service } from './helpers.ts';
 import { totp } from './totp.ts';
 
 const ADMIN = process.env.ADMIN_URL ?? 'http://localhost:3000';
@@ -143,7 +143,7 @@ describe('admin app (browser)', () => {
     // Enrolment into the new group.
     await page.locator('summary', { hasText: 'Upiši u skupinu' }).click();
     await page.locator('form:has(input[name=from]) select[name=groupId]').selectOption({ label: 'Dupini' });
-    await page.locator('form:has(select[name=groupId]) input[name=from]').fill('2026-09-01');
+    await page.locator('form:has(select[name=groupId]) input[name=from]').fill(new Date().toISOString().slice(0, 10)); // D-41a: today or later
     await submit(page, page.getByRole('button', { name: 'Upiši u skupinu' }));
     await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Dijete je upisano u skupinu.');
     await expect(page.locator('.page-header .lede').textContent()).resolves.toContain('Dupini');
@@ -184,6 +184,9 @@ describe('admin app (browser)', () => {
     expect(row).toContain('Bez pristupa');
     expect(row).toContain('E2E-117');
 
+    // As if Lana had been enrolled on an earlier day (fixture with the service key): a transfer on the first day of an
+    // enrolment is refused, and since D-41a the form can only enrol from today.
+    await service.from('enrollments').update({ valid_during: '[2026-09-01,)' }).eq('child_id', childUrl.split('/').pop()!).throwOnError();
     // Transfer from today into the kindergarten's other group; a date in the past is refused by the database (D-36).
     await page.locator('summary', { hasText: 'Premjesti u drugu skupinu' }).click();
     await page.locator('form:has(input[name=effectiveOn]) select[name=groupId]').selectOption({ label: 'Galebovi' });
@@ -216,7 +219,7 @@ describe('admin app (browser)', () => {
     await submit(page, page.getByRole('button', { name: 'Dodaj dijete' }));
     await page.locator('summary', { hasText: 'Upiši u skupinu' }).click();
     await page.locator('form:has(input[name=from]) select[name=groupId]').selectOption({ label: 'Dupini' });
-    await page.locator('form:has(select[name=groupId]) input[name=from]').fill('2026-09-01');
+    await page.locator('form:has(select[name=groupId]) input[name=from]').fill(new Date().toISOString().slice(0, 10)); // D-41a: today or later
     await submit(page, page.getByRole('button', { name: 'Upiši u skupinu' }));
 
     await page.goto(`${ADMIN}/${slug}/attendance`);

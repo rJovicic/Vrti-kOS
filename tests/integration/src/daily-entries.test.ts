@@ -22,10 +22,10 @@ async function account(key: string, role: 'educator' | 'guardian'): Promise<{ ad
 async function guardianOf(key: string, groupId: string): Promise<void> {
   const a = await account(key, 'guardian');
   const { data: c } = await manager.from('children').insert({ organization_id: alfa.orgId, first_name: 'Dijete', last_name: key }).select('id').single().throwOnError();
-  await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: c!.id, group_id: groupId, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: c!.id, group_id: groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: 'Skrbnik', last_name: key }).select('id').single().throwOnError();
   await service.from('guardians').update({ profile_id: a.userId }).eq('id', g!.id).throwOnError();
-  await manager.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: c!.id, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' }).throwOnError();
+  await service.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: c!.id, guardian_id: g!.id, can_view: true, valid_during: '[2026-09-01,)' }).throwOnError();
   parents[key] = (await signInWithCode(a.address)).client;
 }
 

@@ -74,9 +74,11 @@ export const zLinkRightsInput = z
   .strict()
   .refine((v) => v.canView || !(v.canReportAbsence || v.receivesMessages), { message: 'rights_require_view', path: ['canView'] });
 
-/** Ends a link, restriction or pickup authorization: valid through `lastDay` (inclusive). */
-export const zEndRecordInput = z.object({ childId: z.uuid(), recordId: z.uuid(), from: day, lastDay: day }).strict()
-  .refine((v) => v.from <= v.lastDay, { message: 'starts_before_ends', path: ['lastDay'] });
+/**
+ * Ends a link, restriction or pickup authorization: valid through `lastDay` (inclusive). No start date: the server
+ * reads it from the database, so a form can never move it (D-41a).
+ */
+export const zEndRecordInput = z.object({ childId: z.uuid(), recordId: z.uuid(), lastDay: day }).strict();
 
 /** FR-04-5/6: a restriction carries only an internal case reference — never a reason; the manager confirms the effect. */
 export const zRestrictionInput = z

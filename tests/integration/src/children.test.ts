@@ -33,7 +33,7 @@ describe('D2-A: children and enrolments through the API', () => {
     expect(data!.status).toBe('active');
     expect(data!.created_by).toBe((await manager.auth.getUser()).data.user!.id);
     childId = data!.id as string;
-    const enrol = await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' });
+    const enrol = await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: `[${new Date().toISOString().slice(0, 10)},)` });
     expect(enrol.error).toBeNull();
     const twice = await manager.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2027-01-01,)' });
     expect(twice.error?.code).toBe('23P01');
