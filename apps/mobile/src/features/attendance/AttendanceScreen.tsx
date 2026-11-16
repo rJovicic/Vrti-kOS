@@ -362,7 +362,7 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
                 {handover.candidates !== null ? (
                   <Button variant="secondary" label={t('attendance.handoverNotListed')} onPress={() => setHandover({ ...handover, notListed: true })} />
                 ) : null}
-                {handover.notListed ? <Notice title={t('attendance.handoverNotListedHelp')} /> : null}
+                {handover.notListed ? <Notice title={t('attendance.handoverNotListedHelp')} announce /> : null}
                 <View style={styles.row}>
                   <Button variant="secondary" label={t('attendance.handoverWithout')} onPress={() => void perform(handover.tile, handover.kind)} />
                   <Button variant="secondary" label={t('attendance.cancel')} onPress={() => setHandover(null)} />

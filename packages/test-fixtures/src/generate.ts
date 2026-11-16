@@ -8,6 +8,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const world = buildWorld();
 writeFileSync(join(root, 'supabase', 'seed.sql'), toSeedSql(world));
 
+const who = (id: string) => {
+  const p = world.people.find((x) => x.id === id)!;
+  return `${p.firstName} ${p.lastName}`;
+};
+const galebovi = world.children.filter((c) => c.groupId === world.scenario.groupId);
+const state = (childId: string) => {
+  const arrival = world.scenario.attendance.find((a) => a.childId === childId);
+  if (arrival) return `arrived at ${arrival.time}${arrival.handoverLinkId ? ', handed over by the guardian' : ''}`;
+  if (world.scenario.absence.childId === childId) return 'absence reported for today and tomorrow (by the guardian)';
+  return 'expected (not yet arrived)';
+};
+
 const rows = world.people.map((p) => {
   const roles = p.platformAdmin ? 'platform_admin' : p.memberships.map((m) => `${m.role}@${m.orgKey}`).join(', ');
   return `| ${p.email} | ${p.firstName} ${p.lastName} | ${roles} |`;
@@ -54,6 +66,20 @@ writeFileSync(
     '',
     'Only the pending invitation can be accepted: sign in as that address after an invite was sent through the',
     'admin app (the seed does not create Auth accounts for invited people).',
+    '',
+    '## D5 presentation scenario (Vrtić Alfa, Galebovi — relative to the day the seed is loaded)',
+    '',
+    'Used by docs/product/demo-script.md. Every `pnpm demo` (database reset) restores exactly this state.',
+    '',
+    '| Who / what | Synthetic value |',
+    '|---|---|',
+    `| Manager (web) | ${who(world.scenario.managerId)} — uprava.alfa@${'demo.vrtic.test'} |`,
+    `| Educator of Galebovi (mobile) | ${who(world.scenario.educatorId)} — odgojitelj.alfa.1@demo.vrtic.test |`,
+    `| Guardian (mobile) | ${who(world.scenario.conversation.guardianId)} — roditelj.alfa.1@demo.vrtic.test |`,
+    ...galebovi.map((c, i) => `| Child ${i + 1} of Galebovi | ${c.firstName} ${c.lastName} — ${state(c.id)} |`),
+    ...world.scenario.announcements.map((a) => `| Announcement | „${a.title}” — ${a.scope === 'organization' ? 'whole kindergarten, guardians and staff' : 'Galebovi, guardians'}, published ${a.daysAgo === 0 ? 'today' : 'yesterday'} |`),
+    `| Daily overviews | Galebovi, the two previous days (today's is written live in the demo) |`,
+    `| Conversation | about child 1: the guardian's message and the educator's reply (yesterday), unread for the guardian |`,
     '',
   ].join('\n'),
 );

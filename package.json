@@ -21,6 +21,8 @@
     "dev:admin": "pnpm --filter @vrticos/admin dev",
     "dev:mobile": "pnpm --filter @vrticos/mobile start",
     "demo": "node scripts/demo.mjs",
+    "demo:reset": "node scripts/guard-local.mjs && node scripts/supabase.mjs db reset",
+    "demo:verify": "pnpm --filter @vrticos/integration-tests run demo-verify",
     "db:spike": "node scripts/run-rls-spike.mjs",
     "design:sync": "pnpm --filter @vrticos/tokens design-sync",
     "test:integration": "pnpm --filter @vrticos/integration-tests run integration"

@@ -67,3 +67,22 @@ educator of the group read it.
 
 Only the pending invitation can be accepted: sign in as that address after an invite was sent through the
 admin app (the seed does not create Auth accounts for invited people).
+
+## D5 presentation scenario (Vrtić Alfa, Galebovi — relative to the day the seed is loaded)
+
+Used by docs/product/demo-script.md. Every `pnpm demo` (database reset) restores exactly this state.
+
+| Who / what | Synthetic value |
+|---|---|
+| Manager (web) | Iva Vuković — uprava.alfa@demo.vrtic.test |
+| Educator of Galebovi (mobile) | Sara Marković — odgojitelj.alfa.1@demo.vrtic.test |
+| Guardian (mobile) | Tea Vuković — roditelj.alfa.1@demo.vrtic.test |
+| Child 1 of Galebovi | Đurđica Kovačević — arrived at 07:42, handed over by the guardian |
+| Child 2 of Galebovi | Šime Ivančić — arrived at 07:55 |
+| Child 3 of Galebovi | Tomislav Zgrablić — absence reported for today and tomorrow (by the guardian) |
+| Child 4 of Galebovi | Ana Vuković — arrived at 08:05 |
+| Child 5 of Galebovi | Dario Zgrablić — expected (not yet arrived) |
+| Announcement | „Roditeljski sastanak u četvrtak” — whole kindergarten, guardians and staff, published yesterday |
+| Announcement | „Jesenski izlet u petak” — Galebovi, guardians, published today |
+| Daily overviews | Galebovi, the two previous days (today's is written live in the demo) |
+| Conversation | about child 1: the guardian's message and the educator's reply (yesterday), unread for the guardian |

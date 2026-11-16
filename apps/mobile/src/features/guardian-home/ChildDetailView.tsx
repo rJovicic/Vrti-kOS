@@ -110,7 +110,7 @@ export function ChildDetailView({ childId: id, userId, onBack, onReportAbsence }
             <Text accessibilityRole="header" style={[styles.h2, { color: c.textPrimary }]}>
               {t('childDetail.absences')}
             </Text>
-            {message ? <Notice tone={message.tone} title={message.text} /> : null}
+            {message ? <Notice tone={message.tone} title={message.text} announce /> : null}
             {child.absences.length ? (
               <View style={[styles.card, raised, { backgroundColor: c.bgSurface, borderColor: c.borderSubtle }]}>
                 {child.absences.map((a, i) => (

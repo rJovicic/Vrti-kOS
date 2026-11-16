@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "integration": "vitest run --no-file-parallelism --exclude 'src/**/*.e2e.test.ts'",
+    "integration": "vitest run --no-file-parallelism --exclude 'src/**/*.e2e.test.ts' --exclude 'src/**/*.demo.test.ts'",
     "typecheck": "tsc --noEmit",
-    "e2e": "vitest run src/admin.e2e.test.ts"
+    "e2e": "vitest run src/admin.e2e.test.ts",
+    "demo-verify": "vitest run src/demo-reset.demo.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0"

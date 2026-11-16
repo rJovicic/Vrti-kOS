@@ -74,6 +74,47 @@ export function toSeedSql(world: World): string {
       `insert into public.pickup_authorizations (id, organization_id, child_id, first_name, last_name, valid_during, created_by) values (${q(a.id)}, ${q(orgId(a.orgKey))}, ${q(a.childId)}, ${q(a.firstName)}, ${q(a.lastName)}, daterange('2026-09-01', null), null);`,
     );
   }
+  out.push(...scenarioSql(world, orgId(world.scenario.orgKey)));
   out.push('commit;', '');
   return out.join('\n');
+}
+
+/**
+ * D5 scenario SQL. Dates and times are relative to the kindergarten's "today" at load time (never in the future), and
+ * audiences and notifications come from the real database functions (private.announcement_recipients, private.notify),
+ * so the demo shows exactly what the product itself would have produced.
+ */
+function scenarioSql(world: World, org: string): string[] {
+  const sc = world.scenario;
+  const day = (daysAgo: number) => `(private.org_today(${q(org)}) - ${daysAgo})`;
+  const at = (daysAgo: number, time: string) => `least(now() - interval '1 minute', (${day(daysAgo)} + time ${q(time)}) at time zone 'Europe/Zagreb')`;
+  const out: string[] = ['-- D5 presentation scenario (relative to the load day)'];
+  for (const a of sc.attendance) {
+    out.push(
+      `insert into public.attendance_records (id, organization_id, child_id, kind, occurred_at, local_date, recorded_by, source, handover_child_guardian_id, idempotency_key) values (${q(a.id)}, ${q(org)}, ${q(a.childId)}, 'check_in', ${at(0, a.time)}, ${day(0)}, ${q(sc.educatorId)}, 'app', ${a.handoverLinkId ? q(a.handoverLinkId) : 'null'}, ${q(a.idempotencyKey)});`,
+    );
+  }
+  const ab = sc.absence;
+  out.push(
+    `insert into public.absence_records (id, organization_id, child_id, starts_on, ends_on, reported_by, source, created_at) values (${q(ab.id)}, ${q(org)}, ${q(ab.childId)}, ${day(-ab.fromToday)}, ${day(-ab.toToday)}, ${q(ab.reportedBy)}, 'guardian', ${at(0, '06:58')});`,
+  );
+  for (const a of sc.announcements) {
+    const ids = a.audienceIds.length ? `array[${a.audienceIds.map((x) => `${q(x)}::uuid`).join(', ')}]` : `'{}'::uuid[]`;
+    out.push(
+      `insert into public.announcements (id, organization_id, author_id, title, body, audience_scope, audience_ids, audience_roles, status, published_at, created_at) values (${q(a.id)}, ${q(org)}, ${q(sc.managerId)}, ${q(a.title)}, ${q(a.body)}, '${a.scope}', ${ids}, array[${a.roles.map((x) => q(x)).join(', ')}], 'published', ${at(a.daysAgo, a.time)}, ${at(a.daysAgo, a.time)});`,
+      `select private.notify(${q(org)}, array(select private.announcement_recipients(${q(a.id)})), 'announcement.published', 'announcement', ${q(a.id)});`,
+    );
+  }
+  for (const d of sc.dailyEntries) {
+    out.push(
+      `insert into public.daily_entries (id, organization_id, group_id, entry_date, body, activity_tags, status, author_id, published_at) values (${q(d.id)}, ${q(org)}, ${q(sc.groupId)}, ${day(d.daysAgo)}, ${q(d.body)}, array[${d.tags.map((x) => q(x)).join(', ')}]::text[], 'published', ${q(sc.educatorId)}, ${at(d.daysAgo, '14:20')});`,
+    );
+  }
+  const c = sc.conversation;
+  out.push(`insert into public.conversations (id, organization_id, child_id) values (${q(c.id)}, ${q(org)}, ${q(c.childId)});`);
+  for (const m of c.messages) {
+    out.push(`insert into public.messages (id, organization_id, conversation_id, sender_id, body, created_at) values (${q(m.id)}, ${q(org)}, ${q(c.id)}, ${q(m.senderId)}, ${q(m.body)}, ${at(m.daysAgo, m.time)});`);
+  }
+  out.push(`select private.notify(${q(org)}, array[${q(c.guardianId)}::uuid], 'message.received', 'conversation', ${q(c.id)});`);
+  return out;
 }

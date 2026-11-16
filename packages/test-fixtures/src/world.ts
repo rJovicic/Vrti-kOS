@@ -104,7 +104,26 @@ export interface PickupAuthorization {
   lastName: string;
 }
 
+/**
+ * D5 presentation scenario in Vrtić Alfa, group Galebovi — relative to the day the seed is loaded, so every `pnpm demo`
+ * starts from the same story: three arrivals today (one handed over by a guardian), one reported absence, one child
+ * still expected; two published announcements; the overviews of the two previous days (today's is written live);
+ * one conversation with the educator's reply unread by the guardian. All texts are fictional and group-level.
+ */
+export interface Scenario {
+  orgKey: 'alfa';
+  groupId: string;
+  educatorId: string;
+  managerId: string;
+  attendance: { id: string; idempotencyKey: string; childId: string; time: string; handoverLinkId: string | null }[];
+  absence: { id: string; childId: string; reportedBy: string; fromToday: number; toToday: number };
+  announcements: { id: string; title: string; body: string; scope: 'organization' | 'group'; audienceIds: string[]; roles: ('guardians' | 'staff')[]; daysAgo: number; time: string }[];
+  dailyEntries: { id: string; daysAgo: number; body: string; tags: string[] }[];
+  conversation: { id: string; childId: string; guardianId: string; messages: { id: string; senderId: string; body: string; daysAgo: number; time: string }[] };
+}
+
 export interface World {
+  scenario: Scenario;
   orgs: Org[];
   people: Person[];
   assignments: Assignment[];
@@ -252,5 +271,46 @@ export function buildWorld(seed = 20261111): World {
   authorize(alfaChildren[0]!, 'Ivan', 'Kos');
   authorize(alfaChildren[1]!, 'Vesna', 'Radola');
   authorize(betaChildren[0]!, 'Petra', 'Mogorović');
-  return { orgs, people, assignments, invitations, children, guardians, guardianLinks, pickupAuthorizations };
+
+  // D5 scenario — generated last so every earlier id stays stable.
+  const galebovi = alfa.groups[0]!;
+  const inGalebovi = alfaChildren.filter((c) => c.groupId === galebovi.id);
+  const educator = people.find((p) => p.email === `odgojitelj.alfa.1@${EMAIL_DOMAIN}`)!.id;
+  const linkOf = (local: string, child: Child) => guardianLinks.find((l) => l.childId === child.id && l.guardianId === guardianFor(parent(local), 'alfa').id)!.id;
+  const scenario: Scenario = {
+    orgKey: 'alfa',
+    groupId: galebovi.id,
+    educatorId: educator,
+    managerId: manager('alfa'),
+    attendance: [
+      { id: r.uuid(), idempotencyKey: r.uuid(), childId: inGalebovi[0]!.id, time: '07:42', handoverLinkId: linkOf('roditelj.alfa.1', inGalebovi[0]!) },
+      { id: r.uuid(), idempotencyKey: r.uuid(), childId: inGalebovi[1]!.id, time: '07:55', handoverLinkId: null },
+      { id: r.uuid(), idempotencyKey: r.uuid(), childId: inGalebovi[3]!.id, time: '08:05', handoverLinkId: null },
+    ],
+    absence: { id: r.uuid(), childId: inGalebovi[2]!.id, reportedBy: parent('roditelj.alfa.3').id, fromToday: 0, toToday: 1 },
+    announcements: [
+      {
+        id: r.uuid(), title: 'Roditeljski sastanak u četvrtak', scope: 'organization', audienceIds: [], roles: ['guardians', 'staff'], daysAgo: 1, time: '09:10',
+        body: 'Roditeljski sastanak održat će se u četvrtak u 17 sati u dvorani Objekta Maslina. Tema: plan aktivnosti do kraja godine.\n\nMolimo potvrdu dolaska odgojiteljima skupine.',
+      },
+      {
+        id: r.uuid(), title: 'Jesenski izlet u petak', scope: 'group', audienceIds: [galebovi.id], roles: ['guardians'], daysAgo: 0, time: '08:30',
+        body: 'U petak skupina Galebovi ide u šetnju do parka. Polazak je u 9.30, povratak do ručka. Djeci obucite udobnu obuću i jaknu.',
+      },
+    ],
+    dailyEntries: [
+      { id: r.uuid(), daysAgo: 1, body: 'Jutro smo proveli u dvorištu i skupljali lišće za jesenski pano. Nakon ručka slušali smo priču o buri i crtali oblake vjetra.', tags: ['art', 'outdoor', 'story'] },
+      { id: r.uuid(), daysAgo: 2, body: 'Pjevali smo nove jesenske pjesme i vježbali ritam na udaraljkama. Popodne smo slagali kocke u velike kule.', tags: ['music'] },
+    ],
+    conversation: {
+      id: r.uuid(),
+      childId: inGalebovi[0]!.id,
+      guardianId: parent('roditelj.alfa.1').id,
+      messages: [
+        { id: r.uuid(), senderId: parent('roditelj.alfa.1').id, body: 'Dobar dan, sutra dolazimo po dijete ranije, oko 14 sati. Hvala!', daysAgo: 1, time: '15:40' },
+        { id: r.uuid(), senderId: educator, body: 'Hvala na obavijesti, zabilježeno. Vidimo se sutra u 14 sati.', daysAgo: 1, time: '15:52' },
+      ],
+    },
+  };
+  return { scenario, orgs, people, assignments, invitations, children, guardians, guardianLinks, pickupAuthorizations };
 }

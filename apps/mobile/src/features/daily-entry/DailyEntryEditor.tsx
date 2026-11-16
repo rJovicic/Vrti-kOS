@@ -113,7 +113,7 @@ export function DailyEntryEditor({ group, onBack, onSessionExpired }: { group: H
               );
             })}
           </View>
-          {message ? <Notice tone={message.tone} title={message.text} /> : null}
+          {message ? <Notice tone={message.tone} title={message.text} announce /> : null}
           <Button label={t(published ? 'daily.saveEdit' : 'daily.publish')} disabled={!valid || busy} onPress={() => void save(true)} />
           {!published ? <Button variant="secondary" label={t('daily.saveDraft')} disabled={!valid || busy} onPress={() => void save(false)} /> : null}
         </>
