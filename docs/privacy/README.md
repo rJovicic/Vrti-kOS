@@ -20,7 +20,7 @@ započet u Fazi 0 jer utječe na arhitekturu, i **inventar podataka v0**, izrađ
 | 7 | privacy-notice-staff-draft.md | Planirano | 2 | #5 |
 | 8 | privacy-policy-draft.md | Planirano | 2 | #5 |
 | 9 | data-processing-agreement-draft.md | Planirano | 2 | Q-P01, Q-P15 ⚖️ |
-| 10 | subprocessor-register.md | Planirano | 2–3 | D-3, D-6, D-7 |
+| 10 | [subprocessor-register.md](subprocessor-register.md) | **Nacrt** (Expo/APNs/FCM odobreni D-40, neaktivni) | 2–3 | D-3, D-6, D-7, D-40 |
 | 11 | data-retention-policy.md | Planirano | 2 | Q-P09 ⚖️ |
 | 12 | data-subject-rights-procedure.md | Planirano | 2 | #1 |
 | 13 | data-breach-response-plan.md | Planirano | 2 | #9 |
