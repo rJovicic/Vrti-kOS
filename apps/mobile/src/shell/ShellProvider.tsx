@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { CORRELATION_HEADER, newCorrelationId } from '../lib/correlation';
+import { registerDevice } from '../lib/pushRegistration';
 import { signOut } from '../lib/session';
 import { supabase } from '../lib/supabase';
 import {
@@ -99,6 +100,12 @@ export function ShellProvider({ userId, children }: { userId: string; children: 
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // D-40: once the person is in, the device registers for push (no-op until a token provider is activated).
+  const ready = shellGate(status, access).kind === 'ready';
+  useEffect(() => {
+    if (ready) void registerDevice();
+  }, [ready, userId]);
 
   const value = useMemo<ShellState>(() => {
     const gate = shellGate(status, access);

@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { sessionEnd, type SessionEnd } from '../shell/navigation';
 import { SESSION_KEY, sessionStorage, supabase } from './supabase';
 import { ATTENDANCE_QUEUE_KEY } from './attendanceKeys';
+import { unregisterDevice } from './pushRegistration';
 
 interface SessionState {
   session: Session | null;
@@ -44,6 +45,8 @@ export const useSession = (): SessionState => useContext(SessionContext);
 export async function signOut(reason: SessionEnd = 'signedOut'): Promise<void> {
   userInitiatedSignOut = reason === 'signedOut';
   try {
+    // AC-08-3: the device stops receiving push for this account (needs the session, so it runs first).
+    await unregisterDevice();
     await supabase.auth.signOut({ scope: 'local' });
   } finally {
     await sessionStorage.removeItem(SESSION_KEY);
