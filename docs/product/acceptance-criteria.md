@@ -304,7 +304,12 @@ autorizacije — obvezni su prije implementacije modula i kasnije postaju pgTAP 
 - **When** E3 pokuša otvoriti razgovor na dan T+1
 - **Then** pristup je odbijen
 
-**AC-11-3 — Uprava ne čita razgovore do odluke** (FR-11-6)
+**AC-11-4 [NEG] — Drugi skrbnik ne vidi tuđi razgovor** (FR-11-1, FR-11-8; D-42, čeka implementaciju)
+- **Given** G1 i G3 su skrbnici D1, oba s `receives_messages`; G1 je razmijenio poruke s odgojiteljima S1
+- **When** G3 otvori razgovore o D1 ili zatraži razgovor G1-a po ID-u
+- **Then** G3 vidi samo vlastiti razgovor; razgovor, poruke, sudionici i obavijesti G1-a su nedostupni (isti odgovor kao za nepostojeći ID)
+
+**AC-11-3 — Uprava ne čita razgovore** (FR-11-6; D-42)
 - **When** U1 pokuša otvoriti razgovor o D1
 - **Then** pristup sadržaju je odbijen dok Q-T16 nije odlučeno
 

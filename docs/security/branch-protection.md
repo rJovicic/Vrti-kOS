@@ -1,15 +1,25 @@
 # Zaštita grane `main` (D-27, rizik R-45)
 
-- Datum: 2026-11-12 · Stanje: **nije postavljeno** — čeka radnju vlasnika repozitorija.
+- Datum provjere: 2026-11-16 · Stanje: **ruleset aktivan** (`main-protection`, ID 27104632, stvoren 2026-11-12) —
+  R-45 **ublažen**, zatvara se nakon vlasnikove potvrde prazne liste iznimaka.
 - Pravilo za uvoz: [`.github/rulesets/main-protection.json`](../../.github/rulesets/main-protection.json).
+- Potpun dokaz, iznimke i prijedlozi pojačanja: [product/decision-followup.md](../product/decision-followup.md) §5.
 
-## Zašto ovo nije postavljeno automatski
-Provjereno 2026-11-12 kroz GitHub API (popis grana): `main` ima `protected: false`. Radna sesija
-nema alat za promjenu zaštite grana ni rulesetova:
-- GitHub MCP alati nude čitanje i pisanje sadržaja, PR-ove i Actions, ali ne i rulesetove ni zaštitu grana;
-- `gh` CLI u ovoj sesiji smije se koristiti samo za pretraživanje.
+## Provjereno stanje (javni GitHub REST API, 2026-11-16, bez autentikacije)
+| Upit | Rezultat |
+|---|---|
+| `GET /repos/rJovicic/Vrti-kOS/rulesets` | jedan ruleset `main-protection`, `enforcement: active` |
+| `GET /repos/rJovicic/Vrti-kOS/rulesets/27104632` | cilj `~DEFAULT_BRANCH`, bez isključenja; pravila `deletion`, `non_fast_forward`, `pull_request` (0 odobrenja, razriješeni razgovori), `required_status_checks` (4 provjere, `integration_id` 15368, `strict: false`); `bypass_actors: []` |
+| `GET /repos/rJovicic/Vrti-kOS/rules/branches/main` | ista četiri pravila primijenjena na `main` |
+| `GET /repos/rJovicic/Vrti-kOS/branches/main/protection` | 404 „Branch not protected” — klasična zaštita grane se ne koristi (zaštita je kroz ruleset) |
 
-Zato je D-27 i dalje **otvoren**. Ne smije se označiti zatvorenim dok GitHub API ne pokaže aktivno pravilo.
+Pravila su jednaka datoteci u repozitoriju. **Nije potvrđeno:** lista iznimaka — neautenticirani odgovor nije
+pouzdan dokaz da je prazna; vlasnik je treba potvrditi u *Settings → Rules → Rulesets → main-protection → Bypass list*.
+
+### Povijest
+2026-11-12: sesija je kroz popis grana vidjela `protected: false` i nije imala alat za postavljanje rulesetova
+(GitHub MCP bez tog API-ja, `gh` samo za pretraživanje). Ruleset je uveden istog dana (10:26 CET), ali to se u
+dokumentaciji nije odrazilo do provjere 2026-11-16.
 
 ## Model (nalog vlasnika od 2026-11-12)
 | Pravilo | Vrijednost | Razlog |
@@ -38,11 +48,7 @@ bilo kojeg drugog izvora koji bi postavio status s istim imenom.
    zadana grana, a stanje je **Active**.
 3. Alternativa bez uvoza: **New branch ruleset** i ručno postaviti vrijednosti iz tablice iznad. U okviru
    „Require status checks to pass” dodati četiri provjere i odabrati izvor *GitHub Actions*.
-4. Javiti završetak. Sljedeća sesija tada čita postavke i potvrđuje ih:
-   - popis grana mora za `main` vratiti `protected: true`;
-   - API `GET /repos/{owner}/{repo}/rules/branches/main` mora vratiti sva četiri pravila.
-
-   Tek tada se D-27 i R-45 zatvaraju.
+4. (Izvedeno 2026-11-12; provjereno 2026-11-16 — vidi gore.) Preostaje potvrda prazne liste iznimaka.
 
 ## Posljedice
 - Vlasnik i dalje spaja sam, ali samo kroz PR sa zelenim CI-jem.

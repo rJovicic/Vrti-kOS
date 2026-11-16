@@ -102,6 +102,11 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] [D2] Djeca, upisi, skrbnici — plan: [architecture/d2-plan.md](architecture/d2-plan.md). **D2-A…D2-E izvedeni 2026-11-12** (djeca, upisi, skrbnici, veze s pravima po vezi, D-31, D-32, ograničenja pristupa, ovlaštene osobe za preuzimanje, premještaj i ispis, testovi, seed); D2-F, D2-G i D2-H izvedeni; D-37 proveden; slijedi D2-I; D-33 odlučen i proveden (oznaka „Ograničeno” za odgojitelje)
 - [ ] [D3…D5] prema roadmapu
 
+#### Nakon odluka D-41 i D-42 (2026-11-16) — čeka odobrenje implementacije; plan: [product/decision-followup.md](product/decision-followup.md)
+- [ ] [D-41a] Baza odbija izmjenu prošlosti na vezama, ograničenjima i ovlaštenim osobama (okidač, `HISTORY_IMMUTABLE`); administracija ne nudi početak u prošlosti; pgTAP s kontrolnom provjerom (R-54)
+- [ ] [D-42] Razgovor po djetetu i skrbniku: `conversations.guardian_id`, sudionici po razgovoru, RLS, RPC, obavijesti, mobilni popis za odgojitelja, seed, negativni testovi (AC-11-4); migracija se prekida ako postoje razgovori (Q-T19)
+- [ ] [D-41b] Zasebna operacija povijesnog ispravka (`history_corrections`, RPC uz MFA i kod razloga, administracijski postupak, audit) — nakon Q-T17, Q-T18, Q-T21
+
 ## Faza 5 (unaprijed zabilježeno)
 - [P5-1] CI provjera: tablica bez RLS-a ruši build
 - [P5-2] Secret scanning + dependency scanning u CI-u

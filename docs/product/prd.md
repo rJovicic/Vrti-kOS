@@ -116,7 +116,7 @@ su jedni o drugima i mogu se dodavati pojedinačno nakon validacije.
 | A-04 | Skrbnici imaju e-poštu i pametni telefon | intervju, podaci vrtića | Uprava može evidentirati izostanak u ime skrbnika; papirni kanal ostaje |
 | A-05 | Dnevni pregled na razini skupine je dovoljan | H-06 | Specificirati pregled po djetetu uz novu procjenu podataka |
 | A-06 | Izostanak bez razloga je dovoljan vrtiću | H-04, Q-P16 | Dodati neutralne kategorije uz pravnu procjenu |
-| A-07 | Razgovor je vezan uz dijete, ne uz pojedinog zaposlenika | H-08, D-10 | Preoblikovati FS-11 |
+| A-07 | Razgovor je vezan uz dijete, ne uz pojedinog zaposlenika. **Dopuna D-42 (2026-11-16):** razgovor je vezan uz dijete **i jednog skrbnika** | H-08, D-10 → D-42 | FS-11 usklađen |
 | A-08 | Vrtić kao javna ustanova može nabaviti SaaS kroz jednostavnu nabavu | V-4 | Promijeniti model prodaje/cijene |
 | A-09 | Vrtić je voditelj, VrtićOS izvršitelj obrade ⚖️ | DPO, pravnik (Q-P01) | Preispitati DPA, obavijesti i odgovornosti |
 

@@ -17,7 +17,7 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | Q-P08 | Prihvaćaju li DPO-i istarskih vrtića (ili osnivači) US-matične podizvršitelje? | 🏫 | Izlazna strategija prema EU hostingu |
 | Q-P09 | Rokovi čuvanja: dolasci, poruke, fotografije, dnevni izvještaji, audit logovi, računi nakon ispisa djeteta? Postoje li zakonski rokovi (pedagoška dokumentacija, arhivsko gradivo)? | ⚖️ 🏫 | Retencijska politika i automatsko brisanje |
 | Q-P10 | Je li VrtićOS dio službene pedagoške dokumentacije (onda gradivo podliježe arhivskim propisima) ili samo komunikacijski alat? | 👤 ⚖️ | Mijenja opseg, rokove i odgovornost |
-| Q-P11 | Kako postupati sa sudskim ograničenjima roditeljske skrbi, udomiteljstvom, Centrom za socijalnu skrb? | ⚖️ 🏫 | Sigurnost djeteta |
+| Q-P11 | Kako postupati sa sudskim ograničenjima roditeljske skrbi, udomiteljstvom, Centrom za socijalnu skrb? (Napomena 2026-11-16: D-42 razdvaja razgovore po skrbniku; pravni postupak i dalje otvoren.) | ⚖️ 🏫 | Sigurnost djeteta |
 | Q-P12 | Alergije i prehrambena ograničenja: nužni za sigurnost (kuhinja, odgojitelji) — ali su zdravstveni podaci (čl. 9). U MVP ili ne? | 👤 ⚖️ | Preporuka: izvan MVP-a (D-9) |
 | Q-P13 | Opažanja o razvoju djeteta — je li to "evaluacija" u smislu DPIA kriterija? Tko ih smije vidjeti? | ⚖️ 🏫 | Utječe na DPIA i dozvole |
 | Q-P14 | Treba li VrtićOS imenovati vlastitog DPO-a (čl. 37(1)(b)/(c))? Vjerojatno ne obvezno, ali preporučljivo. | ⚖️ | Povjerenje kupaca |
@@ -61,4 +61,9 @@ Oznake: ⚖️ = treba hrvatski pravnik za GDPR / DPO / stručnjak za privatnost
 | ~~Q-T13~~ | ~~Koje podatke o ovlaštenoj osobi za preuzimanje vrtić treba (telefon, odnos)? Smije li skrbnik sam predlagati/uređivati popis?~~ **Zatvoreno — odluka vlasnika 2026-11-12 (D-34):** telefon i odnos prema djetetu zasad se ne prikupljaju niti pohranjuju; skrbnik ne može sam dodavati, mijenjati ni brisati ovlaštene osobe; popis odobrava i uređuje isključivo uprava uz MFA. Prijedlog nove osobe od strane skrbnika moguća je buduća funkcionalnost izvan trenutačnog opsega; predložena osoba nema nikakvo ovlaštenje dok je uprava izričito ne odobri. | 🏫 ⚖️ |
 | Q-T14 | Do kada se javlja izostanak za isti dan i koliko unaprijed? Utječe li na prehranu/naplatu? | 🏫 |
 | Q-T15 | Trebaju li potvrde pročitanosti obavijesti? (privatnost vs. potreba vrtića) | 🏫 |
-| Q-T16 | Smije li uprava čitati razgovore skrbnika i odgojitelja (nadzor kvalitete vs. privatnost)? | 🏫 ⚖️ |
+| ~~Q-T16~~ | ~~Smije li uprava čitati razgovore skrbnika i odgojitelja (nadzor kvalitete vs. privatnost)?~~ **Odgovoreno odlukom D-42 (2026-11-16):** uprava nema pristup privatnim razgovorima. Svaka buduća promjena traži novu odluku. | 🏫 ⚖️ |
+| Q-T17 | D-41: tko smije izvršiti povijesni ispravak odnosa — samo `org_admin` ili i `director`? (prijedlog: samo `org_admin` uz MFA) | 🏫 |
+| Q-T18 | D-41: razlog ispravka samo kao kod ili i slobodna bilješka? Postoji li granica unatrag (npr. tekuća pedagoška godina)? (prijedlog: samo kod, kao D-37) | 🏫 ⚖️ |
+| Q-T19 | D-42: pravilo za postojeću zajedničku povijest razgovora ako okruženje sa stvarnim podacima postoji prije promjene modela (danas ne postoji; migracija se do odluke prekida) | 🏫 ⚖️ |
+| Q-T20 | D-42: na strani vrtića razgovor vide svi odgojitelji skupine djeteta (sada) ili jedan određeni odgojitelj? (prijedlog: tim skupine, nepromijenjeno) | 🏫 |
+| Q-T21 | D-41: obuhvaća li operacija povijesnog ispravka i upise (D-36 najavio poseban postupak)? (prijedlog: da, isti mehanizam) | 🏫 |

@@ -209,19 +209,20 @@
 | FR-10-4 | Upozorenje autoru: bez imena djece, zdravstvenih i razvojnih informacija; nema automatske analize teksta (bez AI). |
 | FR-10-5 | Push skrbnicima je opcionalan i generički ("Novi dnevni pregled"). |
 
-## FS-11 — Razgovori (Should; ovisi o D-10)
+## FS-11 — Razgovori (Should; model odlučen u D-42, 2026-11-16)
 **Svrha:** službeni kanal skrbnik ↔ odgojitelji djeteta umjesto osobnih brojeva. **Odluke:** [A-07].
 **Dozvole:** `conversation.read`, `conversation.send`, `conversation.manage` (uprava). **Podaci:** DI-19.
 
 | ID | Zahtjev |
 |---|---|
-| FR-11-1 | Razgovor je vezan uz dijete. Sudionici se računaju iz aktivnih odnosa: skrbnici s `receives_messages` i odgojitelji s važećim rasporedom na skupinu djeteta. |
+| FR-11-1 | **D-42:** razgovor je vezan uz **dijete i jednog skrbnika**. Sudionici se računaju iz aktivnih odnosa: taj skrbnik (veza važeća danas, `receives_messages`, bez aktivnog ograničenja) i odgojitelji s važećim rasporedom na skupinu djeteta (Q-T20). *Izvedba D4-F (jedan razgovor po djetetu za sve skrbnike) vrijedi do implementacije D-42.* |
 | FR-11-2 | Svaki prikaz razgovora navodi tko ga može vidjeti i očekivano vrijeme odgovora vrtića. |
 | FR-11-3 | Samo tekst (≤ 2.000 znakova) u MVP-u; bez privitaka i fotografija. |
 | FR-11-4 | Nakon premještaja/kraja rasporeda bivši odgojitelj gubi pristup cijelom razgovoru [pretpostavka; Q-T05 za povijest]. |
 | FR-11-5 | Pošiljatelj može povući poruku 5 minuta nakon slanja (prikazuje se "poruka uklonjena"). |
-| FR-11-6 | Pristup uprave sadržaju razgovora [otvoreno Q-T16 — privatnost vs. nadzor]; do odluke: uprava **ne** čita razgovore. |
+| FR-11-6 | Uprava **ne** čita privatne razgovore (D-42; Q-T16 odgovoreno). |
 | FR-11-7 | Push bez sadržaja ("Nova poruka"); tiho razdoblje za djelatnike vrijedi. |
+| FR-11-8 | **D-42:** drugi skrbnik istog djeteta nema pristup porukama, povijesti ni obavijestima tuđeg razgovora; promjena odnosa skrbnik–dijete odmah djeluje na pristup; postojeća povijest se ne razdvaja ni ne kopira automatski (Q-T19). |
 
 ## FS-12 — Jelovnik (Should)
 **Dozvole:** `menu.publish` (uprava), `menu.read`. **Podaci:** DI-20.

@@ -4,6 +4,10 @@
 (jednak `origin`, bez necommitanih promjena na početku) · **CI:** run #56 na `f610167` — sva 4 posla uspješna
 (provjereno izravno kroz GitHub API, uključujući korak „demo resets to the same presentation scenario (D5)”).
 
+> **Dodatak 2026-11-16:** vlasnik je donio odluke D-41 (R-54) i D-42 (D-10/Q-P11); zaštita `main` provjerena u
+> detalje — ruleset je aktivan od 2026-11-12. Vidi [decision-followup.md](decision-followup.md). Ostatak dokumenta je
+> snimka stanja na `f610167` i nije naknadno mijenjan, osim ispravka oznake u §3.2.
+
 > Ovo je procjena stanja, ne odobrenje razvoja. Ništa nije popravljano u sklopu ovog zadatka; nalazi su samo
 > dokumentirani. Ništa nije deployano, spojeno u `main`, niti je mijenjan hosted Supabase ili aktiviran Expo Push.
 
@@ -72,7 +76,7 @@ Oznake: ✅ implementirano i testirano · 🟡 djelomično · ❌ nije implement
 | Osoba predaje/preuzimanja s popisa, ograničeni skrbnik s oznakom (D-38 b) | ✅ | pgTAP 23 (mutacija), render 5 | — |
 | Rad bez mreže (šifrirani red, ID-ovi, brisanje pri odjavi) | ✅ (kod) | unit 7, render 6 | ponašanje SecureStorea i povratka mreže **na telefonu nije provjereno** |
 | „Opravdani/neopravdani izostanci” | ❌ ⚖️ | — | **namjerno ne postoji**: prijava je bez razloga (FR-06-2, Q-P16 ⚖️); odgojitelj ne evidentira izostanak u ime skrbnika (N-10/H-04) |
-| Dnevni pregled (nacrt, objava, izmjena istog dana) | ✅ | pgTAP 26, render 3 | ispravak ograničen na isti dan (D-39) |
+| Dnevni pregled (nacrt, objava, izmjena istog dana) | ✅ | pgTAP 26, render 3 | ispravak ograničen na isti dan (D4-E) |
 | Centar obavijesti (obavijesti vrtića, prijave izostanka) | ✅ | pgTAP 24–25, render 6 | push se ne šalje (R-56) |
 | Razgovori sa skrbnicima, povlačenje poruke 5 min | ✅ | pgTAP 27, render 5 | radno vrijeme odgovaranja nije prikazano (Q-T05) |
 | Nakon premještaja / kraja rasporeda / suspenzije | ✅ | pgTAP 19, 22, 27, 28 (NEG-08/09) | gubi pristup na sljedećem zahtjevu; offline unosi tada se odbijaju i prikazuju kao „nije poslano” |
