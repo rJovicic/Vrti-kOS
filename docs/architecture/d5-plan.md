@@ -27,3 +27,23 @@ shown to a kindergarten — synthetic data only, no production services, no real
 - `demo:verify` resets the database, so it is excluded from `pnpm test:integration` and runs as its own CI step at the
   end of the database job.
 - Today's daily overview is intentionally absent: the educator writes it live in the presentation (script step 2.8).
+
+## 4. Closure (2026-11-16)
+| Package | Result |
+|---|---|
+| D5-A | Done: scenario in `world.ts` → `seed.sql` (deterministic, CI checks it), listed in demo-accounts.md "D5 presentation scenario" |
+| D5-B | Done: `pnpm demo:reset`, `pnpm demo:verify` (`tests/integration/src/demo-reset.demo.test.ts`) passes locally and is the last CI step of the database job |
+| D5-C | Done: existing banner on every screen of both apps (admin layout, mobile root inside the safe area), unchanged text |
+| D5-D | Done: [docs/product/demo-script.md](../product/demo-script.md) — preparation, manager, educator, guardian, closing and reset, with expected results |
+| D5-E | Done: [docs/design/d5-audit.md](../design/d5-audit.md) — 17/20 → 19/20; detector source 1 → 0, rendered sign-in 0 |
+| D5-F | Done: A-01 (announced results, mobile), A-02 (multi-line fields), A-03/A-04 (admin dark mode for textarea and native controls), A-06 (side stripe) |
+| D5-G | Done: docs, CI |
+
+**Proven:** seed loads; reset restores the identical scenario (demo:verify); lint, typecheck, unit, render, pgTAP,
+integration and admin e2e pass on the seeded database; screenshots of the scenario in light and dark.
+
+**Not verified:** the mobile part of the script on a phone (R-44, R-55). Before the first presentation to a
+kindergarten, run the script once on a device (precondition written in the script, step 0).
+
+**Out of scope, unchanged:** photos, media, consents, production, pilot, real push (D-40 not activated), Q-T05, Q-T15,
+Q-T16, educators publishing announcements, D-10.
