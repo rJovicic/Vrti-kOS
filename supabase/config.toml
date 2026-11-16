@@ -406,6 +406,8 @@ deno_version = 2
 EMAIL_TRANSPORT = "mailpit"
 MAILPIT_URL = "http://supabase_inbucket_vrticos:8025"
 ALLOWED_ORIGINS = "http://localhost:3000"
+# D-40: local demo and tests use the mock adapter only (nothing leaves the machine). Real delivery is not approved.
+PUSH_ADAPTER = "mock"
 
 # One canonical Deno config for all functions (R-47): imports, lint and type checking live in functions/deno.json.
 # The path is relative to this supabase/ directory.
@@ -415,6 +417,11 @@ import_map = "./functions/deno.json"
 
 [functions.accept-invitations]
 verify_jwt = true
+import_map = "./functions/deno.json"
+
+# D-40: called by a scheduler with the service key; the function compares the key itself (new-format keys are not JWTs).
+[functions.push-dispatch]
+verify_jwt = false
 import_map = "./functions/deno.json"
 
 [analytics]

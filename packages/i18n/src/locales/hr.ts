@@ -632,6 +632,7 @@ export const hr = {
     ATTENDANCE_UNDO_EXPIRED: 'Poništavanje je moguće samo u prvih 10 sekundi. Za kasniji ispravak odaberite razlog.',
     ATTENDANCE_ALREADY_VOIDED: 'Ovaj unos je već poništen.',
     HANDOVER_INVALID: 'Odabrana osoba više nije na popisu za ovo dijete. Osvježite popis.',
+    PUSH_TOKEN_INVALID: 'Uređaj se nije mogao prijaviti za push obavijesti.',
     MESSAGE_CONTENT_INVALID: 'Poruka je obavezna i može imati najviše 2.000 znakova.',
     MESSAGE_ALREADY_WITHDRAWN: 'Poruka je već povučena.',
     MESSAGE_WITHDRAW_EXPIRED: 'Poruku je moguće povući samo u prvih 5 minuta.',

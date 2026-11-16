@@ -36,7 +36,7 @@ describe('D4-A: notifications through the API', () => {
     const { data: mine } = await educator.from('notifications').select('*');
     expect(mine).toHaveLength(1);
     expect(mine![0]).toMatchObject({ type: 'absence.reported', resource_type: 'absence_record', read_at: null, push_status: 'pending' });
-    expect(Object.keys(mine![0]!).sort()).toEqual(['created_at', 'id', 'organization_id', 'push_attempts', 'push_status', 'read_at', 'recipient_id', 'resource_id', 'resource_type', 'type']);
+    expect(Object.keys(mine![0]!).sort()).toEqual(['created_at', 'id', 'organization_id', 'push_attempts', 'push_next_attempt_at', 'push_status', 'read_at', 'recipient_id', 'resource_id', 'resource_type', 'type']);
     expect(JSON.stringify(mine)).not.toMatch(/Lea|Obavijest|Galebovi/);
     // The resource itself is read under the absence RLS.
     const { data: absence } = await educator.from('absence_records').select('id, child_id').eq('id', mine![0]!.resource_id as string);

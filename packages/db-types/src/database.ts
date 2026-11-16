@@ -60,6 +60,14 @@ export type Database = {
 "publish_announcement":
 { Args: { "p_id": string }; Returns: string
                            },
+"push_claim":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attempts": number,"notification_id": string,"organization_id": string,"tokens": (string)[],"type": Database["public"]['Enums']["notification_type"]
+            }[]
+                           },
+"push_report":
+{ Args: { "p_invalid_tokens"?: (string)[],"p_results": Json }; Returns: undefined
+                           },
 "record_absence_on_behalf":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
                            },
@@ -73,6 +81,9 @@ export type Database = {
                            },
 "record_missed_attendance":
 { Args: { "p_child_id": string,"p_idempotency_key": string,"p_kind": Database["public"]['Enums']["attendance_kind"],"p_occurred_at": string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_source"?: string }; Returns: string
+                           },
+"register_push_token":
+{ Args: { "p_platform": string,"p_token": string }; Returns: undefined
                            },
 "report_absence":
 { Args: { "p_child_id": string,"p_ends_on": string,"p_starts_on": string }; Returns: string
@@ -91,6 +102,9 @@ export type Database = {
                            },
 "undo_attendance":
 { Args: { "p_idempotency_key": string,"p_record_id": string }; Returns: string
+                           },
+"unregister_push_token":
+{ Args: { "p_token": string }; Returns: undefined
                            },
 "withdraw_child":
 { Args: { "p_child_id": string,"p_last_day": string }; Returns: undefined
@@ -709,14 +723,14 @@ isOneToOne: false
                   ]
                 },"notifications": {
                   Row: {
-                    "created_at": string,"id": string,"organization_id": string,"push_attempts": number,"push_status": string,"read_at": string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
+                    "created_at": string,"id": string,"organization_id": string,"push_attempts": number,"push_next_attempt_at": string | null,"push_status": string,"read_at": string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"organization_id": string,"push_attempts"?: number,"push_status"?: string,"read_at"?: string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
+                    "created_at"?: string,"id"?: string,"organization_id": string,"push_attempts"?: number,"push_next_attempt_at"?: string | null,"push_status"?: string,"read_at"?: string | null,"recipient_id": string,"resource_id": string,"resource_type": string,"type": Database["public"]['Enums']["notification_type"]
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"organization_id"?: string,"push_attempts"?: number,"push_status"?: string,"read_at"?: string | null,"recipient_id"?: string,"resource_id"?: string,"resource_type"?: string,"type"?: Database["public"]['Enums']["notification_type"]
+                    "created_at"?: string,"id"?: string,"organization_id"?: string,"push_attempts"?: number,"push_next_attempt_at"?: string | null,"push_status"?: string,"read_at"?: string | null,"recipient_id"?: string,"resource_id"?: string,"resource_type"?: string,"type"?: Database["public"]['Enums']["notification_type"]
                   }
                   Relationships: [
                     {
@@ -818,6 +832,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"push_tokens": {
+                  Row: {
+                    "created_at": string,"last_seen_at": string,"platform": string,"profile_id": string,"token": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"last_seen_at"?: string,"platform": string,"profile_id": string,"token": string
+                  }
+                  Update: {
+                    "created_at"?: string,"last_seen_at"?: string,"platform"?: string,"profile_id"?: string,"token"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_tokens_profile_id_fkey"
+      columns: ["profile_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"staff_assignments": {
                   Row: {
