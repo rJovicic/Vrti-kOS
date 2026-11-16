@@ -140,7 +140,8 @@ details.manage > summary { cursor: pointer; padding: var(--space-3) var(--space-
 details.manage[open] > summary { background: var(--color-accent-soft); }
 .manage-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-5); padding: var(--space-4) var(--space-5) var(--space-5); }
 .manage-body h3, .disclose-body h3 { margin: 0; font-size: var(--font-size-label); }
-.manage-body .danger-zone { border-left: 3px solid var(--color-danger-fg); padding-left: var(--space-4); }
+/* D5 audit (detector side-tab): destructive actions are marked by the heading colour, not a thick side stripe. */
+.manage-body .danger-zone h3 { color: var(--color-danger-fg); }
 .row { flex-wrap: wrap; }
 .row details.disclose[open] { flex-basis: 100%; }
 .row-inline { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; border-top: 1px solid var(--color-border-subtle); }
