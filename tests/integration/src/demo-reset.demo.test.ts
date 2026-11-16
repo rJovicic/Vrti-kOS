@@ -10,11 +10,19 @@ import { service } from './helpers.ts';
 const root = join(import.meta.dirname, '..', '..', '..');
 const ALFA_SLUG = 'alfa-demo';
 
-function reset(): void {
+async function reset(): Promise<void> {
   const guard = spawnSync('node', ['scripts/guard-local.mjs'], { cwd: root, encoding: 'utf8' });
   if (guard.status !== 0) throw new Error(`guard refused: ${guard.stderr}`);
   const r = spawnSync('node', ['scripts/supabase.mjs', 'db', 'reset'], { cwd: root, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`db reset failed: ${r.stderr.slice(-400)}`);
+  // The API reconnects to the restarted database on its own schedule (CI run #55: PGRST001 "no connection" right after
+  // the reset). Wait until it answers with the seeded data — as a presenter would before opening the apps.
+  for (let i = 0; i < 120; i++) {
+    const { data, error } = await service.from('organizations').select('id').eq('slug', ALFA_SLUG);
+    if (!error && data?.length === 1) return;
+    await new Promise((res) => setTimeout(res, 500));
+  }
+  throw new Error('the API did not come back within 60 s after the reset');
 }
 
 /** The scenario as data: what each role would see (counts and states, never row ids generated at load time). */
@@ -51,7 +59,7 @@ async function snapshot() {
 
 describe('D5: the demo resets to the same scenario', () => {
   it('reset → scenario → presentation changes → reset → identical scenario', { timeout: 240_000 }, async () => {
-    reset();
+    await reset();
     const before = await snapshot();
     // Galebovi: five children — three arrived (one handed over), one absent, one expected.
     expect(before).toMatchObject({ galebovi: 5, arrivals: 3, handovers: 1, otherEvents: 0, absences: 1, dailyEntries: 2, messages: 2 });
@@ -70,7 +78,7 @@ describe('D5: the demo resets to the same scenario', () => {
     const changed = await snapshot();
     expect(changed).not.toEqual(before);
 
-    reset();
+    await reset();
     expect(await snapshot()).toEqual(before);
   });
 });
