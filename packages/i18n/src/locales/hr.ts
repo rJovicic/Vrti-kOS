@@ -209,7 +209,9 @@ export const hr = {
   },
   conversations: {
     ledeGuardian: 'Razgovori s odgojiteljima o vašem djetetu. Službeni kanal umjesto privatnih brojeva.',
-    ledeEducator: 'Razgovori sa skrbnicima djece vaših skupina danas.',
+    ledeEducator: 'Razgovori sa skrbnicima djece vaših skupina danas — zaseban razgovor sa svakim skrbnikom.',
+    withGuardian: '{{child}}, razgovor sa skrbnikom {{guardian}}',
+    guardianLine: 'Skrbnik: {{guardian}}',
     noChildrenGuardian: 'Za vaše dijete nemate pravo na poruke s vrtićem. Za promjenu se obratite upravi vrtića.',
     noChildrenEducator: 'Danas nemate djece u dodijeljenim skupinama.',
     unread_one: '{{count}} nova poruka',

@@ -290,7 +290,7 @@ grant), `created_at`.
 - **FK** composite to `children` · **UQ** `(organization_id, child_id)` — one conversation per child (A-07)
 - **RLS** S: `can_access_conversation(id)` · I: guardian with `receives_messages` or educator of the child (`api.open_conversation(child_id)` is idempotent) · U/D: none
 - **Managers: no access to content** (SR-AUTHZ-11; confirmed by D-42)
-- **Planned change (D-42, 2026-11-16, not implemented):** one conversation per child **and guardian** — `guardian_id` NOT NULL with composite FK to `guardians`, UQ `(organization_id, child_id, guardian_id)`; participants = that guardian (link valid today, `receives_messages`, no active restriction) + educators of the child's group today. Plan: [product/decision-followup.md](../product/decision-followup.md) §4
+- **D-42 (implemented 2026-11-16, `20261118110000_conversation_per_guardian.sql`):** one conversation per child **and guardian** — `guardian_id` NOT NULL with composite FK to `guardians` RESTRICT, UQ `(organization_id, child_id, guardian_id)` replaces the per-child key; participants = `private.conversation_participant_ids(conversation)`: that guardian (link valid today, `receives_messages`, no active restriction, active membership) + every educator assigned today to the child's group (Q-T20). `api.open_conversation(child, guardian default null)` (guardian: always own record; educator: names a participant guardian), `api.message_contacts()` (who the caller can talk to today). The migration refuses to run if any conversation or message exists (Q-T19). Plan and evidence: [product/decision-followup.md](../product/decision-followup.md) §4
 - **Sens.** R3
 
 ### 5.18 `messages` — implemented in D4-F

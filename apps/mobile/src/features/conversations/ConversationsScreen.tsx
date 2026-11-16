@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { orgLocalDate } from '@vrticos/domain';
 import { radius, space, type } from '@vrticos/tokens';
 import { newCorrelationId } from '../../lib/correlation';
 import { loadConversationChildren, type ConversationChild } from '../../lib/conversations';
@@ -11,10 +10,12 @@ import { Notice } from '../../ui/Notice';
 import { useColors } from '../../ui/theme';
 import { ConversationView } from './ConversationView';
 
-/** Guardian "Poruke" / educator "Razgovori" (D4-F): the children one can talk about, then the conversation. */
-export function ConversationsScreen({ mode, kindergartens, onSessionExpired }: {
+/**
+ * Guardian "Poruke" / educator "Razgovori" (D4-F, D-42): the conversations one can have — a guardian one per child
+ * (their own), an educator one per child and guardian — then the conversation.
+ */
+export function ConversationsScreen({ mode, onSessionExpired }: {
   mode: 'guardian' | 'educator';
-  kindergartens: { id: string; timezone?: string }[];
   onSessionExpired: (e: unknown) => boolean;
 }) {
   const { t } = useTranslation();
@@ -22,22 +23,21 @@ export function ConversationsScreen({ mode, kindergartens, onSessionExpired }: {
   const [children, setChildren] = useState<ConversationChild[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState<{ id: string; name: string } | null>(null);
+  const [open, setOpen] = useState<{ id: string; name: string; guardianId?: string; guardianName?: string } | null>(null);
   const close = useCallback(() => setOpen(null), []);
 
   const load = useCallback(async () => {
     setLoading(true);
     const correlationId = newCorrelationId();
     try {
-      const tz = new Map(kindergartens.map((k) => [k.id, k.timezone]));
-      setChildren(await loadConversationChildren(mode, (orgId) => orgLocalDate(new Date(), tz.get(orgId)), correlationId));
+      setChildren(await loadConversationChildren(correlationId));
       setLoadError(null);
     } catch (e) {
       if (!onSessionExpired(e)) setLoadError(correlationId);
     } finally {
       setLoading(false);
     }
-  }, [mode, kindergartens, onSessionExpired]);
+  }, [onSessionExpired]);
   useEffect(() => {
     if (!open) void load();
   }, [load, open]);
@@ -64,22 +64,29 @@ export function ConversationsScreen({ mode, kindergartens, onSessionExpired }: {
           <Notice title={t(mode === 'educator' ? 'conversations.noChildrenEducator' : 'conversations.noChildrenGuardian')} />
         ) : (
           <View style={shellStyles.section}>
-            {children.map((x) => (
+            {children.map((x) => {
+              // Educators see one conversation per guardian (D-42); a guardian only has their own, so no name is needed.
+              const label = mode === 'educator' ? t('conversations.withGuardian', { child: x.name, guardian: x.guardianName }) : x.name;
+              return (
               <Pressable
-                key={x.childId}
+                key={`${x.childId}:${x.guardianId}`}
                 accessibilityRole="button"
-                accessibilityLabel={x.unread ? `${x.name}. ${t('conversations.unread', { count: x.unread })}` : x.name}
-                onPress={() => setOpen({ id: x.childId, name: x.name })}
+                accessibilityLabel={x.unread ? `${label}. ${t('conversations.unread', { count: x.unread })}` : label}
+                onPress={() => setOpen(mode === 'educator' ? { id: x.childId, name: x.name, guardianId: x.guardianId, guardianName: x.guardianName } : { id: x.childId, name: x.name })}
                 style={[styles.row, { backgroundColor: c.bgSurface, borderColor: c.borderSubtle }]}
               >
-                <Text style={[styles.name, { color: c.textPrimary }]}>{x.name}</Text>
+                <View style={styles.text}>
+                  <Text style={[styles.name, { color: c.textPrimary }]}>{x.name}</Text>
+                  {mode === 'educator' ? <Text style={[styles.sub, { color: c.textSecondary }]}>{t('conversations.guardianLine', { guardian: x.guardianName })}</Text> : null}
+                </View>
                 {x.unread ? (
                   <View style={[styles.badge, { backgroundColor: c.accentSoft }]}>
                     <Text style={[styles.badgeText, { color: c.textAccent }]}>{x.unread}</Text>
                   </View>
                 ) : null}
               </Pressable>
-            ))}
+              );
+            })}
           </View>
         )
       ) : null}
@@ -89,7 +96,9 @@ export function ConversationsScreen({ mode, kindergartens, onSessionExpired }: {
 
 const styles = StyleSheet.create({
   row: { minHeight: 56, borderWidth: 1, borderRadius: radius.lg, padding: space[3], flexDirection: 'row', alignItems: 'center', gap: space[3] },
-  name: { flex: 1, fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
+  text: { flex: 1, gap: 2 },
+  name: { fontSize: type.bodyStrong.size, lineHeight: type.bodyStrong.lineHeight, fontWeight: type.bodyStrong.weight },
+  sub: { fontSize: type.footnote.size, lineHeight: type.footnote.lineHeight },
   badge: { minWidth: 28, borderRadius: radius.pill, paddingHorizontal: space[2], paddingVertical: space[1], alignItems: 'center' },
   badgeText: { fontSize: type.footnote.size, fontWeight: '700' },
 });

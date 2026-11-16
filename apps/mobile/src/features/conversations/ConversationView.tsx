@@ -17,7 +17,8 @@ import { useColors } from '../../ui/theme';
  * message for 5 minutes. Staff messages are shown by role, without a name. Nothing is stored on the device.
  */
 export function ConversationView({ child, onBack, onSessionExpired, now = () => new Date() }: {
-  child: { id: string; name: string };
+  /** guardianId: set when an educator opens the conversation with one guardian (D-42); a guardian opens their own. */
+  child: { id: string; name: string; guardianId?: string; guardianName?: string };
   onBack: () => void;
   onSessionExpired: (e: unknown) => boolean;
   now?: () => Date;
@@ -32,7 +33,7 @@ export function ConversationView({ child, onBack, onSessionExpired, now = () => 
 
   const load = useCallback(async () => {
     try {
-      const next = await openConversation(child.id);
+      const next = await openConversation(child.id, child.guardianId);
       setConv(next);
       setFailed(null);
       void markConversationRead(next.id).catch(() => undefined);
@@ -40,7 +41,7 @@ export function ConversationView({ child, onBack, onSessionExpired, now = () => 
       if (onSessionExpired(e)) return;
       setFailed((e as { code?: string }).code === '42501' ? 'denied' : 'error');
     }
-  }, [child.id, onSessionExpired]);
+  }, [child.id, child.guardianId, onSessionExpired]);
   useEffect(() => {
     void load();
   }, [load]);
@@ -80,6 +81,7 @@ export function ConversationView({ child, onBack, onSessionExpired, now = () => 
       <Text accessibilityRole="header" style={[shellStyles.title, { color: c.textPrimary }]}>
         {child.name}
       </Text>
+      {child.guardianName ? <Text style={[shellStyles.meta, { color: c.textSecondary }]}>{t('conversations.guardianLine', { guardian: child.guardianName })}</Text> : null}
       {failed === 'denied' ? (
         <Notice title={t('conversations.denied')} body={t('conversations.deniedHelp')} />
       ) : failed === 'error' ? (

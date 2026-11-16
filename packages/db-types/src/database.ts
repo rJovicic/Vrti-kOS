@@ -54,8 +54,13 @@ export type Database = {
 "mark_notifications_read":
 { Args: { "p_ids"?: (string)[] }; Returns: number
                            },
+"message_contacts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "child_id": string,"conversation_id": string,"guardian_id": string,"guardian_name": string,"is_me": boolean
+            }[]
+                           },
 "open_conversation":
-{ Args: { "p_child_id": string }; Returns: string
+{ Args: { "p_child_id": string,"p_guardian_id"?: string }; Returns: string
                            },
 "publish_announcement":
 { Args: { "p_id": string }; Returns: string
@@ -409,20 +414,32 @@ isOneToOne: false
                   ]
                 },"conversations": {
                   Row: {
-                    "child_id": string,"created_at": string,"id": string,"organization_id": string
+                    "child_id": string,"created_at": string,"guardian_id": string,"id": string,"organization_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "child_id": string,"created_at"?: string,"id"?: string,"organization_id": string
+                    "child_id": string,"created_at"?: string,"guardian_id": string,"id"?: string,"organization_id": string
                   }
                   Update: {
-                    "child_id"?: string,"created_at"?: string,"id"?: string,"organization_id"?: string
+                    "child_id"?: string,"created_at"?: string,"guardian_id"?: string,"id"?: string,"organization_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "conversations_guardian_fkey"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
+      referencedRelation: "guardian_directory"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "conversations_guardian_fkey"
+      columns: ["organization_id","guardian_id"]
+isOneToOne: false
+      referencedRelation: "guardians"
+      referencedColumns: ["organization_id","id"]
+    },{
       foreignKeyName: "conversations_organization_id_child_id_fkey"
       columns: ["organization_id","child_id"]
-isOneToOne: true
+isOneToOne: false
       referencedRelation: "children"
       referencedColumns: ["organization_id","id"]
     },{

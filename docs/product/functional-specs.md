@@ -215,7 +215,7 @@
 
 | ID | Zahtjev |
 |---|---|
-| FR-11-1 | **D-42:** razgovor je vezan uz **dijete i jednog skrbnika**. Sudionici se računaju iz aktivnih odnosa: taj skrbnik (veza važeća danas, `receives_messages`, bez aktivnog ograničenja) i odgojitelji s važećim rasporedom na skupinu djeteta (Q-T20). *Izvedba D4-F (jedan razgovor po djetetu za sve skrbnike) vrijedi do implementacije D-42.* |
+| FR-11-1 | **D-42:** razgovor je vezan uz **dijete i jednog skrbnika**. Sudionici se računaju iz aktivnih odnosa: taj skrbnik (veza važeća danas, `receives_messages`, bez aktivnog ograničenja) i svi odgojitelji s važećim rasporedom na skupinu djeteta danas (Q-T20, odluka 2026-11-16). *Izvedeno 2026-11-16 (migracija `20261118110000`); do tada je vrijedio model D4-F (jedan razgovor po djetetu).* |
 | FR-11-2 | Svaki prikaz razgovora navodi tko ga može vidjeti i očekivano vrijeme odgovora vrtića. |
 | FR-11-3 | Samo tekst (≤ 2.000 znakova) u MVP-u; bez privitaka i fotografija. |
 | FR-11-4 | Nakon premještaja/kraja rasporeda bivši odgojitelj gubi pristup cijelom razgovoru [pretpostavka; Q-T05 za povijest]. |

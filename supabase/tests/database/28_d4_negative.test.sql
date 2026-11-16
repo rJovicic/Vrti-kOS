@@ -54,9 +54,9 @@ insert into public.announcements (organization_id, title, body, audience_scope, 
 insert into public.daily_entries (organization_id, group_id, entry_date, body, status, published_at) values
   ('d4900000-0000-4000-8000-00000000000a', 'd4900000-0000-4000-8000-000000000051', current_date, 'Pregled A', 'published', now()),
   ('d4900000-0000-4000-8000-00000000000b', 'd4900000-0000-4000-8000-000000000061', current_date, 'Pregled B', 'published', now());
-insert into public.conversations (organization_id, child_id) values
-  ('d4900000-0000-4000-8000-00000000000a', 'd4900000-0000-4000-8000-0000000000ca'),
-  ('d4900000-0000-4000-8000-00000000000b', 'd4900000-0000-4000-8000-0000000000cb');
+insert into public.conversations (organization_id, child_id, guardian_id) values
+  ('d4900000-0000-4000-8000-00000000000a', 'd4900000-0000-4000-8000-0000000000ca', 'd4900000-0000-4000-8000-000000000a01'),
+  ('d4900000-0000-4000-8000-00000000000b', 'd4900000-0000-4000-8000-0000000000cb', 'd4900000-0000-4000-8000-000000000b01');
 
 create function pg_temp.login(x text) returns void language plpgsql as $$
 begin

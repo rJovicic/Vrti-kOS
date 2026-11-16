@@ -1,7 +1,9 @@
-// D4-F render tests on the real Expo Router with the in-memory client: guardian "Poruke" lists only children with the
-// messaging right; a conversation says who can see it and how the kindergarten answers; staff messages appear by role;
-// sending, withdrawing (own, within 5 minutes), "poruka uklonjena", denied and error states; opening marks the
-// conversation's notifications read; educators get "Razgovori". Participants and access are proven by pgTAP 27.
+// D4-F / D-42 render tests on the real Expo Router with the in-memory client: guardian "Poruke" lists the conversations
+// api.message_contacts returns (their own, one per child); a conversation says who can see it (the guardian and the
+// group's educators — never another guardian) and how the kindergarten answers; staff messages appear by role; sending,
+// withdrawing (own, within 5 minutes), "poruka uklonjena", denied and error states; opening marks the conversation's
+// notifications read; educators get "Razgovori" with one conversation per guardian and open it by naming the guardian.
+// Participants and access are proven in the database (pgTAP 27, 31) and through the API (conversations.test.ts).
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { join } from 'node:path';
@@ -18,7 +20,6 @@ jest.mock('../../lib/supabase', () => ({
 }));
 
 const appDir = join(__dirname, '..', '..', 'app');
-const since = '[2020-01-01,)';
 const rpcCalls = (fn: string) => mockFake.requests.filter((r) => r.table === `rpc:${fn}`);
 type Row = Record<string, unknown>;
 const recent = new Date(Date.now() - 60_000).toISOString();
@@ -27,7 +28,7 @@ function guardian(): FakeState {
   const messages: Row[] = [
     { id: 'm1', body: 'Lana danas ide ranije.', created_at: '2026-11-15T07:00:00Z', withdrawn: false, mine: true, sender_kind: 'guardian', sender_name: 'Ana Babić' },
     { id: 'm2', body: 'Hvala, zabilježeno.', created_at: '2026-11-15T07:05:00Z', withdrawn: false, mine: false, sender_kind: 'staff', sender_name: null },
-    { id: 'm3', body: null, created_at: '2026-11-15T07:06:00Z', withdrawn: true, mine: false, sender_kind: 'guardian', sender_name: 'Marko Horvat' },
+    { id: 'm3', body: null, created_at: '2026-11-15T07:06:00Z', withdrawn: true, mine: false, sender_kind: 'staff', sender_name: null },
   ];
   return {
     session: session('g-1'),
@@ -38,19 +39,15 @@ function guardian(): FakeState {
         { id: 'c-lana', first_name: 'Lana', last_name: 'Babić', organization_id: ALFA.id },
         { id: 'c-nika', first_name: 'Nika', last_name: 'Babić', organization_id: ALFA.id },
       ],
-      child_guardians: [
-        { child_id: 'c-lana', receives_messages: true, valid_during: since },
-        { child_id: 'c-nika', receives_messages: false, valid_during: since },
-      ],
-      conversations: [{ id: 'conv-1', child_id: 'c-lana' }],
       notifications: [{ id: 'n1', type: 'message.received', resource_id: 'conv-1', read_at: null }],
     },
     rpc: {
+      // The database returns only Ana's own conversation (Nika: no messaging right).
+      message_contacts: () => ({ data: [{ child_id: 'c-lana', guardian_id: 'gr-ana', guardian_name: 'Ana Babić', is_me: true, conversation_id: 'conv-1' }], error: null }),
       open_conversation: () => ({ data: 'conv-1', error: null }),
       conversation_participants: () => ({
         data: [
           { kind: 'guardian', name: 'Ana Babić', is_me: true },
-          { kind: 'guardian', name: 'Marko Horvat', is_me: false },
           { kind: 'group', name: 'Galebovi', is_me: false },
         ],
         error: null,
@@ -82,20 +79,22 @@ beforeEach(() => {
 });
 
 describe('conversations (D4-F)', () => {
-  it('a guardian sees only children with the messaging right, with unread count', async () => {
+  it('a guardian sees only their own conversations (one per child with the messaging right), with unread count', async () => {
     await start(guardian());
     expect(await screen.findByLabelText('Lana Babić. 1 nova poruka')).toBeTruthy();
     expect(screen.queryByText('Nika Babić')).toBeNull();
+    expect(screen.queryByText(/Skrbnik:/)).toBeNull();
   });
 
   it('the conversation says who can see it and how the kindergarten answers; staff by role; withdrawn shown as removed', async () => {
     await start(guardian());
     await fireEvent.press(await screen.findByLabelText(/^Lana Babić/));
-    expect(await screen.findByText('Razgovor vide: vi, Marko Horvat, odgojitelji skupine Galebovi.')).toBeTruthy();
+    expect(await screen.findByText('Razgovor vide: vi, odgojitelji skupine Galebovi.')).toBeTruthy();
+    expect(rpcCalls('open_conversation')[0]!.values).toEqual({ p_child_id: 'c-lana' });
     expect(screen.getByText(hr.conversations.responseTime)).toBeTruthy();
     expect(screen.getByLabelText(/^Vi, .*: Lana danas ide ranije\.$/)).toBeTruthy();
     expect(screen.getByLabelText(/^Odgojitelj\/ica skupine, .*: Hvala, zabilježeno\.$/)).toBeTruthy();
-    expect(screen.getByLabelText(/^Marko Horvat, .*: Poruka je uklonjena\.$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Odgojitelj\/ica skupine, .*: Poruka je uklonjena\.$/)).toBeTruthy();
     // An old own message cannot be withdrawn any more.
     expect(screen.queryByText(hr.conversations.withdraw)).toBeNull();
     expect(rpcCalls('mark_notifications_read')[0]!.values).toEqual({ p_ids: ['n1'] });
@@ -130,7 +129,7 @@ describe('conversations (D4-F)', () => {
     expect(await screen.findByText(hr.errors.MESSAGE_CONTENT_INVALID)).toBeTruthy();
   });
 
-  it('an educator has "Razgovori" with the children of the groups', async () => {
+  it('an educator has "Razgovori" with one conversation per guardian and opens it by naming the guardian (D-42)', async () => {
     await start({
       session: session('e-1'),
       tables: {
@@ -139,12 +138,29 @@ describe('conversations (D4-F)', () => {
         facilities: [],
         staff_assignments: [],
         children: [{ id: 'c-lana', first_name: 'Lana', last_name: 'Babić', organization_id: ALFA.id }],
-        conversations: [],
-        notifications: [],
+        notifications: [{ id: 'n2', type: 'message.received', resource_id: 'conv-ivan', read_at: null }],
+      },
+      rpc: {
+        message_contacts: () => ({
+          data: [
+            { child_id: 'c-lana', guardian_id: 'gr-ivan', guardian_name: 'Ivan Babić', is_me: false, conversation_id: 'conv-ivan' },
+            { child_id: 'c-lana', guardian_id: 'gr-ana', guardian_name: 'Ana Babić', is_me: false, conversation_id: null },
+          ],
+          error: null,
+        }),
+        open_conversation: () => ({ data: 'conv-ivan', error: null }),
+        conversation_participants: () => ({ data: [{ kind: 'guardian', name: 'Ivan Babić', is_me: false }, { kind: 'group', name: 'Galebovi', is_me: false }], error: null }),
+        conversation_messages: () => ({ data: [], error: null }),
+        mark_notifications_read: () => ({ data: 1, error: null }),
       },
     });
     expect(await screen.findByRole('header', { name: hr.nav.conversations })).toBeTruthy();
-    expect(screen.getByLabelText('Lana Babić')).toBeTruthy();
     expect(screen.getByText(hr.conversations.ledeEducator)).toBeTruthy();
+    expect(screen.getByLabelText('Lana Babić, razgovor sa skrbnikom Ana Babić')).toBeTruthy();
+    // The unread count belongs to Ivan's conversation only.
+    await fireEvent.press(screen.getByLabelText('Lana Babić, razgovor sa skrbnikom Ivan Babić. 1 nova poruka'));
+    expect(await screen.findByText('Razgovor vide: Ivan Babić, odgojitelji skupine Galebovi.')).toBeTruthy();
+    expect(screen.getByText('Skrbnik: Ivan Babić')).toBeTruthy();
+    expect(rpcCalls('open_conversation')[0]!.values).toEqual({ p_child_id: 'c-lana', p_guardian_id: 'gr-ivan' });
   });
 });

@@ -111,7 +111,10 @@ function scenarioSql(world: World, org: string): string[] {
     );
   }
   const c = sc.conversation;
-  out.push(`insert into public.conversations (id, organization_id, child_id) values (${q(c.id)}, ${q(org)}, ${q(c.childId)});`);
+  // D-42: the conversation belongs to the child AND this guardian's record (c.guardianId is the guardian's account).
+  out.push(
+    `insert into public.conversations (id, organization_id, child_id, guardian_id) values (${q(c.id)}, ${q(org)}, ${q(c.childId)}, (select g.id from public.guardians g where g.organization_id = ${q(org)} and g.profile_id = ${q(c.guardianId)}));`,
+  );
   for (const m of c.messages) {
     out.push(`insert into public.messages (id, organization_id, conversation_id, sender_id, body, created_at) values (${q(m.id)}, ${q(org)}, ${q(c.id)}, ${q(m.senderId)}, ${q(m.body)}, ${at(m.daysAgo, m.time)});`);
   }

@@ -1,6 +1,8 @@
 // D4-F through the real API: a guardian with receives_messages and the educator of the group talk about a child; the
 // other guardian without the right and the manager (Q-T16) get nothing; withdrawal removes the text; each message notifies
-// the other side without content. Synthetic accounts only.
+// the other side without content. D-42: a second guardian of the same child with the right to messages has a separate
+// conversation and learns nothing of the first one (no messages, participants, notifications or contacts).
+// Synthetic accounts only.
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createKindergarten, email, enrolMfa, service, signInWithCode } from './helpers.ts';
 
@@ -10,13 +12,15 @@ let manager: Client;
 let educator: Client;
 let childId = '';
 const parents: Record<string, Client> = {};
+const guardianIds: Record<string, string> = {};
 
 async function guardian(key: string, receivesMessages: boolean): Promise<void> {
   const address = email(`msg-${key}`);
   const { data: user } = await service.auth.admin.createUser({ email: address, email_confirm: true });
   await service.from('profiles').insert({ id: user.user!.id, first_name: 'Racun', last_name: key }).throwOnError();
   await service.from('memberships').insert({ organization_id: alfa.orgId, profile_id: user.user!.id, role: 'guardian', valid_during: '[2026-01-01,)' }).throwOnError();
-  const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: key === 'g1' ? 'Ana' : 'Marko', last_name: 'Razgovor' }).select('id').single().throwOnError();
+  const { data: g } = await manager.from('guardians').insert({ organization_id: alfa.orgId, first_name: { g1: 'Ana', g2: 'Marko', g3: 'Ivan' }[key]!, last_name: 'Razgovor' }).select('id').single().throwOnError();
+  guardianIds[key] = g!.id as string;
   await service.from('guardians').update({ profile_id: user.user!.id }).eq('id', g!.id).throwOnError();
   await service.from('child_guardians').insert({ organization_id: alfa.orgId, child_id: childId, guardian_id: g!.id, can_view: true, receives_messages: receivesMessages, valid_during: '[2026-09-01,)' }).throwOnError();
   parents[key] = (await signInWithCode(address)).client;
@@ -32,6 +36,7 @@ beforeAll(async () => {
   await service.from('enrollments').insert({ organization_id: alfa.orgId, child_id: childId, group_id: alfa.groupId, valid_during: '[2026-09-01,)' }).throwOnError();
   await guardian('g1', true);
   await guardian('g2', false);
+  await guardian('g3', true);
   educator = (await signInWithCode(alfa.educatorEmail)).client;
 });
 
@@ -39,7 +44,7 @@ describe('D4-F: conversations through the API', () => {
   it('guardian and educator talk; the other guardian without the right and the manager see nothing (AC-11-1, AC-11-3)', async () => {
     const { data: conv, error } = await parents.g1!.schema('api').rpc('open_conversation', { p_child_id: childId });
     expect(error).toBeNull();
-    expect((await educator.schema('api').rpc('open_conversation', { p_child_id: childId })).data).toBe(conv);
+    expect((await educator.schema('api').rpc('open_conversation', { p_child_id: childId, p_guardian_id: guardianIds.g1 })).data).toBe(conv);
     expect((await parents.g1!.schema('api').rpc('send_message', { p_conversation_id: conv, p_body: 'Lana danas ide ranije.' })).error).toBeNull();
     expect((await educator.schema('api').rpc('send_message', { p_conversation_id: conv, p_body: 'Hvala, zabilježeno.' })).error).toBeNull();
 
@@ -62,6 +67,34 @@ describe('D4-F: conversations through the API', () => {
 
     expect((await parents.g1!.from('notifications').select('type, resource_id')).data).toEqual([{ type: 'message.received', resource_id: conv }]);
     expect((await educator.from('notifications').select('type, resource_id')).data).toEqual([{ type: 'message.received', resource_id: conv }]);
+  });
+
+  it('D-42: the second guardian with messages has a separate conversation and learns nothing of the first', async () => {
+    const { data: conv1 } = await parents.g1!.schema('api').rpc('open_conversation', { p_child_id: childId });
+    const { data: conv3, error } = await parents.g3!.schema('api').rpc('open_conversation', { p_child_id: childId });
+    expect(error).toBeNull();
+    expect(conv3).not.toBe(conv1);
+    expect((await parents.g3!.schema('api').rpc('send_message', { p_conversation_id: conv3, p_body: 'Ivan pita za izlet.' })).error).toBeNull();
+    // Nothing of Ana's conversation: not by RLS, not by id, not by naming her record, not in notifications or contacts.
+    expect((await parents.g3!.from('conversations').select('id')).data).toEqual([{ id: conv3 }]);
+    expect((await parents.g3!.from('messages').select('body')).data).toEqual([{ body: 'Ivan pita za izlet.' }]);
+    for (const fn of ['conversation_messages', 'conversation_participants']) {
+      const r = await parents.g3!.schema('api').rpc(fn, { p_conversation_id: conv1 });
+      expect([r.error?.code, r.error?.message]).toEqual(['42501', 'PERMISSION_DENIED']);
+    }
+    expect((await parents.g3!.schema('api').rpc('send_message', { p_conversation_id: conv1, p_body: 'upad' })).error?.code).toBe('42501');
+    expect((await parents.g3!.schema('api').rpc('open_conversation', { p_child_id: childId, p_guardian_id: guardianIds.g1 })).error?.code).toBe('42501');
+    expect((await parents.g3!.from('notifications').select('resource_id')).data).toEqual([]);
+    expect((await parents.g3!.schema('api').rpc('message_contacts')).data).toEqual([
+      { child_id: childId, guardian_id: guardianIds.g3, guardian_name: 'Ivan Razgovor', is_me: true, conversation_id: conv3 },
+    ]);
+    // Ana does not see Ivan's conversation either; the educator sees both and was notified of Ivan's message.
+    expect((await parents.g1!.from('conversations').select('id')).data).toEqual([{ id: conv1 }]);
+    expect(((await parents.g1!.from('notifications').select('resource_id')).data ?? []).every((n) => n.resource_id === conv1)).toBe(true);
+    const { data: contacts } = await educator.schema('api').rpc('message_contacts');
+    expect((contacts as { guardian_name: string }[]).map((c) => c.guardian_name).sort()).toEqual(['Ana Razgovor', 'Ivan Razgovor']);
+    expect(((await educator.from('notifications').select('resource_id')).data ?? []).some((n) => n.resource_id === conv3)).toBe(true);
+    expect((await manager.schema('api').rpc('message_contacts')).data).toEqual([]);
   });
 
   it('the sender withdraws within 5 minutes; the text is gone for everyone', async () => {

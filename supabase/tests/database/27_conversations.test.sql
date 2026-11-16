@@ -1,4 +1,5 @@
--- D4-F: conversations (migration 20261116140000_conversations.sql). AC-11-1 (participants from relationships:
+-- D4-F: conversations (migration 20261116140000_conversations.sql), per child AND guardian since D-42
+-- (20261118110000_conversation_per_guardian.sql; the D-42 negative suite is in 31_conversation_per_guardian). AC-11-1 (participants from relationships:
 -- receives_messages, no restriction; educators of the group today), AC-11-2 (former educator loses the conversation),
 -- AC-11-3 (managers no access to content), FR-11-2 (who can see it), FR-11-3/5 (text only, withdraw within 5 minutes),
 -- notifications, audit without text, NEG-01/03/09/10. Synthetic, rolled back.
@@ -60,7 +61,8 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', ('d4f00000-0000-4000-8000-0000000000' || x)::uuid, 'role', 'authenticated', 'aal', aal)::text, true);
   perform set_config('role', 'authenticated', true);
 end $$;
-create function pg_temp.conv() returns uuid language sql security definer as $$ select id from public.conversations where child_id = 'd4f00000-0000-4000-8000-0000000000d1' $$;
+create function pg_temp.conv() returns uuid language sql security definer as $$
+  select id from public.conversations where child_id = 'd4f00000-0000-4000-8000-0000000000d1' and guardian_id = 'd4f00000-0000-4000-8000-000000000a10' $$;
 create function pg_temp.msg(p_body text) returns uuid language sql security definer as $$ select id from public.messages where body = p_body $$;
 grant execute on function pg_temp.conv(), pg_temp.msg(text) to authenticated;
 
@@ -97,10 +99,10 @@ select throws_ok($$select api.open_conversation('d4f00000-0000-4000-8000-0000000
 reset role;
 select pg_temp.login('f1');
 select lives_ok($$select api.open_conversation('d4f00000-0000-4000-8000-0000000000d1')$$, 'the guardian with receives_messages opens the conversation about D1');
-select is(api.open_conversation('d4f00000-0000-4000-8000-0000000000d1'), pg_temp.conv(), 'opening again returns the same one (one per child)');
+select is(api.open_conversation('d4f00000-0000-4000-8000-0000000000d1'), pg_temp.conv(), 'opening again returns the same one (one per child and guardian, D-42)');
 reset role;
 select pg_temp.login('e1');
-select is(api.open_conversation('d4f00000-0000-4000-8000-0000000000d1'), pg_temp.conv(), 'the educator of the group opens the same conversation');
+select is(api.open_conversation('d4f00000-0000-4000-8000-0000000000d1', 'd4f00000-0000-4000-8000-000000000a10'), pg_temp.conv(), 'the educator of the group opens the same conversation by naming the guardian (D-42)');
 reset role;
 
 -- Sending, notifications, display (FR-11-2) ------------------------------------------------------------------------------

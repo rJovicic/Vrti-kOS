@@ -47,7 +47,7 @@ Prijave (kod iz Mailpita za svaku):
 | 2.6 | Odabrati ovlaštenu osobu | Odlazak zabilježen uz osobu | — |
 | 2.7 | **Obavijesti** | Prijava izostanka djeteta 3 i obavijesti vrtića s oznakom „Novo” | Obavijest ne nosi sadržaj; sadržaj se učitava uz provjeru prava |
 | 2.8 | **Danas** → „Dnevni pregled: Galebovi”: napisati 2–3 rečenice, označiti „Boravak vani”, *Objavi skrbnicima* | Upozorenje o imenima i zdravlju; „Objavljeno u …” | Pregled je na razini skupine, nikad o pojedinom djetetu |
-| 2.9 | **Razgovori** → dijete 1 | „Razgovor vide: …”, jučerašnja poruka roditelja i odgovor | Uprava ne čita razgovore (do odluke Q-T16) |
+| 2.9 | **Razgovori** → dijete 1, razgovor sa skrbnicom (roditelj.alfa.1) | Zaseban razgovor za svakog skrbnika; „Razgovor vide: …”, jučerašnja poruka roditelja i odgovor | Svaki skrbnik ima svoj razgovor (D-42); uprava ne čita razgovore |
 
 ## 3. Roditelj — što vidi obitelj (telefon, ~7 min)
 
@@ -57,7 +57,7 @@ Prijave (kod iz Mailpita za svaku):
 | 3.2 | Odjeljak **Danas** | „Dnevni pregled: Galebovi · Objavljeno u …” (iz 2.8) i obavijest „Novo” | — |
 | 3.3 | Otvoriti dnevni pregled | Tekst, oznaka aktivnosti, „Objavile odgojiteljice skupine u …”, prethodni dani | Roditelj vidi samo dane kad je njegovo dijete bilo u skupini |
 | 3.4 | **Obavijesti** → obavijest iz 1.5 | Puni tekst; oznaka „Novo” nestaje | — |
-| 3.5 | **Poruke** → dijete 1 | „Razgovor vide: vi, … i odgojitelji skupine Galebovi” | Svaki razgovor kaže tko ga vidi |
+| 3.5 | **Poruke** → dijete 1 | „Razgovor vide: vi, odgojitelji skupine Galebovi” | Drugi skrbnik istog djeteta (roditelj.alfa.2) ima zaseban razgovor i ne vidi ovaj (D-42) |
 | 3.6 | Napisati poruku i poslati; zatim *Povuci poruku* | Poruka se pojavi; nakon povlačenja „Poruka je uklonjena.” | Povlačenje samo 5 minuta |
 | 3.7 | Početna → dijete 1 → **Prijavi izostanak** za sutra | Sažetak, zatim „Prijava izostanka poslana vrtiću.” | Bez razloga i slobodnog teksta (zdravstveni podaci se ne skupljaju) |
 | 3.8 | **Profil** → Push obavijesti | Postavke po vrsti i napomena da vrtić push još nije uključio | Push ne sadrži imena ni sadržaj (D-40) |
