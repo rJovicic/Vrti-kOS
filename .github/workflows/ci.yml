@@ -80,6 +80,10 @@ jobs:
           (pnpm --filter @vrticos/admin start > admin.log 2>&1 &)
           for i in $(seq 1 60); do curl -fs -o /dev/null http://localhost:3000/sign-in && break; sleep 1; done
           pnpm --filter @vrticos/integration-tests run e2e
+      # D5: the demo is repeatable — reset, scenario, presentation-like changes, reset, identical scenario.
+      # Last step of the job because it resets the database.
+      - name: demo resets to the same presentation scenario (D5)
+        run: pnpm demo:verify
       - name: admin server log (on failure)
         if: failure()
         run: cat admin.log || true
