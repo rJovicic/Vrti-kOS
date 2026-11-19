@@ -12,7 +12,7 @@ import { createClient, type RealtimeChannel, type SupabaseClient } from '@supaba
 import { totp } from '../totp.ts';
 import { readFileSync } from 'node:fs';
 import { createServerClient } from '@supabase/ssr';
-import { STAGING_ADMIN_URL, STAGING_REF, anon, mintCode, signIn, stagingTarget } from './target.ts';
+import { STAGING_ADMIN_URL, STAGING_REF, anon, ensureSmokeManager, mintCode, signIn, stagingTarget } from './target.ts';
 
 let failures = 0;
 const pass = (name: string, detail = '') => console.log(`PASS  ${name}${detail ? ` — ${detail}` : ''}`);
@@ -136,7 +136,7 @@ const ids = await section('rls', async () => {
   check('rls: educator of Alfa cannot record attendance for a Beta child', !!badWrite.error && !/Invalid schema|fetch failed/.test(badWrite.error.message), badWrite.error?.message ?? 'write accepted');
 
   // AAL2: a manager enrols TOTP like the admin app does, then removes the factor so the operator can enrol their own.
-  const manager = await signIn('uprava.alfa@demo.vrtic.test');
+  const manager = await signIn(await ensureSmokeManager());
   const { data: enrol, error: enrolErr } = await manager.auth.mfa.enroll({ factorType: 'totp', friendlyName: `smoke-${randomUUID().slice(0, 6)}` });
   if (enrolErr || !enrol) throw new Error(`mfa enroll: ${enrolErr?.message}`);
   try {
@@ -277,7 +277,7 @@ if (ids) {
 
   // ── 6. Admin on Railway: /api/live streams hints from the server-side subscription (token never in the browser) ───
   await section('admin-live', async () => {
-    const manager = await signIn('uprava.alfa@demo.vrtic.test');
+    const manager = await signIn(await ensureSmokeManager());
     const { data: enrol, error: enrolErr } = await manager.auth.mfa.enroll({ factorType: 'totp', friendlyName: `smoke-live-${randomUUID().slice(0, 6)}` });
     if (enrolErr || !enrol) throw new Error(`mfa enroll: ${enrolErr?.message}`);
     const abort = new AbortController();

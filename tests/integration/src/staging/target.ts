@@ -66,3 +66,36 @@ export async function signIn(email: string): Promise<SupabaseClient> {
   if (error || !data.session) throw new Error(`verifyOtp failed for ${email}: ${error?.message}`);
   return client;
 }
+
+/** Synthetic manager used only by the smoke run, so it never touches accounts people test with by hand. */
+export const SMOKE_MANAGER = 'smoke.uprava@demo.vrtic.test';
+
+/**
+ * Ensures the smoke manager exists (org_admin of the synthetic Vrtić Alfa) and has no MFA factor left over from an
+ * interrupted run. Operator-only (secret key); touches nothing but this one synthetic account.
+ */
+export async function ensureSmokeManager(): Promise<string> {
+  assertSynthetic(SMOKE_MANAGER);
+  const admin = operator();
+  let userId: string | undefined;
+  const created = await admin.auth.admin.createUser({ email: SMOKE_MANAGER, email_confirm: true });
+  if (created.data.user) userId = created.data.user.id;
+  else {
+    for (let page = 1; !userId && page <= 10; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 100 });
+      if (error) throw new Error(`listUsers: ${error.message}`);
+      userId = data.users.find((u) => u.email === SMOKE_MANAGER)?.id;
+      if (data.users.length < 100) break;
+    }
+  }
+  if (!userId) throw new Error('smoke manager could not be created or found');
+  const { data: org } = await admin.from('organizations').select('id').eq('slug', 'alfa-demo').single().throwOnError();
+  await admin.from('profiles').upsert({ id: userId, first_name: 'Smoke', last_name: 'Uprava' }, { onConflict: 'id', ignoreDuplicates: true }).throwOnError();
+  const { data: m } = await admin.from('memberships').select('id').eq('profile_id', userId).eq('organization_id', org!.id);
+  if (!m?.length) {
+    await admin.from('memberships').insert({ organization_id: org!.id, profile_id: userId, role: 'org_admin', valid_during: '[2026-01-01,)' }).throwOnError();
+  }
+  const { data: factors } = await admin.auth.admin.mfa.listFactors({ userId });
+  for (const f of factors?.factors ?? []) await admin.auth.admin.mfa.deleteFactor({ userId, id: f.id });
+  return SMOKE_MANAGER;
+}
