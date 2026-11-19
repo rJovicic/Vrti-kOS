@@ -111,9 +111,13 @@ temporary `smoke.lozinka.*@demo.vrtic.test` account.
 
 **Expo Go is enough.** Every native module of `apps/mobile` ships in Expo Go (expo-secure-store, expo-router,
 expo-localization, expo-constants, expo-linking, react-native-screens, safe-area-context); Realtime is plain WebSocket in
-supabase-js. Push registration has no provider (D-40): no Expo Push, APNs or FCM credentials exist or are needed. The
-app uses Expo SDK 58: the App Store Expo Go must support SDK 58 (Expo Go shows an "incompatible SDK" message
-otherwise; then a development build is needed, which requires an Expo account and is not part of this approval).
+supabase-js. Push registration has no provider (D-40): no Expo Push, APNs or FCM credentials exist or are needed.
+Checked on 2026-11-19: every native dependency matches the version that `expo/bundledNativeModules.json` of SDK 58
+expects (the set Expo Go ships); the rest is plain JavaScript (supabase-js, i18next, react-i18next). SDK 58 is the
+current stable release (`npm view expo dist-tags`: `latest` = 58.0.26), and the App Store Expo Go tracks the latest SDK.
+The Expo version API could not be reached from the cloud session (network policy), so the App Store build itself was
+not inspected: if Expo Go shows "incompatible SDK", update Expo Go; only if that fails is a development build needed
+(Expo account, not part of this approval).
 A staging iOS bundle was exported (`expo export --platform ios`) and passed the CI secret scan. **Not yet verified on a
 device** (R-44, R-55).
 
@@ -121,6 +125,8 @@ device** (R-44, R-55).
 2. On the laptop (same Wi-Fi as the phone): create `apps/mobile/.env.local` with
    `EXPO_PUBLIC_SUPABASE_URL=https://hfwlfdgzgulbutnjttnq.supabase.co`, the staging publishable key
    (`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`, public by design) and `EXPO_PUBLIC_APP_ENV=staging`.
+   `pnpm demo` rewrites this file with local values; set it again afterwards. The app has no built-in host: without the
+   file it targets `127.0.0.1` (local stack), never a hosted project.
 3. `pnpm install`, then `pnpm --filter @vrticos/mobile start` (if the phone cannot reach the laptop:
    `pnpm --filter @vrticos/mobile start -- --tunnel`).
 4. Scan the QR code with the iPhone camera → it opens in Expo Go. The "DEMO: izmišljeni podaci" bar must be visible.
@@ -129,6 +135,13 @@ device** (R-44, R-55).
 6. Live check (D-43): keep the educator's "Danas" screen open on the phone; in the admin (§7) or a second phone record
    an arrival or send a message — the list updates within a few seconds without pulling to refresh. Put the phone in
    flight mode, record another arrival, switch the network back on: the screen refetches on reconnect.
+
+The full manual protocol (10 scenarios with expected results, failure meaning and technical traces):
+[product/iphone-test-protocol.md](../product/iphone-test-protocol.md).
+
+**Smoke account.** The smoke run uses its own synthetic manager `smoke.uprava@demo.vrtic.test` (org_admin of Vrtić
+Alfa, created on first use; its MFA factors are reset before each run), so accounts used for manual testing — whose
+TOTP the tester enrols — are never touched.
 
 ## 7. Admin on staging
 
@@ -169,7 +182,9 @@ then revoke the legacy secret) and **API Keys** → Legacy → disable. Both are
 
 **Supabase personal access token (PAT).** It was used for the migrations, settings, function deploys and the
 configuration comparison. It is account-wide (all projects of the account), so keep it only while staging work is
-active. It was not exposed. Revocation is an owner action (no API for it):
+active. It was not exposed. **Still needed** until the physical iPhone test is done: the operator uses it to read the
+staging secret key for sign-in codes, to run the configuration comparison and to apply migrations. Not needed by any
+app, CI or Railway. Revocation is an owner action (no API for it), after the device test:
 Dashboard → avatar → **Account preferences → Access Tokens → Revoke**, then remove the `api.supabase.com` network
 secret from this cloud environment (environment settings → Network secrets). Afterwards the smoke prints
 `config: SKIPPED` until a new token is provided for a run; no new token is created by Claude.

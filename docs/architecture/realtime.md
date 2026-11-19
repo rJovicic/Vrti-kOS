@@ -48,7 +48,7 @@ Realtime  ── delivers committed messages only ──►  channel 'user:<id>'
 | Client | How | Token |
 |---|---|---|
 | Mobile (`apps/mobile/src/lib/live.tsx`) | `LiveEventsProvider` subscribes to `user:<id>` after `realtime.setAuth()`; screens call `useLiveRefresh(kinds, load)` (attendance, conversations, conversation view, notifications, home) | session token from the keychain; supabase-js sends refreshed tokens to Realtime |
-| Admin (`/api/live` + `LiveRefresh`) | the browser opens an `EventSource('/api/live')`; the **server** subscribes with the caller's token from the httpOnly cookie and forwards validated hints; the page calls `router.refresh()` | never in the browser (SR-WEB-03); stream ends ≤ 10 min / before token expiry, then reconnects through the proxy that refreshes the session |
+| Admin (`/api/live` + `LiveRefresh`) | the browser opens an `EventSource('/api/live')`; the **server** subscribes with the caller's token from the httpOnly cookie and forwards validated hints; the page calls `router.refresh()` | never in the browser (SR-WEB-03; staging smoke checks the stream carries none); the stream ends ≤ 10 min / before token expiry and the browser reconnects through the proxy that refreshes the session (not automatically tested, §5) |
 | Shared (`packages/domain/src/live-events.ts`) | strict payload parser (unknown kinds, non-uuid ids and extra fields dropped), de-duplication by message id, `onResync` after a drop or a failed first join, coalescing of bursts (400 ms) | — |
 
 **Reconnect.** Realtime does not replay messages sent while a client was disconnected. Every client refetches what it
@@ -61,8 +61,8 @@ A hint delivered twice only causes a second refetch of the same rows.
 | Scenario | Local (pgTAP 34 / integration / e2e) | CI | Staging (smoke 2026-11-19) |
 |---|---|---|---|
 | Attendance visible to the manager without refresh | ✅ integration (event + refetch), ✅ admin e2e (open page updates, no reload) | ✅ #71 | ✅ director receives the event; ✅ Railway `/api/live` streams it to an MFA manager |
-| Message to the right participant only | ✅ pgTAP, integration (second guardian gets nothing) | ✅ | ✅ (second guardian of the same child: 0 events) |
-| Notification and announcement to the right audience | ✅ pgTAP (audience, draft → managers only, archive → previous audience), integration | ✅ | notification via message ✅; announcement local only |
+| Message to the right participant only | ✅ pgTAP (new and withdrawn), integration (second guardian gets nothing) | ✅ | ✅ (second guardian of the same child: 0 events) |
+| Notification and announcement to the right audience | ✅ pgTAP (audience, draft → managers only, archive and audience change → previous and new audience, no title or text in the event), integration | ✅ | notification via message ✅; announcement local only |
 | Alfa does not receive Beta | ✅ pgTAP, integration | ✅ | ✅ (Beta manager: 0 events) |
 | Second guardian gets no private messages | ✅ | ✅ | ✅ |
 | Former educator, **subscription kept open** | ✅ integration (channel still `joined`, 0 events), pgTAP | ✅ | — (local proof) |
@@ -79,8 +79,15 @@ A hint delivered twice only causes a second refetch of the same rows.
 ## 5. Limits
 
 - Revocation of the **channel** itself is not instantaneous on Supabase (cached per connection); this design does not
-  depend on it, because the channel only ever authorizes the person's own topic. A suspended account keeps a joined
-  channel until its token expires (≤ 15 min, SR-SESS-02) but receives no events, because the database no longer lists it
-  as a recipient.
+  depend on it, because the channel only ever authorizes the person's own topic. A person whose membership, assignment
+  or link ends keeps an open channel (the Auth account and its token refresh are unaffected) but receives no further
+  events, because the database no longer lists them as a recipient. Only deleting or banning the Auth account ends the
+  channel, at the latest when the current access token expires (≤ 15 min, SR-SESS-02; Supabase docs) — not tested.
 - Hints after the fact cannot be recalled. They contain no content.
 - Local Realtime cannot be set to `private_only`; the public-channel refusal is proved on staging.
+- The admin stream's planned end before token expiry and the browser's reconnect through the session-refreshing proxy
+  are implemented but **not covered by an automated test** (it needs a session older than the 15-minute token).
+- Retention of `realtime.messages` is managed by Supabase Realtime (daily partitions; on staging on 2026-11-19 the
+  partitions ran from the previous day to three days ahead). The deletion period itself is not yet observed (R-53).
+- Not load-tested: one row per recipient per event; a group check-in of 25 children with 3 staff and 2 managers creates
+  125 rows. Any load test needs a cost estimate first (free plan limits).

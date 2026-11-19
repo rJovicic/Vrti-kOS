@@ -51,7 +51,7 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 | ST-TEN-06 | Svaki view i RPC izložen API-ju pozvan kao U1 i U9 | Vraća samo podatke vlastitog vrtića | L2 | SR-TEN-06, SR-API-02 |
 | ST-TEN-07 | U1 dohvaća postojeći ID zapisa Bete i nepostojeći ID; uspoređuje status, tijelo, zaglavlja i brojače (`count`) | Identični odgovori — nema otkrivanja postojanja | L3 | SR-API-04 |
 | ST-TEN-08 | Realtime (D-43): pretplata na tuđu temu, javni kanal, slanje s klijenta, izgubljeno pravo uz otvorenu pretplatu, drugi vrtić, drugi skrbnik, premještaj, ponovno spajanje, duplikati | Prima samo vlastitu temu; baza šalje samo onima koji smiju čitati u tom trenutku; nema sadržaja u porukama | L3 | SR-API-05 |
-|  | ↳ stanje 2026-11-19 | ✅ pgTAP `34_realtime_broadcast` (31), integracija `realtime.test.ts` (9, stvarni lokalni Realtime), admin e2e (osvježavanje bez ponovnog učitavanja), staging `smoke.ts` (realtime i `/api/live`); kontrolna provjera: oslabljena politika kanala obara test uljeza ([architecture/realtime.md](../architecture/realtime.md)) | L1–L3 | SR-API-05 |
+|  | ↳ stanje 2026-11-19 | ✅ pgTAP `34_realtime_broadcast` (35), integracija `realtime.test.ts` (9, stvarni lokalni Realtime), admin e2e (osvježavanje bez ponovnog učitavanja), staging `smoke.ts` (realtime i `/api/live`); kontrolna provjera: oslabljena politika kanala obara test uljeza ([architecture/realtime.md](../architecture/realtime.md)) | L1–L3 | SR-API-05 |
 
 ### 3.3 Pristup skrbnika djeci
 | ID | Scenarij | Očekivano | Razina | SR |

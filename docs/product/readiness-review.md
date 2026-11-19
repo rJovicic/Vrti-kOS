@@ -312,3 +312,12 @@ Odvojeno prema vrsti dokaza:
   vraćaju 401.
 - **Nije dokazano:** rad na fizičkom iPhoneu (R-44, R-55), ponašanje pod opterećenjem.
 - R-59 zatvoren; R-60 i R-61 ostaju ublaženi; R-58 ostaje zatvoren (bez regresije).
+
+## Dodatak 2026-11-19 (3) — završetak D-43 i priprema fizičkog testa
+
+- CI #72 zelen; lokalni niz i staging smoke (46/46) ponovno prolaze nakon proširenja pgTAP-a 34 i izmjene smokea.
+- Ublažene tvrdnje bez automatskog dokaza: kraj SSE streama prije isteka tokena i ponovno spajanje preglednika;
+  zatvaranje Realtime kanala (samo brisanje/zabrana računa, ne promjena članstva — tada kanal ostaje, ali događaji ne
+  stižu, što je dokazano).
+- Fizički test na iPhoneu pripremljen ([iphone-test-protocol.md](iphone-test-protocol.md)), **nije izveden**: R-44 i
+  R-55 ostaju otvoreni. Opterećenje Realtimea nije testirano (procjena troška prije bilo kakvog testa opterećenja).
