@@ -1,0 +1,29 @@
+{
+  "_comment": "Security-relevant settings of the hosted staging project (vrticos-staging). The hosted project does not read supabase/config.toml; these values are applied by hand (docs/architecture/staging.md §3) and checked by smoke.ts. Change both together, never only one.",
+  "postgrest": { "db_schema": "public,api", "max_rows": 100 },
+  "auth": {
+    "site_url": "https://admin-staging-7d208881.up.railway.app",
+    "uri_allow_list": "https://admin-staging-7d208881.up.railway.app/**",
+    "disable_signup": true,
+    "external_anonymous_users_enabled": false,
+    "external_phone_enabled": false,
+    "jwt_exp": 900,
+    "mailer_otp_length": 6,
+    "mailer_otp_exp": 600,
+    "refresh_token_rotation_enabled": true,
+    "security_manual_linking_enabled": false,
+    "security_update_password_require_reauthentication": true,
+    "password_min_length": 12,
+    "hook_custom_access_token_enabled": true,
+    "hook_custom_access_token_uri": "pg-functions://postgres/auth_hooks/custom_access_token",
+    "mfa_totp_enroll_enabled": true,
+    "mfa_totp_verify_enabled": true,
+    "mfa_phone_enroll_enabled": false,
+    "mfa_phone_verify_enabled": false
+  },
+  "realtime": { "private_only": true, "presence_enabled": false },
+  "legacy_api_keys_enabled": false,
+  "signing_keys": "only ES256 in use; every other key revoked",
+  "functions": { "invite-member": true, "accept-invitations": true, "push-dispatch": false },
+  "function_secrets_absent": ["PUSH_ACTIVATION_APPROVED", "EXPO_ACCESS_TOKEN"]
+}
