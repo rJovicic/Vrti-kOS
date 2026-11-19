@@ -5,7 +5,7 @@
 -- clients; D-37 unchanged. Synthetic, rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(54);
+select plan(61);
 
 insert into auth.users (id, email, aud, role, email_confirmed_at)
 select ('d2200000-0000-4000-8000-0000000000' || x)::uuid, 'sd-' || x || '@t.test', 'authenticated', 'authenticated', now()
@@ -182,6 +182,49 @@ select is((select count(*)::int from public.attendance_records where child_id in
 select is((select count(*)::int from public.absence_records where child_id in (pg_temp.c('d1'), pg_temp.c('d4'))), 2, 'no absence record was touched');
 select is((select count(*)::int from public.messages where organization_id = 'd2200000-0000-4000-8000-00000000000a'), 2, 'no message was touched');
 select is((select count(*)::int from public.pickup_authorizations where id = pg_temp.id('b002') and cancelled_at is null), 1, 'the refused pickup is unchanged');
+
+-- Correction 2026-11-19 (migration 20261119130000): an absence depends on a record through the days it covers, not
+-- only through the day it was reported. Own data; earlier assertions above are unchanged.
+insert into auth.users (id, email, aud, role, email_confirmed_at)
+select ('d2200000-0000-4000-8000-0000000000' || x)::uuid, 'sd-' || x || '@t.test', 'authenticated', 'authenticated', now() from unnest(array['f7', 'f8']) x;
+insert into public.profiles (id, first_name, last_name) select id, 'Racun', split_part(email, '@', 1) from auth.users where email in ('sd-f7@t.test', 'sd-f8@t.test');
+insert into public.memberships (organization_id, profile_id, role, valid_during)
+select 'd2200000-0000-4000-8000-00000000000a', ('d2200000-0000-4000-8000-0000000000' || x)::uuid, 'guardian', daterange(current_date - 30, null) from unnest(array['f7', 'f8']) x;
+insert into public.children (id, organization_id, first_name, last_name, created_by)
+select ('d2200000-0000-4000-8000-0000000000' || x)::uuid, 'd2200000-0000-4000-8000-00000000000a', 'Dijete', x, null from unnest(array['d6', 'd7', 'd8', 'd9']) x;
+insert into public.enrollments (id, organization_id, child_id, group_id, valid_during, created_by)
+select ('d2200000-0000-4000-8000-00000000e0' || x)::uuid, 'd2200000-0000-4000-8000-00000000000a', ('d2200000-0000-4000-8000-0000000000' || x)::uuid,
+       'd2200000-0000-4000-8000-000000000051', daterange(current_date, null), null from unnest(array['d6', 'd7', 'd8', 'd9']) x;
+insert into public.guardians (id, organization_id, profile_id, first_name, last_name, created_by) values
+  ('d2200000-0000-4000-8000-000000000a70', 'd2200000-0000-4000-8000-00000000000a', 'd2200000-0000-4000-8000-0000000000f7', 'Skrbnik', 'f7', null),
+  ('d2200000-0000-4000-8000-000000000a80', 'd2200000-0000-4000-8000-00000000000a', 'd2200000-0000-4000-8000-0000000000f8', 'Skrbnik', 'f8', null);
+insert into public.child_guardians (id, organization_id, child_id, guardian_id, can_view, can_report_absence, valid_during, created_by) values
+  ('d2200000-0000-4000-8000-00000000c070', 'd2200000-0000-4000-8000-00000000000a', 'd2200000-0000-4000-8000-0000000000d1', 'd2200000-0000-4000-8000-000000000a70', true, true, daterange(current_date, null), null),
+  ('d2200000-0000-4000-8000-00000000c080', 'd2200000-0000-4000-8000-00000000000a', 'd2200000-0000-4000-8000-0000000000d1', 'd2200000-0000-4000-8000-000000000a80', true, true, daterange(current_date, null), null);
+-- Absences as they were recorded on earlier days (created_at in the past).
+insert into public.absence_records (organization_id, child_id, starts_on, ends_on, reported_by, source, status, cancelled_by, cancelled_at, created_at) values
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d6'), current_date, current_date + 1, 'd2200000-0000-4000-8000-0000000000a1', 'staff_on_behalf', 'active', null, null, now() - interval '1 day'),
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d7'), current_date - 5, current_date - 2, 'd2200000-0000-4000-8000-0000000000a1', 'staff_on_behalf', 'active', null, null, now() - interval '10 days'),
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d8'), current_date + 3, current_date + 4, 'd2200000-0000-4000-8000-0000000000a1', 'staff_on_behalf', 'active', null, null, now() - interval '1 day'),
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d9'), current_date, current_date, 'd2200000-0000-4000-8000-0000000000a1', 'staff_on_behalf', 'cancelled', 'd2200000-0000-4000-8000-0000000000a1', now() - interval '1 day', now() - interval '2 days'),
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d1'), current_date + 5, current_date + 6, 'd2200000-0000-4000-8000-0000000000f7', 'guardian', 'active', null, null, now() - interval '1 day'),
+  ('d2200000-0000-4000-8000-00000000000a', pg_temp.c('d1'), current_date - 9, current_date - 8, 'd2200000-0000-4000-8000-0000000000f8', 'guardian', 'active', null, null, now() - interval '12 days');
+select pg_temp.login('a1', 'aal2');
+select throws_ok($$select api.cancel_same_day_record('enrollment', pg_temp.id('e0d6'), 'entered_in_error')$$, 'P0001', 'RECORD_HAS_DEPENDENTS',
+  'enrolment: an absence reported yesterday that covers today is a dependency');
+select lives_ok($$select api.cancel_same_day_record('enrollment', pg_temp.id('e0d7'), 'entered_in_error')$$,
+  'enrolment: an absence reported earlier that ended before today is not');
+select throws_ok($$select api.cancel_same_day_record('enrollment', pg_temp.id('e0d8'), 'entered_in_error')$$, 'P0001', 'RECORD_HAS_DEPENDENTS',
+  'enrolment: an absence reported earlier for future days only is a dependency');
+select throws_ok($$select api.cancel_same_day_record('enrollment', pg_temp.id('e0d9'), 'entered_in_error')$$, 'P0001', 'RECORD_HAS_DEPENDENTS',
+  'enrolment: a cancelled absence for today is recorded history and counts too');
+select throws_ok($$select api.cancel_same_day_record('child_guardian', pg_temp.id('c070'), 'entered_in_error')$$, 'P0001', 'RECORD_HAS_DEPENDENTS',
+  'link: the same guardian reported earlier an absence covering days from today on');
+select lives_ok($$select api.cancel_same_day_record('child_guardian', pg_temp.id('c080'), 'entered_in_error')$$,
+  'link: an earlier absence of that guardian that ended before today does not block');
+reset role;
+select is((select count(*)::int from public.absence_records where child_id in (pg_temp.c('d1'), pg_temp.c('d6'), pg_temp.c('d7'), pg_temp.c('d8'), pg_temp.c('d9'))), 7,
+  'no absence record was touched by any of these cancellations');
 
 select * from finish();
 rollback;

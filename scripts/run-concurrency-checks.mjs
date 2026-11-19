@@ -28,13 +28,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const tag = randomUUID().slice(0, 8);
 const id = () => randomUUID();
 const ids = { org: id(), fac: id(), year: id(), group: id(), mgr: id(), edu: id(), eduM: id(), x: id(), y: id(), z: id(), w: id(), v: id(),
-  px: id(), py: id(), pz: id(), pv: id(), gd: id(), gr: id(), lw: id(), conv: id(), u: id(), eu: id() };
+  px: id(), py: id(), pz: id(), pv: id(), gd: id(), gr: id(), lw: id(), conv: id(), u: id(), eu: id(), t: id(), et: id(), g2: id(), gr2: id() };
 const setup = `
 insert into auth.users (id, email, aud, role, email_confirmed_at) values
   ('${ids.mgr}', 'cc-mgr-${tag}@t.test', 'authenticated', 'authenticated', now()),
   ('${ids.edu}', 'cc-edu-${tag}@t.test', 'authenticated', 'authenticated', now()),
-  ('${ids.gd}', 'cc-gd-${tag}@t.test', 'authenticated', 'authenticated', now());
-insert into public.profiles (id, first_name, last_name) values ('${ids.mgr}', 'Racun', 'mgr'), ('${ids.edu}', 'Racun', 'edu'), ('${ids.gd}', 'Racun', 'gd');
+  ('${ids.gd}', 'cc-gd-${tag}@t.test', 'authenticated', 'authenticated', now()),
+  ('${ids.g2}', 'cc-g2-${tag}@t.test', 'authenticated', 'authenticated', now());
+insert into public.profiles (id, first_name, last_name) values ('${ids.mgr}', 'Racun', 'mgr'), ('${ids.edu}', 'Racun', 'edu'), ('${ids.gd}', 'Racun', 'gd'), ('${ids.g2}', 'Racun', 'g2');
 insert into public.organizations (id, name, slug) values ('${ids.org}', 'Test istodobnost ${tag}', 'test-cc-${tag}');
 insert into public.facilities (id, organization_id, name) values ('${ids.fac}', '${ids.org}', 'Objekt');
 insert into public.academic_years (id, organization_id, name, starts_on, ends_on, status) values ('${ids.year}', '${ids.org}', 'PG', current_date - 60, current_date + 300, 'active');
@@ -42,10 +43,11 @@ insert into public.groups (id, organization_id, facility_id, academic_year_id, n
 insert into public.memberships (id, organization_id, profile_id, role, valid_during) values
   (gen_random_uuid(), '${ids.org}', '${ids.mgr}', 'org_admin', daterange(current_date - 30, null)),
   ('${ids.eduM}', '${ids.org}', '${ids.edu}', 'educator', daterange(current_date - 30, null)),
-  (gen_random_uuid(), '${ids.org}', '${ids.gd}', 'guardian', daterange(current_date - 30, null));
+  (gen_random_uuid(), '${ids.org}', '${ids.gd}', 'guardian', daterange(current_date - 30, null)),
+  (gen_random_uuid(), '${ids.org}', '${ids.g2}', 'guardian', daterange(current_date - 30, null));
 insert into public.staff_assignments (organization_id, membership_id, group_id, valid_during) values ('${ids.org}', '${ids.eduM}', '${ids.group}', daterange(current_date - 30, null));
 insert into public.children (id, organization_id, first_name, last_name) values
-  ${['x', 'y', 'z', 'w', 'v', 'u'].map((k) => `('${ids[k]}', '${ids.org}', 'Dijete', '${k}')`).join(', ')};
+  ${['x', 'y', 'z', 'w', 'v', 'u', 't'].map((k) => `('${ids[k]}', '${ids.org}', 'Dijete', '${k}')`).join(', ')};
 insert into public.enrollments (organization_id, child_id, group_id, valid_during) values
   ${['x', 'y', 'z', 'w', 'v'].map((k) => `('${ids.org}', '${ids[k]}', '${ids.group}', daterange(current_date - 30, null))`).join(', ')};
 insert into public.pickup_authorizations (id, organization_id, child_id, first_name, last_name, valid_during) values
@@ -58,7 +60,12 @@ insert into public.enrollments (id, organization_id, child_id, group_id, valid_d
 insert into public.guardians (id, organization_id, profile_id, first_name, last_name) values ('${ids.gr}', '${ids.org}', '${ids.gd}', 'Skrbnik', 'GD');
 insert into public.child_guardians (id, organization_id, child_id, guardian_id, can_view, can_report_absence, receives_messages, valid_during)
   values ('${ids.lw}', '${ids.org}', '${ids.w}', '${ids.gr}', true, true, true, daterange(current_date, null));
-insert into public.conversations (id, organization_id, child_id, guardian_id) values ('${ids.conv}', '${ids.org}', '${ids.w}', '${ids.gr}');`;
+insert into public.conversations (id, organization_id, child_id, guardian_id) values ('${ids.conv}', '${ids.org}', '${ids.w}', '${ids.gr}');
+-- T is enrolled only from today (enrolment ET); guardian G2 has been linked to T for ten days and may report absences.
+insert into public.enrollments (id, organization_id, child_id, group_id, valid_during) values ('${ids.et}', '${ids.org}', '${ids.t}', '${ids.group}', daterange(current_date, null));
+insert into public.guardians (id, organization_id, profile_id, first_name, last_name) values ('${ids.gr2}', '${ids.org}', '${ids.g2}', 'Skrbnik', 'G2');
+insert into public.child_guardians (organization_id, child_id, guardian_id, can_view, can_report_absence, valid_during)
+  values ('${ids.org}', '${ids.t}', '${ids.gr2}', true, true, daterange(current_date - 10, null));`;
 const s = sql(setup);
 if (s.status !== 0) {
   console.error(s.stderr);
@@ -103,6 +110,14 @@ await scenario('Q-T22 serial: a link cancelled first makes the guardian\'s waiti
   `/*commit*/ select 1;`, `${guardian} select api.send_message('${ids.conv}', 'Poruka nakon poništenja');`, /PERMISSION_DENIED/, 100);
 await scenario('Q-T22 serial: an enrolment cancelled first makes the waiting attendance write refuse',
   `/*commit*/ ${manager} ${cancelOf('enrollment', ids.eu)}`, `${educator} ${attend(ids.u)}`, /PERMISSION_DENIED|CHILD_NOT_ENROLLED/);
+
+const guardian2 = as(ids.g2);
+await scenario('Q-T22 lock: while an absence report holds the child, a same-day cancellation waits (times out)',
+  `${guardian2} select api.report_absence('${ids.t}', current_date + 2, current_date + 2);`,
+  `set lock_timeout = '1s'; ${manager} ${cancelOf('enrollment', ids.et)}`, /lock timeout/);
+await scenario('Q-T22 serial: an absence for a future day committed first makes the waiting enrolment cancellation refuse',
+  `/*commit*/ ${guardian2} select api.report_absence('${ids.t}', current_date + 2, current_date + 2);`,
+  `${manager} ${cancelOf('enrollment', ids.et)}`, /RECORD_HAS_DEPENDENTS/);
 
 // D-41b (only when the correction RPC exists) ----------------------------------------------------------------------------
 if (sql(`select to_regprocedure('api.correct_relationship_history(text,uuid,daterange,history_correction_reason,text,text,text)') is not null`).stdout.trim() === 't') {
