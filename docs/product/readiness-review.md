@@ -6,7 +6,7 @@
 (provjereno kroz GitHub API).
 
 > **Dopuna 2026-11-19:** nakon ove procjene izvedeni su D-41b (povijesni ispravak) i Q-T22 (poništenje pogrešnog
-> unosa istog dana, s korekcijom provjere izostanaka). **R-54 je zatvoren**, R-58 ostaje otvoren do potvrde vlasnika.
+> unosa istog dana, s korekcijom provjere izostanaka). **R-54 i R-58 su zatvoreni.**
 > Nepromjenjivost evidencije ispravaka vrijedi prema aplikaciji, ne prema privilegiranom operateru baze (model prijetnji
 > §3.1). Ostale ocjene ovog dokumenta nisu se promijenile.
 
