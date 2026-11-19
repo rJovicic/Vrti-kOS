@@ -4,8 +4,18 @@
 > Vrtić je (vjerojatno) voditelj obrade, VrtićOS izvršitelj (Q-P01); svaki podizvršitelj traži prethodno ovlaštenje
 > voditelja obrade (čl. 28(2) GDPR-a) i upis ovdje **prije** nego što primi ikakve podatke.
 
-Stanje 2026-11-16. Lokalni demo i CI ne šalju ništa nijednom vanjskom pružatelju (pošta ide u lokalni Mailpit, push u
-lažni adapter).
+Stanje 2026-11-19. Lokalni demo i CI ne šalju ništa nijednom vanjskom pružatelju (pošta ide u lokalni Mailpit, push u
+lažni adapter). Staging (§1a) koristi dva vanjska pružatelja isključivo sa **sintetičkim** podacima.
+
+## 1a. Staging — samo sintetički podaci (odobrenje vlasnika 2026-11-19)
+
+Nisu podizvršitelji za osobne podatke djece ili korisnika: staging ne smije sadržavati stvarne osobe, račune ni podatke
+([architecture/staging.md](../architecture/staging.md)). Ovo **nije** odluka D-3 ni odabir produkcijskog hostinga.
+
+| Pružatelj | Svrha | Podaci | Lokacija | Stanje |
+|---|---|---|---|---|
+| **Supabase** (projekt `vrticos-staging`) | baza, Auth, API, Edge Functions za testiranje | sintetički seed (`@demo.vrtic.test`), operativni podaci računa vlasnika kod Supabasea | eu-central-1 (Frankfurt) | aktivno, besplatni plan |
+| **Railway** (projekt `vrticos-staging`, servis `admin`) | posluživanje admin web aplikacije | prolazni HTTP promet sa sintetičkim podacima; nema baze ni pohrane | europe-west4 (Amsterdam); Railway Corp. je iz SAD-a ⚖️ ako ikad dobije stvarne podatke | aktivno |
 
 ## 1. Odobreni, ali neaktivni
 

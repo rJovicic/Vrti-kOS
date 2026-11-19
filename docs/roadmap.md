@@ -21,10 +21,10 @@ Kratice: **DoD** = Definition of Done. Svaki DoD implicitno uključuje: ažurira
 
 ## Izgradnja demo verzije (odluka vlasnika 2026-11-10)
 Vlasnik je odlučio izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua. MVP ostaje nepotvrđen.
-Demo radi **samo lokalno** sa sintetičkim podacima (ADR-0009). Faze 5–12 izvode se kao **vertikalni slojevi**;
+Demo radi lokalno sa sintetičkim podacima (ADR-0009); od 2026-11-19 i na stagingu, također samo sa sintetičkim podacima. Faze 5–12 izvode se kao **vertikalni slojevi**;
 svaki sloj završava radnim tokom kroz bazu (RLS + testovi), mobilnu i admin aplikaciju:
 
-**Stanje 2026-11-19 (ažurirano):** Faza 4 ✅ · D0 ✅ · D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D-40 push (lažni adapter, neaktivno) ✅ · D5 ✅ (2026-11-16) · nakon procjene spremnosti: D-41a ✅, D-42 ✅, D-41b ✅ i Q-T22 ✅ s korekcijom izostanaka (2026-11-19; R-54 zatvoren; [architecture/d41b-plan.md](architecture/d41b-plan.md)). Sljedeći sloj **nije odobren**. Mobilna aplikacija nije pokrenuta na uređaju (R-44, R-55); tok V nije započet. Procjena: [product/readiness-review.md](product/readiness-review.md).
+**Stanje 2026-11-19 (ažurirano):** Faza 4 ✅ · D0 ✅ · D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D-40 push (lažni adapter, neaktivno) ✅ · D5 ✅ (2026-11-16) · nakon procjene spremnosti: D-41a ✅, D-42 ✅, D-41b ✅ i Q-T22 ✅ s korekcijom izostanaka (2026-11-19; R-54 zatvoren; [architecture/d41b-plan.md](architecture/d41b-plan.md)). Sljedeći sloj **nije odobren**. **Staging** (Railway + Supabase `vrticos-staging`, samo sintetički podaci; nije produkcija ni D-3) postavljen 2026-11-19 — [architecture/staging.md](architecture/staging.md). Mobilna aplikacija nije pokrenuta na uređaju (R-44, R-55); tok V nije započet. Procjena: [product/readiness-review.md](product/readiness-review.md).
 
 | Sloj | Sadržaj | Faze | Gotovo kada |
 |---|---|---|---|

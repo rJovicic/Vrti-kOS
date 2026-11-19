@@ -283,3 +283,16 @@ odlukom D-3 i zabranom promjena hosted Supabasea.
 - **Najrazumniji sljedeći korak:** (1) vlasnik pokreće demo na iPhoneu i Androidu uz lokalni stack (zatvara R-44/R-55);
   (2) paralelno usklađivanje dokumentacije i potvrda bypass liste (R-45); (3) uz odobrenje, paket „spremnost za pilot”:
   D-41b, pregled audita (FR-09-4) i SR-MOB-03; (4) istovremeno započeti tok V i pravni pregled.
+
+## Dodatak 2026-11-19 — staging okruženje
+
+- **Postoji hostano okruženje za testiranje, ali nije produkcija ni odluka D-3:** Railway `vrticos-staging` (servis
+  `admin`, Amsterdam) i Supabase `vrticos-staging` (Frankfurt), samo sintetički podaci
+  ([architecture/staging.md](../architecture/staging.md)). Rečenica iz ocjene „hosted okruženje ne postoji” vrijedi i
+  dalje za **produkciju**.
+- Dokaz: smoke `tests/integration/src/staging/smoke.ts` — 25 PASS, 0 FAIL (health, Auth, RLS i izolacija s upisom,
+  Realtime). Staging je pronašao dvije razlike hostanih zadanih postavki koje lokalni testovi ne mogu vidjeti (shema
+  `api` nije izložena; javni Realtime kanali otvoreni) — ispravljeno, R-60 i R-61.
+- **Razina B** je sada moguća bez lokalnog stacka (iPhone s Expo Go prema stagingu), ali još nije provedena na
+  uređaju (R-44, R-55).
+- Realtime nije značajka proizvoda; scenariji i prijedlog: [architecture/realtime.md](../architecture/realtime.md).

@@ -51,6 +51,7 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 | ST-TEN-06 | Svaki view i RPC izložen API-ju pozvan kao U1 i U9 | Vraća samo podatke vlastitog vrtića | L2 | SR-TEN-06, SR-API-02 |
 | ST-TEN-07 | U1 dohvaća postojeći ID zapisa Bete i nepostojeći ID; uspoređuje status, tijelo, zaglavlja i brojače (`count`) | Identični odgovori — nema otkrivanja postojanja | L3 | SR-API-04 |
 | ST-TEN-08 | Ako je Realtime uključen: G1 se pretplaćuje na promjene tablica i kanale | Prima samo događaje za koje ima pravo; bez Realtimea: pretplata odbijena | L3 | SR-API-05 |
+|  | ↳ stanje 2026-11-19 (staging) | `staging/smoke.ts`: javne teme odbijene (`private_only`), privatni kanal drugog vrtića odbijen, `postgres_changes` bez događaja nakon upisa dolaska; aplikacije nemaju Realtime ([architecture/realtime.md](../architecture/realtime.md)) | staging | SR-API-05 |
 
 ### 3.3 Pristup skrbnika djeci
 | ID | Scenarij | Očekivano | Razina | SR |

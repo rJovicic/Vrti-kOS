@@ -118,6 +118,8 @@ flowchart TB
 | **Triggers** | Audit events (`private.audit_row`), guard triggers, `updated_at`; later notification fan-out and derived columns | Live in `private`, fixed `search_path`, no client EXECUTE (SR-API-01) |
 
 Realtime is **off** for the demo (SR-API-05); clients refetch on focus and pull-to-refresh. Revisit for messages.
+On the hosted staging project the service is locked down instead (`private_only`, empty publication); state, staging
+evidence and a minimal design: [realtime.md](realtime.md).
 
 ## 5. Shared packages in practice
 - **tokens:** TypeScript source (`palette.ts`, `theme.ts`, `scale.ts`) consumed directly by RN; `build-css.ts` writes
@@ -157,7 +159,7 @@ on `main` (owner action D-27, risk R-45).
 | Environment | Exists now | Data | Notes |
 |---|---|---|---|
 | local / demo | **yes** (ADR-0009) | synthetic seed only | Laptop + phones on the same Wi-Fi for kindergarten demos |
-| staging | no | synthetic only | Requires D-3 |
+| staging | **yes** (2026-11-19, owner approval) | synthetic only | Railway `admin` (europe-west4) + Supabase `vrticos-staging` (eu-central-1); **not production, not D-3** — [staging.md](staging.md) |
 | production | no | real (only after Phase 14 gates) | Requires D-3, D-6, D-7, legal review |
 
 ## 9. Requirement coverage (architecture → SR)
