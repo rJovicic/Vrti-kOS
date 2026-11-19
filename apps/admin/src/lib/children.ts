@@ -87,6 +87,20 @@ export interface ChildDetail {
   pickups: PickupRow[];
   groups: { id: string; name: string }[];
   guardians: { id: string; name: string }[];
+  /** D-41b evidence for this child (managers with MFA read it through RLS). */
+  corrections: CorrectionRow[];
+}
+export interface CorrectionRow {
+  id: string;
+  recordType: 'enrollment' | 'child_guardian' | 'access_restriction' | 'pickup_authorization';
+  correctedAt: string;
+  role: string;
+  reason: string;
+  oldSpan: DateSpan;
+  newSpan: DateSpan;
+  oldName: string | null;
+  newName: string | null;
+  note: string;
 }
 
 const byStart = <T extends { span: DateSpan }>(a: T, b: T) => (a.span.from ?? '').localeCompare(b.span.from ?? '');
@@ -108,6 +122,11 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
     supabase.from('groups').select('id, name, archived_at').eq('organization_id', org.id).order('name'),
     supabase.from('guardian_directory').select('id, first_name, last_name, status, has_account').eq('organization_id', org.id),
   ]);
+  const { data: corrections } = await supabase
+    .from('history_corrections')
+    .select('id, record_type, corrected_at, corrected_role, reason_code, old_values, new_values, note')
+    .eq('child_id', childId)
+    .order('corrected_at', { ascending: false });
   const linkIds = (links.data ?? []).map((l) => l.id);
   const guardianIds = [...new Set((links.data ?? []).map((l) => l.guardian_id))];
   const [restrictions, invitations] = await Promise.all([
@@ -177,5 +196,21 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
       .filter((g) => g.status === 'active')
       .map((g) => ({ id: g.id!, name: `${g.first_name} ${g.last_name}` }))
       .sort((a, b) => a.name.localeCompare(b.name, 'hr')),
+    corrections: (corrections ?? []).map((c) => {
+      const o = c.old_values as { valid_during?: string; first_name?: string; last_name?: string };
+      const n = c.new_values as { valid_during?: string; first_name?: string; last_name?: string };
+      return {
+        id: c.id,
+        recordType: c.record_type as CorrectionRow['recordType'],
+        correctedAt: c.corrected_at,
+        role: c.corrected_role,
+        reason: c.reason_code,
+        oldSpan: spanOf(o.valid_during),
+        newSpan: spanOf(n.valid_during),
+        oldName: o.first_name ? `${o.first_name} ${o.last_name}` : null,
+        newName: n.first_name ? `${n.first_name} ${n.last_name}` : null,
+        note: c.note,
+      };
+    }),
   };
 }

@@ -2,8 +2,9 @@
 
 _Revised 2026-11-19 after the D-41a review: pickup names (§1.1), locking (§2.6), RLS (§2.7), same-day errors (§7)._
 
-**Status:** plan only (owner, 2026-11-16: "D-41b zasad ostaje na razini tehničkog plana"). No migration, RPC or UI
-exists. Implementation needs a separate approval.
+**Status:** **implemented 2026-11-19** (owner approval of the same day): migration `20261119120000_history_corrections.sql`,
+locks in `20261119100000_child_event_lock.sql`, admin panel „Ispravak povijesti”, tests in pgTAP 33, `pnpm db:concurrency`,
+`tests/integration/src/history-corrections.test.ts` and admin e2e. §7 (same-day errors) is implemented separately as Q-T22.
 
 **Decisions this plan implements:** D-41 (corrections only through a separate, explicitly authorised, audited
 operation), Q-T17 (director and org_admin of the own kindergarten, MFA/AAL2, never platform_admin), Q-T18 (mandatory

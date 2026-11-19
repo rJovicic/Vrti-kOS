@@ -46,6 +46,9 @@ export type Database = {
 "correct_attendance":
 { Args: { "p_idempotency_key": string,"p_new_occurred_at"?: string,"p_reason": Database["public"]['Enums']["attendance_correction_reason"],"p_record_id": string,"p_source"?: string }; Returns: string
                            },
+"correct_relationship_history":
+{ Args: { "p_new_first_name"?: string,"p_new_last_name"?: string,"p_new_valid_during": unknown,"p_note": string,"p_reason_code": Database["public"]['Enums']["history_correction_reason"],"p_record_id": string,"p_record_type": string }; Returns: string
+                           },
 "edit_announcement":
 { Args: { "p_body": string,"p_id": string,"p_title": string }; Returns: string
                            },
@@ -607,6 +610,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"history_corrections": {
+                  Row: {
+                    "aal": string,"affected": NonNullable<Json>,"child_id": string,"corrected_at": string,"corrected_by": string,"corrected_role": Database["public"]['Enums']["org_role"],"correlation_id": string | null,"id": string,"new_values": NonNullable<Json>,"note": string,"old_values": NonNullable<Json>,"organization_id": string,"reason_code": Database["public"]['Enums']["history_correction_reason"],"record_id": string,"record_type": string,"supersedes": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "aal": string,"affected"?: NonNullable<Json>,"child_id": string,"corrected_at"?: string,"corrected_by": string,"corrected_role": Database["public"]['Enums']["org_role"],"correlation_id"?: string | null,"id"?: string,"new_values": NonNullable<Json>,"note": string,"old_values": NonNullable<Json>,"organization_id": string,"reason_code": Database["public"]['Enums']["history_correction_reason"],"record_id": string,"record_type": string,"supersedes"?: string | null
+                  }
+                  Update: {
+                    "aal"?: string,"affected"?: NonNullable<Json>,"child_id"?: string,"corrected_at"?: string,"corrected_by"?: string,"corrected_role"?: Database["public"]['Enums']["org_role"],"correlation_id"?: string | null,"id"?: string,"new_values"?: NonNullable<Json>,"note"?: string,"old_values"?: NonNullable<Json>,"organization_id"?: string,"reason_code"?: Database["public"]['Enums']["history_correction_reason"],"record_id"?: string,"record_type"?: string,"supersedes"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "history_corrections_corrected_by_fkey"
+      columns: ["corrected_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "history_corrections_organization_id_child_id_fkey"
+      columns: ["organization_id","child_id"]
+isOneToOne: false
+      referencedRelation: "children"
+      referencedColumns: ["organization_id","id"]
+    },{
+      foreignKeyName: "history_corrections_organization_id_fkey"
+      columns: ["organization_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "history_corrections_supersedes_fkey"
+      columns: ["supersedes"]
+isOneToOne: false
+      referencedRelation: "history_corrections"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"invitations": {
                   Row: {
                     "accepted_at": string | null,"accepted_by": string | null,"created_at": string,"created_by": string,"email": string,"expires_at": string,"first_name": string,"guardian_id": string | null,"id": string,"last_name": string,"organization_id": string,"revoked_at": string | null,"revoked_by": string | null,"role": Database["public"]['Enums']["org_role"],"status": Database["public"]['Enums']["invitation_status"],"updated_at": string
@@ -1004,7 +1045,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","attendance_correction_reason": "entry_error"|"forgot"|"other","attendance_kind": "check_in"|"check_out"|"void","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","notification_type": "announcement.published"|"absence.reported"|"message.received"|"daily_entry.published","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
+            "academic_year_status": "planned"|"active"|"closed","assignment_type": "regular"|"substitute","attendance_correction_reason": "entry_error"|"forgot"|"other","attendance_kind": "check_in"|"check_out"|"void","cancellation_reason": "entered_in_error"|"plan_changed"|"withdrawal_planned"|"other","child_status": "active"|"withdrawn","guardian_status": "active"|"ended","history_correction_reason": "entered_in_error"|"wrong_date_recorded"|"authority_document"|"late_information"|"other","invitation_status": "pending"|"accepted"|"revoked","membership_status": "active"|"suspended"|"ended","notification_type": "announcement.published"|"absence.reported"|"message.received"|"daily_entry.published","org_role": "org_admin"|"director"|"educator"|"guardian","restriction_scope": "full"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1124,7 +1165,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"attendance_correction_reason": ["entry_error", "forgot", "other"],"attendance_kind": ["check_in", "check_out", "void"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"notification_type": ["announcement.published", "absence.reported", "message.received", "daily_entry.published"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
+            "academic_year_status": ["planned", "active", "closed"],"assignment_type": ["regular", "substitute"],"attendance_correction_reason": ["entry_error", "forgot", "other"],"attendance_kind": ["check_in", "check_out", "void"],"cancellation_reason": ["entered_in_error", "plan_changed", "withdrawal_planned", "other"],"child_status": ["active", "withdrawn"],"guardian_status": ["active", "ended"],"history_correction_reason": ["entered_in_error", "wrong_date_recorded", "authority_document", "late_information", "other"],"invitation_status": ["pending", "accepted", "revoked"],"membership_status": ["active", "suspended", "ended"],"notification_type": ["announcement.published", "absence.reported", "message.received", "daily_entry.published"],"org_role": ["org_admin", "director", "educator", "guardian"],"restriction_scope": ["full"]
           }
         }
 } as const

@@ -3,6 +3,7 @@ import {
   zCancelInput,
   zChildInput,
   zCancelSameDayInput,
+  zHistoryCorrectionInput,
   zEndRecordInput,
   zGuardianInviteInput,
   zGuardianLinkInput,
@@ -63,6 +64,14 @@ describe('child forms (D2-G)', () => {
     expect(() => zCancelSameDayInput.parse({ childId: id, kind: 'pickup_authorization', recordId: id2, reason: 'entered_in_error' })).toThrow();
     expect(() => zCancelSameDayInput.parse({ childId: id, kind: 'access_restriction', recordId: id2, reason: 'entered_in_error', confirm: 'on' })).toThrow();
     expect(zCancelSameDayInput.parse({ childId: id, kind: 'enrollment', recordId: id2, reason: 'entered_in_error', confirm: 'on' }).kind).toBe('enrollment');
+    // D-41b: reason code, note (10–1,000) and confirmation; names only for pickup persons, both or none.
+    const corr = { childId: id, recordType: 'enrollment', recordId: id2, from: '2026-09-01', reason: 'wrong_date_recorded', note: 'Datum je pogrešno upisan.', confirm: 'on' };
+    expect(zHistoryCorrectionInput.parse(corr).to).toBeUndefined();
+    expect(() => zHistoryCorrectionInput.parse({ ...corr, note: 'kratko' })).toThrow();
+    expect(() => zHistoryCorrectionInput.parse({ ...corr, confirm: undefined })).toThrow();
+    expect(() => zHistoryCorrectionInput.parse({ ...corr, firstName: 'Iva', lastName: 'Teta' })).toThrow();
+    expect(zHistoryCorrectionInput.parse({ ...corr, recordType: 'pickup_authorization', firstName: 'Iva', lastName: 'Teta' }).firstName).toBe('Iva');
+    expect(() => zHistoryCorrectionInput.parse({ ...corr, recordType: 'pickup_authorization', firstName: 'Iva' })).toThrow();
     // D-41a: the start never travels with the form.
     expect(() => zEndRecordInput.parse({ childId: id, recordId: id2, from: '2026-11-12', lastDay: '2026-11-12' })).toThrow();
     expect(zEndRecordInput.parse({ childId: id, recordId: id2, lastDay: '2026-11-12' }).lastDay).toBe('2026-11-12');

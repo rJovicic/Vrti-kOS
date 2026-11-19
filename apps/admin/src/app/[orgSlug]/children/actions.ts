@@ -9,6 +9,7 @@ import {
   fromPostgrestError,
   zCancelInput,
   zCancelSameDayInput,
+  zHistoryCorrectionInput,
   zChildInput,
   zChildUpdateInput,
   zEndRecordInput,
@@ -155,6 +156,28 @@ export async function cancelSameDayRecord(formData: FormData) {
     .rpc('cancel_same_day_record', { p_kind: parsed.data.kind, p_record_id: parsed.data.recordId, p_reason: parsed.data.reason });
   if (error) dbFail(ctx, error, childId);
   done(ctx, 'cancelledToday', childId);
+}
+
+/**
+ * D-41b: historical correction — a separate, explicitly confirmed procedure (not a regular edit). The database authorises
+ * (org_admin/director with MFA), records the evidence and refuses anything that would hide recorded events.
+ */
+export async function correctHistory(formData: FormData) {
+  const ctx = await context(formData);
+  const childId = childIdOf(formData);
+  const parsed = zHistoryCorrectionInput.safeParse(fields(formData));
+  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  const v = parsed.data;
+  const { error } = await ctx.supabase.schema('api').rpc('correct_relationship_history', {
+    p_record_type: v.recordType,
+    p_record_id: v.recordId,
+    p_new_valid_during: toDateRange(v.from, v.to ?? null),
+    p_reason_code: v.reason,
+    p_note: v.note,
+    ...(v.firstName && v.lastName ? { p_new_first_name: v.firstName, p_new_last_name: v.lastName } : {}),
+  });
+  if (error) dbFail(ctx, error, childId);
+  done(ctx, 'historyCorrected', childId);
 }
 
 // Guardians and links (FR-04-4, D-31, D-32) -----------------------------------------------------------------------

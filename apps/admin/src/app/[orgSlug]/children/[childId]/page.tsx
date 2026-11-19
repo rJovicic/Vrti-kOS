@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import type { DateSpan } from '@vrticos/domain';
 import { formatDay } from '@vrticos/i18n';
-import { cancellationReasons } from '@vrticos/validation';
+import { cancellationReasons, historyCorrectionReasons } from '@vrticos/validation';
 import { Flash } from '@/components/Flash';
 import { PageHeader } from '@/components/PageHeader';
 import { loadChild, type LinkRow, type Timing } from '@/lib/children';
@@ -16,6 +16,7 @@ import {
   addRestriction,
   cancelFutureRecord,
   cancelSameDayRecord,
+  correctHistory,
   endLink,
   endPickup,
   endRestriction,
@@ -138,6 +139,80 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
         <EndFields recordId={recordId} span={span} />
       </form>
     </Disclose>
+  );
+
+  // D-41b: a separate panel, never mixed with the regular edit, end or cancel actions.
+  type HistoryRecord = { type: 'enrollment' | 'child_guardian' | 'access_restriction' | 'pickup_authorization'; id: string; label: string; span: DateSpan; names?: [string, string] };
+  const historyRecords: HistoryRecord[] = [
+    ...child.enrollments.filter((e) => e.timing !== 'cancelled').map((e) => ({ type: 'enrollment' as const, id: e.id, label: e.groupName, span: e.span })),
+    ...child.links
+      .filter((l) => l.timing !== 'cancelled')
+      .flatMap((l) => [
+        { type: 'child_guardian' as const, id: l.id, label: l.guardianName, span: l.span },
+        ...l.restrictions.map((r) => ({ type: 'access_restriction' as const, id: r.id, label: l.guardianName, span: r.span })),
+      ]),
+    ...child.pickups
+      .filter((p) => p.timing !== 'cancelled')
+      .map((p) => {
+        const [first, ...rest] = p.name.split(' ');
+        return { type: 'pickup_authorization' as const, id: p.id, label: p.name, span: p.span, names: [first ?? '', rest.join(' ')] as [string, string] };
+      }),
+  ].filter((h) => h.span.from !== null);
+  const HistoryForm = ({ h }: { h: HistoryRecord }) => (
+    <details className="manage" key={`${h.type}-${h.id}`}>
+      <summary>
+        {t(`admin.children.history.record.${h.type}`)}: {h.label} · {period(h.span)}
+      </summary>
+      <div className="manage-body">
+        <form action={correctHistory} className="stack">
+          {ids}
+          <input type="hidden" name="recordType" value={h.type} />
+          <input type="hidden" name="recordId" value={h.id} />
+          <label className="field">
+            {t('admin.children.history.from')}
+            <input name="from" type="date" required defaultValue={h.span.from!} />
+          </label>
+          <label className="field">
+            {t('admin.children.history.to')}
+            <input name="to" type="date" defaultValue={h.span.toInclusive ?? undefined} />
+          </label>
+          {h.names ? (
+            <>
+              <label className="field">
+                {t('admin.children.history.firstName')}
+                <input name="firstName" maxLength={60} defaultValue={h.names[0]} autoComplete="off" />
+              </label>
+              <label className="field">
+                {t('admin.children.history.lastName')}
+                <input name="lastName" maxLength={60} defaultValue={h.names[1]} autoComplete="off" />
+              </label>
+              <p className="small muted">{t('admin.children.history.nameNote')}</p>
+            </>
+          ) : null}
+          <label className="field">
+            {t('admin.children.history.reason')}
+            <select name="reason" required>
+              {historyCorrectionReasons.map((r) => (
+                <option key={r} value={r}>
+                  {t(`admin.children.history.reasons.${r}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            {t('admin.children.history.note')}
+            <textarea name="note" required minLength={10} maxLength={1000} rows={3} />
+          </label>
+          <p className="small muted">{t('admin.children.history.noteHelp')}</p>
+          <label className="radio">
+            <input type="checkbox" name="confirm" required /> {t('admin.children.history.confirm')}
+          </label>
+          <button className="btn secondary" type="submit">
+            {t('admin.children.history.submit')}
+          </button>
+        </form>
+      </div>
+    </details>
   );
 
   const accountCell = (l: LinkRow) => {
@@ -570,6 +645,42 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                 </Disclose>
               </div>
             ) : null}
+          </section>
+
+          <section className="panel" aria-labelledby="h-title">
+            <h2 id="h-title">{t('admin.children.history.title')}</h2>
+            <p className="pad small muted">{t('admin.children.history.lede')}</p>
+            {historyRecords.map((h) => (
+              <HistoryForm h={h} key={`${h.type}-${h.id}`} />
+            ))}
+            <h3 className="pad">{t('admin.children.history.listTitle')}</h3>
+            {child.corrections.length ? (
+              <div>
+                {child.corrections.map((c) => (
+                  <div className="row" key={c.id}>
+                    <span className="grow">
+                      <span className="t">
+                        {t('admin.children.history.entry', {
+                          when: formatDay(c.correctedAt.slice(0, 10)),
+                          record: t(`admin.children.history.record.${c.recordType}`),
+                          reason: t(`admin.children.history.reasons.${c.reason}`),
+                          role: t(`admin.children.history.roles.${c.role}`),
+                        })}
+                      </span>
+                      <br />
+                      <span className="muted small">
+                        {c.oldSpan.from ? t('admin.children.history.change', { from: period(c.oldSpan), to: period(c.newSpan) }) : null}
+                        {c.oldName && c.newName && c.oldName !== c.newName ? ` · ${t('admin.children.history.change', { from: c.oldName, to: c.newName })}` : null}
+                      </span>
+                      <br />
+                      <span className="small">{c.note}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="pad muted">{t('admin.children.history.empty')}</p>
+            )}
           </section>
         </div>
       </div>

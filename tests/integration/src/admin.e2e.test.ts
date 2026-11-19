@@ -215,6 +215,18 @@ describe('admin app (browser)', () => {
     await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Dijete je ispisano.');
     await page.goto(childUrl);
     await expect(page.locator('.page-header .lede').textContent()).resolves.toContain('Ispisano');
+
+    // D-41b: a separate, confirmed procedure — the start of the Dupini enrolment is corrected with a reason and a note,
+    // and the correction is listed (evidence). The regular forms were not used for this.
+    const corr = page.locator('details.manage', { has: page.locator('summary', { hasText: 'Upis: Dupini' }) });
+    await corr.locator('summary').click();
+    await corr.locator('input[name=from]').fill('2026-08-25');
+    await corr.locator('select[name=reason]').selectOption('wrong_date_recorded');
+    await corr.locator('textarea[name=note]').fill('Upis je prema zapisniku počeo ranije.');
+    await corr.getByLabel('Potvrđujem da ispravljam stvarnu pogrešku u evidenciji prošlih dana.').check();
+    await submit(page, corr.getByRole('button', { name: 'Spremi ispravak povijesti' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Ispravak povijesti je spremljen i zabilježen.');
+    await expect(page.locator('#h-title ~ div .row').first().textContent()).resolves.toContain('Upis je prema zapisniku počeo ranije.');
     await expect(page.locator('summary', { hasText: 'Dodaj skrbnika' }).count()).resolves.toBe(0);
   });
 

@@ -454,3 +454,14 @@ ST-RLS-00; fixed by a global default-privilege revoke and an explicit final revo
 - `private.lock_child_events(child)` (`20261119100000_child_event_lock.sql`): taken FOR SHARE first by
   `record_attendance`, `record_missed_attendance`, `report_absence`, `record_absence_on_behalf`, `send_message`.
 
+## D-41b — historical corrections (2026-11-19, `20261119120000_history_corrections.sql`)
+`history_corrections`: `id`, `organization_id`, `child_id`, `record_type`, `record_id`, `old_values jsonb`, `new_values jsonb`,
+`reason_code history_correction_reason`, `note` (10–1,000, trimmed), `corrected_by`, `corrected_role` (org_admin/director),
+`aal` (= aal2), `corrected_at`, `correlation_id`, `affected jsonb`, `supersedes`.
+- **Append-only** for every role, the owner included (`history_corrections_no_change`, `history_corrections_no_truncate`
+  → `HISTORY_CORRECTION_IMMUTABLE`); audit trigger.
+- **RLS** S: `is_org_manager(organization_id)`; no insert/update/delete privilege for clients. **Sens. R4** (free-text note).
+- `api.correct_relationship_history(type, id, new_period, reason, note, first_name?, last_name?)` → definer; checks in
+  `private.correction_conflicts` (attendance, handovers, absences, messages on removed days; for restrictions on changed
+  days); audit `history.corrected` (ids, dates, codes, changed columns — no note, no names).
+

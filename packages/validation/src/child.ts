@@ -111,3 +111,32 @@ export const zPickupInput = z
 export const zGuardianInviteInput = z
   .object({ childId: z.uuid(), guardianId: z.uuid(), email: z.string().trim().toLowerCase().pipe(z.email().max(254)) })
   .strict();
+
+/** D-41b: reason codes of a historical correction (database enum `history_correction_reason`). */
+export const historyCorrectionReasons = ['entered_in_error', 'wrong_date_recorded', 'authority_document', 'late_information', 'other'] as const;
+export const historyRecordTypes = ['enrollment', 'child_guardian', 'access_restriction', 'pickup_authorization'] as const;
+
+/**
+ * D-41b: historical correction of a relationship period (and, for a pickup person, the name). Reason code and note are
+ * mandatory (Q-T18); the manager confirms explicitly. The database decides everything else (rights, MFA, past days
+ * only, no hiding of recorded events).
+ */
+export const zHistoryCorrectionInput = z
+  .object({
+    childId: z.uuid(),
+    recordType: z.enum(historyRecordTypes),
+    recordId: z.uuid(),
+    from: day,
+    to: day.optional(),
+    firstName: name.optional(),
+    lastName: name.optional(),
+    reason: z.enum(historyCorrectionReasons),
+    note: z.string().trim().min(10).max(1000),
+    confirm: checkbox,
+  })
+  .strict()
+  .refine((v) => v.confirm, { message: 'confirmation_required', path: ['confirm'] })
+  .refine((v) => v.to === undefined || v.from <= v.to, { message: 'starts_before_ends', path: ['to'] })
+  .refine((v) => v.recordType === 'pickup_authorization' || (v.firstName === undefined && v.lastName === undefined), { message: 'names_only_for_pickups', path: ['firstName'] })
+  .refine((v) => (v.firstName === undefined) === (v.lastName === undefined), { message: 'both_names', path: ['lastName'] });
+

@@ -157,6 +157,12 @@ autorizacije — obvezni su prije implementacije modula i kasnije postaju pgTAP 
 - **Then** poništenje uspijeva: zapis ostaje u evidenciji označen kao poništen (bez brisanja), odmah prestaje vrijediti i auditiran je
 - **And** ako ovisni događaj postoji, ako zapis počinje prije ili nakon danas, ili ako to pokuša druga uloga, drugi vrtić ili uprava bez MFA-a, poništenje se odbija; istodobni upis događaja i poništenje ne mogu oboje proći
 
+**AC-04-10 [NEG] — Povijesni ispravak (D-41b)** (FR-04-2…FR-04-8; R-54)
+- **Given** u evidenciji prošlih dana postoji stvarna pogreška (upis, veza, ograničenje ili ovlaštena osoba)
+- **When** `org_admin` ili `director` vrtića s MFA-om spremi ispravak s kodom razloga i bilješkom
+- **Then** promjena je provedena u jednoj transakciji, trajno zabilježena (prethodno i novo stanje, tko, kada, razlog, bilješka) i auditirana bez bilješke i imena
+- **And** odbija se ako bi uklonila dane s dolascima, predajama, izostancima ili porukama, ako mijenja ime osobe zabilježene pri predaji, ako ne dira prošle dane, ako nedostaje razlog ili bilješka, ili ako je pokuša druga uloga, drugi vrtić, uprava bez MFA-a ili administrator platforme; evidencija ispravaka ne može se mijenjati ni brisati
+
 ## FS-05 Dolasci i odlasci
 **AC-05-1 — Brza evidencija** (FR-05-1, FR-05-2; NFR-PERF-02)
 - **Given** S1 ima 20 sintetičke djece i E1 je u skupini
