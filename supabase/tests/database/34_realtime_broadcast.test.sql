@@ -5,7 +5,7 @@
 -- payload minimality and the realtime.messages policies exactly as Realtime evaluates them. Synthetic, rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(35);
 
 -- People (suffix = last two hex digits of the id): a1 org_admin A, e1 educator A/S1, e2 educator A/S2, f1 and f2
 -- guardians A (both of child d1; f2 also of d2), b1 org_admin B, eb educator B/SB.
@@ -103,6 +103,13 @@ select is(pg_temp.got('notification'), array['e1'], 'notification: only its reci
 select is((select count(*) from realtime.messages m where not exists (select 1 from seen s where s.id = m.id)
            and (m.payload ? 'body' or m.payload::text like '%Pitanje%')), 0::bigint, 'no message text in any payload');
 
+-- Withdrawal by the sender within 5 minutes: the same participants are told (no text either way).
+select pg_temp.mark();
+select pg_temp.login('f1');
+select lives_ok($$select api.withdraw_message((select m.id from public.messages m where m.conversation_id = (select id from conv) order by m.created_at desc limit 1))$$, 'F1 withdraws her message');
+reset role;
+select is(pg_temp.got('message'), array['e1', 'f1'], 'withdrawal: the same participants only, still not the second guardian');
+
 -- 3. Announcements -----------------------------------------------------------------------------------------------------
 select pg_temp.mark();
 insert into public.announcements (id, organization_id, author_id, title, body, audience_scope, audience_ids, audience_roles, status, published_at)
@@ -117,6 +124,16 @@ insert into public.announcements (id, organization_id, author_id, title, body, a
 values ('d43a0000-0000-4000-8000-0000000a0002', 'd43a0000-0000-4000-8000-00000000000a', 'd43a0000-0000-4000-8000-0000000000a1',
         'Nacrt', 'Tekst', 'organization', '{}', array['staff', 'guardians'], 'draft');
 select is(pg_temp.got('announcement'), array['a1'], 'a draft reaches only the managers');
+
+-- Editing a published announcement to another audience: the previous audience (S2) and the new one (S1) refresh.
+insert into public.announcements (id, organization_id, author_id, title, body, audience_scope, audience_ids, audience_roles, status, published_at)
+values ('d43a0000-0000-4000-8000-0000000a0003', 'd43a0000-0000-4000-8000-00000000000a', 'd43a0000-0000-4000-8000-0000000000a1',
+        'Promjena', 'Tekst', 'group', array['d43a0000-0000-4000-8000-000000000052'::uuid], array['staff'], 'published', now());
+select pg_temp.mark();
+update public.announcements set audience_ids = array['d43a0000-0000-4000-8000-000000000051'::uuid], edited_at = now() where id = 'd43a0000-0000-4000-8000-0000000a0003';
+select is(pg_temp.got('announcement'), array['a1', 'e1', 'e2'], 'audience change: old audience (S2), new audience (S1) and the managers');
+select is((select count(*) from realtime.messages m where m.event = 'announcement' and not exists (select 1 from seen s where s.id = m.id)
+           and m.payload::text like '%Promjena%'), 0::bigint, 'announcement events carry no title or text');
 
 -- 4. Kindergarten B ---------------------------------------------------------------------------------------------------
 select pg_temp.mark();
