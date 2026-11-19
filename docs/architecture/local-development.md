@@ -94,6 +94,8 @@ Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
 | `pnpm db:spike` | Phase 3 RLS spike in a throw-away database | ✅ 14/14 |
 | `pnpm db:types` | regenerates `packages/db-types/src/database.ts` (deterministic; CI diffs it) | ✅ |
 | `pnpm seed:generate` | regenerates `supabase/seed.sql` and `docs/architecture/demo-accounts.md` | ✅ deterministic |
+| `pnpm demo:reset` | guard (local only) → `db reset`: puts the database back into the D5 presentation scenario (dates relative to the day of loading; notifications created through the real database functions). Run before every presentation | ✅ |
+| `pnpm demo:verify` | resets, checks the scenario, makes presentation-like changes, resets again and checks that the same scenario is back (`tests/integration/src/demo-reset.demo.test.ts`; excluded from `test:integration`; last step of the CI database job) | ✅ CI #56–#61 |
 | `pnpm design:sync` | regenerates `DESIGN.md` frontmatter and `design/prototype/tokens.css` from `packages/tokens` | ✅ |
 | `pnpm lint` / `pnpm typecheck` / `pnpm test` | ESLint (boundary rules; `supabase/**` excluded), `tsc` per package (admin runs `next typegen` first), Vitest in packages and `apps/mobile` | ✅ |
 | `pnpm --filter @vrticos/mobile test` | mobile Vitest only (pure presentation rules; no component render tests yet) | ✅ |

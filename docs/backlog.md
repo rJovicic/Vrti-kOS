@@ -99,8 +99,12 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [ ] Break-glass pristup platform admina s razlogom, rokom i auditom vidljivim vrtiću (ADR-0005)
 - [ ] Testovi rate limita prijave i provjere koda (SR-AUTHN-02) i isteka sesije (Faza 6 „Testovi”)
 - [ ] Ponovno slanje pozivnice, ekran platform admina za novi vrtić, potvrda obavijesti o privatnosti (vidi D1-9)
-- [ ] [D2] Djeca, upisi, skrbnici — plan: [architecture/d2-plan.md](architecture/d2-plan.md). **D2-A…D2-E izvedeni 2026-11-12** (djeca, upisi, skrbnici, veze s pravima po vezi, D-31, D-32, ograničenja pristupa, ovlaštene osobe za preuzimanje, premještaj i ispis, testovi, seed); D2-F, D2-G i D2-H izvedeni; D-37 proveden; slijedi D2-I; D-33 odlučen i proveden (oznaka „Ograničeno” za odgojitelje)
-- [ ] [D3…D5] prema roadmapu
+- [x] [D2] Djeca, upisi, skrbnici — plan: [architecture/d2-plan.md](architecture/d2-plan.md). **D2-A…D2-E izvedeni 2026-11-12** (djeca, upisi, skrbnici, veze s pravima po vezi, D-31, D-32, ograničenja pristupa, ovlaštene osobe za preuzimanje, premještaj i ispis, testovi, seed); D2-F, D2-G i D2-H izvedeni; D-37 proveden; D2-I izveden 2026-11-15 (zaključak D2); D-33 odlučen i proveden (oznaka „Ograničeno” za odgojitelje)
+- [x] [D3] Dolasci i izostanci (D3-A…D3-I, D-38 b) — izvedeno 2026-11-15; plan i zaključak: [architecture/d3-plan.md](architecture/d3-plan.md)
+- [x] [D4] Komunikacija (D4-A…D4-G: obavijesti, centar obavijesti, objave s revizijama, dnevni pregled, razgovori) — izvedeno 2026-11-15; [architecture/d4-plan.md](architecture/d4-plan.md)
+- [x] [D-40] Dostava push obavijesti s lažnim adapterom, **bez aktivacije** — 2026-11-16; aktivacija čeka vlasnika (R-56, R-57)
+- [x] [D5] Demo poliranje (scenarij, `demo:reset`/`demo:verify`, demo traka, skripta prezentacije, Impeccable audit) — 2026-11-16; [architecture/d5-plan.md](architecture/d5-plan.md)
+- [ ] [R-58/Q-T22] Zapis unesen danas greškom ne može se ukloniti s učinkom od danas (osobito ovlaštena osoba) — čeka odluku vlasnika; [architecture/d41b-plan.md](architecture/d41b-plan.md) §7
 
 #### Nakon odluka D-41 i D-42 (2026-11-16) — čeka odobrenje implementacije; plan: [product/decision-followup.md](product/decision-followup.md)
 - [x] [D-41a] (izvedeno 2026-11-16) Baza odbija izmjenu prošlosti na vezama, ograničenjima i ovlaštenim osobama (okidač, `HISTORY_IMMUTABLE`); administracija ne nudi početak u prošlosti; pgTAP s kontrolnom provjerom (R-54)

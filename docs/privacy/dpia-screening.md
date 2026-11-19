@@ -37,3 +37,16 @@ slučaju preporučena.** Planiramo je kao obveznu isporuku Faze 2 i uvjet za Faz
 ## Odluke koje smanjuju rizik već u arhitekturi
 Bez biometrije/AI/profiliranja; bez zdravstvenih podataka u MVP-u; push bez osobnih podataka; privatni mediji
 s privolom po djetetu; najmanji skup atributa djeteta; zadana retencija; bez stvarnih podataka u razvoju.
+
+## Dopuna 2026-11-19 — push obavijesti (D-40) ⚖️ otvoreno
+Ova dopuna samo opisuje obradu; **pravni status nije utvrđen** i ostaje preduvjet aktivacije.
+
+| Stavka | Stanje |
+|---|---|
+| Obrada | registracija uređaja (Expo push token), red dostave, slanje generičke obavijesti bez imena, skupine i sadržaja (D-40) |
+| Podizvršitelji | Expo (SAD) → Apple APNs / Google FCM — odobreni kao **opcija** (D-40), **neaktivni**: nema računa, vjerodajnica, stvarnih uređaja ni slanja; [subprocessor-register.md](subprocessor-register.md) |
+| Podaci koji bi izašli iz EU-a | push token, vrsta obavijesti, vrijeme slanja; nikad ime djeteta, tekst poruke ni ID-ovi zapisa |
+| Kriteriji iz screeninga | ne dodaje novi kriterij WP248 sam po sebi; povećava rizik prijenosa (R-03, R-57) |
+| Otvoreni preduvjeti ⚖️ | uloge voditelj/izvršitelj (Q-P01); DPA s Expo-om i procjena prijenosa (Q-P07, SCC/DPF — nije provjereno); pravna osnova za obavijesti; tiho razdoblje (Q-T05); ulazak u punu DPIA prije aktivacije |
+| Zaključak | push se **ne aktivira** dok vlasnik i pravni pregled ne zatvore gornje stavke; do tada samo obavijesti unutar aplikacije |
+

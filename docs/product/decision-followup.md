@@ -240,3 +240,32 @@ Vlasnik je istog dana odobrio D-41a i D-42 te odgovorio na Q-T17, Q-T18, Q-T20 i
   redovnim putem — unosi se od danas, a povijest kroz D-41b kad bude odobren.
 - D-42: nakon ograničenja ili gubitka prava skrbnik gubi pristup vlastitom razgovoru, a odgojitelji skupine i dalje vide
   povijest tog razgovora (bez skrbnika na popisu sudionika) i ne mogu ga ponovno otvoriti s tim skrbnikom.
+
+## 9. Provjera D-41a (2026-11-19)
+
+**Semantika razdoblja:** `valid_during` je `daterange` `[početak, kraj)` — kraj je isključiv; „zadnji dan T” zapisuje
+se kao gornja granica T+1. Pravilo u bazi (`private.guard_relationship_history`, migracija `20261118100000`), samo
+za klijentske uloge (`authenticated`, `anon`):
+- INSERT: `lower_inf(valid_during) or lower(valid_during) < org_today` → `HISTORY_IMMUTABLE`;
+- UPDATE razdoblja: `(old.valid_during * daterange(null, org_today)) is distinct from (new.valid_during * daterange(null, org_today))` → `HISTORY_IMMUTABLE`;
+- UPDATE imena ovlaštene osobe: promjena `first_name`/`last_name` kad `not isempty(old.valid_during * daterange(null, org_today))` → `HISTORY_IMMUTABLE`.
+
+| Pitanje | Nalaz | Dokaz |
+|---|---|---|
+| Kraj „od danas” (zapis ne vrijedi danas, zadnji dan jučer) | **dopušten u bazi** za zapis koji je počeo prije danas (nijedan prošli dan se ne mijenja; D-36 semantika iz D2-E); **administracija ga ne nudi** (`lastDay >= today`) | pgTAP 14 („an enrolment can end yesterday”), 30 („lifted as of today”), 11 („ends the restriction as of today”) |
+| Promjena proteklih dana | odbijena za početak i kraj na sve 4 tablice | pgTAP 30 (18 padova bez okidača) |
+| Izravni API/RPC | PostgREST INSERT/PATCH odbijeni; jedini serverski putovi pisanja su `transfer_child`, `withdraw_child` (datumi ≥ danas) i `cancel_future_record` (samo budući zapisi); Edge Functions ne pišu ove tablice; klijent nema DELETE | `relationship-history.test.ts`; upit nad katalogom 2026-11-19 |
+| Dosljednost 4 tablice | isti okidač i ista pravila; razlike: stupčana prava (upis: samo razdoblje; veza: i prava; ograničenje: i interna oznaka; ovlaštena osoba: i ime) | katalog: prava stupaca, okidači `*_history_guard` |
+| Ograničenja | ograničenje se uklanja krajem razdoblja; prošli dani se ne mijenjaju; interna oznaka se smije mijenjati (ne odlučuje o pristupu) | pgTAP 11, 30 |
+| **Propust (R-58)** | zapis unesen **danas greškom** ne može se ukloniti istog dana (prazno razdoblje odbija ograničenje tablice, pomak unatrag D-41a, D-37 `RECORD_ALREADY_EFFECTIVE`); za ovlaštenu osobu nema istodnevnog lijeka | sonda 2026-11-19 (4 koraka, sve odbijeno osim „vrijedi do kraja danas”) |
+| Niži nalazi | prava veze i interna oznaka nemaju povijest vrijednosti (audit bilježi samo nazive stupaca); preimenovanje skrbnika (redovna operacija) mijenja ime prikazano uz prošle predaje — isto načelo kao §1.1 plana D-41b | kod: `attendanceDay.ts`, audit |
+
+**Prijedlog minimalnog popravka (nije proveden — traži odluku Q-T22):** proširiti `api.cancel_future_record` tako da
+uprava uz MFA smije poništiti i zapis koji **počinje danas**, samo ako za njega još ne postoji nijedan ovisni zapis
+(dolazak/predaja, izostanak), s istim kodovima razloga i auditom; testovi: poništenje bez ovisnih zapisa uspijeva,
+s ovisnim zapisom `RECORD_ALREADY_EFFECTIVE`, zapis od jučer i dalje odbijen, ostale uloge odbijene, kontrolna provjera.
+Neovisno o tome: administracija može ponuditi kraj „od danas” za zapis koji je počeo prije danas (baza to već dopušta).
+
+**Testovi nisu oslabljeni:** svaka uklonjena tvrdnja od `f610167` zamijenjena je jednakom ili strožom (pregled
+`git diff f610167 HEAD`). Jedina blaža: u `access-restrictions.test.ts` „svi audit zapisi su od uprave” zamijenjeno je
+s „4 od uprave + ukupno 5”, jer je jedan zapis podatkovna priprema serverskim ključem.

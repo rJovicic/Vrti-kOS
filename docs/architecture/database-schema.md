@@ -40,7 +40,7 @@
 | staff_assignment | `staff_assignments` | `assignment_type` regular/substitute (DD-01) |
 | attendance_event + attendance_correction | `attendance_records` | corrections/voids are rows referencing the original (`corrects_id`) |
 | absence_report | `absence_records` | |
-| announcement | `announcements` | `announcement_revision` **deferred**: in the demo a published announcement cannot be edited (only archived) |
+| announcement | `announcements`, `announcement_revisions` | implemented in D4-B/D4-C: a published announcement can be edited; every earlier version is kept as a revision (FR-07-3) |
 | conversation (+ derived participants), message | `conversations`, `messages` | participants derived from relationships (A-07) |
 | daily_report | `daily_entries` | one per group per day (A-05) |
 | audit_log | `audit_events` | |
@@ -48,7 +48,7 @@
 | notification_preference | `notification_preferences` | |
 | invitation | `invitations` | |
 | — (platform role) | `private.platform_admins` | platform admin is **not** a membership; table not exposed (SR-PRIV-01/02) |
-| device_token | `push_tokens` — **deferred** | push delivery not part of the local demo (Expo push service needs an account); in-app notifications only |
+| device_token | `push_tokens` | implemented in D-40 (`20261117100000_push_delivery.sql`): no client privileges and no policies; own registration/removal through RPCs; delivery queue for the service role only. **Delivery is not active** (mock adapter; R-56, R-57) |
 | activity_tag | `daily_entries.activity_tags text[]` | org-defined list later |
 | menu, event | — **deferred** | Should modules (FS-12, FS-13) after the demo core |
 | data_subject_request, retention_rule | — **deferred to Phase 12** | Must before production, not for the demo |

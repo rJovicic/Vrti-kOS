@@ -1,5 +1,7 @@
 # D-41b — historical correction of a child's relationships (final technical plan, NOT implemented)
 
+_Revised 2026-11-19 after the D-41a review: pickup names (§1.1), locking (§2.6), RLS (§2.7), same-day errors (§7)._
+
 **Status:** plan only (owner, 2026-11-16: "D-41b zasad ostaje na razini tehničkog plana"). No migration, RPC or UI
 exists. Implementation needs a separate approval.
 
@@ -16,7 +18,21 @@ history), Q-T21 (enrolments included, same rules). Regular operations stay as D-
 | `enrollments` | `valid_during` | child, group, organisation |
 | `child_guardians` | `valid_during` | child, guardian, rights flags (rights apply from now — regular operation) |
 | `access_restrictions` | `valid_during` | link, scope, reference (regular operation) |
-| `pickup_authorizations` | `valid_during`, `first_name`, `last_name` (D-41a blocks renaming once valid) | child |
+| `pickup_authorizations` | `valid_during`; `first_name`, `last_name` **only under §1.1** | child |
+
+### 1.1 Pickup person names — history of events must not change
+Attendance records store only the id of the handover person (`handover_pickup_id`, `handover_child_guardian_id`); every
+screen reads the **current** name from `pickup_authorizations` / `guardians` (`apps/admin/src/lib/attendanceDay.ts`,
+`private.handover_list`). A rename therefore rewrites who is shown as having picked a child up in the past. Rule:
+
+- a name correction is allowed **only if no attendance record references the authorization** (any day, also voided
+  ones) — then nothing recorded changes its meaning; otherwise refused with `CORRECTION_NAME_IN_USE`;
+- if the person was recorded under a wrong name, history stays as recorded: the manager ends the authorization as of
+  today (regular operation) and enters the correct person from today; the correction row may document the error
+  (`reason_code`, `note`) without changing any name (`new_values` = old values is refused, so this is done with a
+  period-only correction if needed, otherwise only by the regular end + new entry);
+- rejected alternative: storing a name snapshot on each attendance event — it changes the attendance model (D3) and
+  needs its own decision; it would make renames safe later.
 
 Never possible through this operation: creating a record in the past, deleting a record, emptying a period, moving a
 record to another child, group, guardian or kindergarten. A correction that only touches today or the future is refused
@@ -89,6 +105,26 @@ Access is always computed from the current rows for **today**, so a correction a
   reviewed and added.
 - `history_corrections` cannot be written by clients; the RPC is the only way in.
 
+### 2.6 Transactions and locking
+- One function call = one transaction (default READ COMMITTED). Lock order, the same as transfer/withdrawal to avoid
+  deadlocks: child row `FOR UPDATE` → target row `FOR UPDATE` → for a restriction its link `FOR SHARE`.
+- **Companion change (part of D-41b):** the writers of dependent records do not lock the child row today. Attendance
+  writers (`private.record_attendance`, `undo_attendance`, `correct_attendance`, `record_missed_attendance`) only take a
+  per-child-per-day advisory lock (`private.attendance_lock`); absence writers (`private.absence_insert`,
+  `cancel_absence`) take none. Each gets `select 1 from public.children where id = … for share` before writing, so a
+  dependency check (§2.3 step 5) cannot pass while a dependent row for a removed day is inserted concurrently. Taking
+  the advisory lock for every removed day instead was rejected (a correction can span years). Cost: one shared row lock
+  per write; transfer and withdrawal already lock the child `FOR UPDATE`, so the order stays child-first.
+- Checks run after the locks; the correction row, the update and the audit event commit together or not at all.
+
+### 2.7 RLS and grants
+- `history_corrections`: RLS on; one policy `select … using (private.is_org_manager(organization_id))`; no insert,
+  update or delete policy; `revoke all` from `anon`, `authenticated`; `grant select` to `authenticated`. Rows are
+  written only by the definer function (owner role).
+- Append-only trigger `before update or delete … raise 'HISTORY_CORRECTION_IMMUTABLE'` for every role.
+- `api.correct_relationship_history` executable by `authenticated` only; the definer is not executable by clients.
+- The note never leaves this table: not in `audit_events.details`, logs, notifications or push payloads.
+
 ## 3. Admin UI (later approval)
 On the child record, per record: a separate, clearly marked action **„Ispravak povijesti”** behind a disclosure (not in
 the regular edit forms). It shows the current and the proposed period side by side, the reason code (select), the note
@@ -115,6 +151,12 @@ AAL2); the database decides again.
 - regular path still closed: a direct `UPDATE` of a past day stays refused after the RPC exists;
 - **mutation checks:** drop the role check, the AAL2 check, the dependency check, the note check → tests fail.
 
+- pickup names: rename refused when any attendance record references the authorization (also voided), allowed
+  otherwise; after a refused rename the handover still shows the recorded name;
+- locking: the attendance and absence writers take the shared child lock (catalog/function-body check), plus an
+  integration test with two connections — a correction removing day X and an attendance correction on day X — must end
+  with exactly one of them succeeding;
+
 **Integration (PostgREST):** the same refusals for guardian, educator, manager without MFA, other kindergarten; a correction
 by a director with MFA; audit contents without the note.
 
@@ -134,3 +176,13 @@ corrections listed on the record.
 2. pgTAP file with mutation checks; integration test.
 3. Admin UI with e2e; data inventory, DPIA note, security test plan, traceability.
 4. CI green; then R-54 can be closed with evidence.
+
+## 7. Related gap found in the D-41a review (2026-11-19) — needs an owner decision, not part of D-41b
+A record entered **today by mistake** (pickup person, guardian link, restriction, enrolment) cannot be withdrawn with
+effect today: an empty period is refused by the table constraint, moving the start back is refused by D-41a, and D-37
+cancels only records starting after today (`RECORD_ALREADY_EFFECTIVE`). The earliest end is "valid through today". For a
+link, switching off `can_view` removes access immediately; for a **pickup person there is no same-day remedy** — the
+person stays on today's handover list. D-41b does not solve it either (it only changes past days and never empties a
+period). Options: (a) extend D-37 to records starting today **if no dependent record exists yet** (same audit, reason
+codes and MFA); (b) accept and handle by kindergarten procedure. Recommendation: (a). Tracked as R-58 / Q-T22.
+

@@ -13,6 +13,7 @@ pnpm demo            # Supabase + Mailpit + migracije + sintetički seed + admin
 ```
 
 - Admin: http://localhost:3000 · Mailpit: http://127.0.0.1:54324 · mobilno: Expo Go (QR kod u terminalu)
+- Prije prezentacije: `pnpm demo:reset` (vraća sintetički scenarij); provjera ponovljivosti: `pnpm demo:verify` · skripta: [docs/product/demo-script.md](docs/product/demo-script.md)
 - Testovi: `pnpm lint && pnpm typecheck && pnpm test && pnpm db:test`
 - Detalji i rješavanje problema: [docs/architecture/local-development.md](docs/architecture/local-development.md)
 

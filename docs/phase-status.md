@@ -1,8 +1,8 @@
 # Status faza
 
 **Trenutna faza:** sloj **D5** (demo poliranje) — **izveden 2026-11-16** (plan i zaključak: [architecture/d5-plan.md](architecture/d5-plan.md); skripta prezentacije: [product/demo-script.md](product/demo-script.md)). D4 izveden 2026-11-15; D-40 (push) odobren i izveden s lažnim adapterom, bez aktivacije. Sljedeći sloj nije odobren.
-**Zadnja provjera:** 2026-11-15 (D4-G) — lint, typecheck, 187 unit testova (Vitest) + 73 render testa (Jest), **969 pgTAP** (29 datoteka), RLS spike 14/14, **115 integracijskih**, **11 Playwright e2e** (admin, uključuje D3-G i D4-C), Deno check/lint, Expo export iOS + Android
-**CI:** GitHub Actions runovi #30–#41 (D2-I, D3-A…D3-I) — sva 4 posla zelena za svaki završeni paket; run #40 (D3-G) pao je jednom na izgubljenoj e-pošti s kodom u integracijskom testu (ne u D3-G kodu), uzrok ublažen u pomoćnoj funkciji testa; [run #41](https://github.com/rJovicic/Vrti-kOS/actions/runs/43718121587) zelen na `ed515fa`
+**Zadnja provjera:** 2026-11-16 (`470d030`, procjena spremnosti v2) — lint, typecheck, 193 unit testa (Vitest) + 75 render testova (Jest), **1.099 pgTAP** (32 datoteke), RLS spike, **122 integracijska**, **11 Playwright e2e**, Deno check/lint, Expo export iOS + Android, `demo:verify`; svih 17 koraka iz čistog stanja
+**CI:** GitHub Actions runovi #56 (`f610167`, zaključak D5), #59 (`3a1274f`, D-41a), #60 (`470d030`, D-42 i odluke) i [#61](https://github.com/rJovicic/Vrti-kOS/actions/runs/43892736883) (`aac1e58`) — sva 4 posla i svi koraci zeleni (#61 provjeren po poslovima 2026-11-19). Povijest nestabilnih testova: #33 i #40 (e-pošta s kodom, ublaženo), #45 (port na runneru), #55 (utrka nakon reseta, popravljeno)
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
