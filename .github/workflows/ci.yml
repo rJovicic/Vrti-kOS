@@ -82,6 +82,8 @@ jobs:
           pnpm --filter @vrticos/integration-tests run e2e
       # D5: the demo is repeatable — reset, scenario, presentation-like changes, reset, identical scenario.
       # Last step of the job because it resets the database.
+      - name: concurrency — corrections and same-day cancellations serialize with event writers (D-41b, Q-T22)
+        run: pnpm db:concurrency
       - name: demo resets to the same presentation scenario (D5)
         run: pnpm demo:verify
       - name: admin server log (on failure)

@@ -151,6 +151,12 @@ autorizacije — obvezni su prije implementacije modula i kasnije postaju pgTAP 
 - **When** U1 ispiše D2 s datumom T
 - **Then** od T+1 E1 više ne vidi D2 u skupini, G3 vidi samo ono što retencijska pravila dopuštaju [otvoreno Q-P09], a zapisi D2 nisu obrisani prije isteka roka čuvanja
 
+**AC-04-9 [NEG] — Poništenje pogrešnog unosa istog dana (Q-T22)** (FR-04-2…FR-04-8; R-58)
+- **Given** uprava s MFA-om danas je greškom unijela ovlaštenu osobu, vezu skrbnika ili upis koji počinje danas
+- **When** zapis nema ovisnih događaja (dolazak, predaja/preuzimanje, izostanak, poruka; za vezu ni ograničenje)
+- **Then** poništenje uspijeva: zapis ostaje u evidenciji označen kao poništen (bez brisanja), odmah prestaje vrijediti i auditiran je
+- **And** ako ovisni događaj postoji, ako zapis počinje prije ili nakon danas, ili ako to pokuša druga uloga, drugi vrtić ili uprava bez MFA-a, poništenje se odbija; istodobni upis događaja i poništenje ne mogu oboje proći
+
 ## FS-05 Dolasci i odlasci
 **AC-05-1 — Brza evidencija** (FR-05-1, FR-05-2; NFR-PERF-02)
 - **Given** S1 ima 20 sintetičke djece i E1 je u skupini

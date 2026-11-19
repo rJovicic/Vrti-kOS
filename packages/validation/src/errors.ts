@@ -38,6 +38,10 @@ export const errorCatalog = {
   /** D-37: only records that start after today can be cancelled; a restricted link is not cancelled. */
   RECORD_ALREADY_EFFECTIVE: { status: 409 },
   CANCEL_RECORD_REFERENCED: { status: 409 },
+  /** Q-T22: only a record that starts today can be cancelled the same day, once, and only without dependent events. */
+  CANCEL_TODAY_ONLY: { status: 409 },
+  RECORD_ALREADY_CANCELLED: { status: 409 },
+  RECORD_HAS_DEPENDENTS: { status: 409 },
   /** D2-F: the guardian record is ended or already attached to an account. */
   GUARDIAN_ALREADY_LINKED: { status: 409 },
   /** D3-A attendance: today only for educators; the order arrival → departure per day; undo within 10 s. */
@@ -113,6 +117,9 @@ export const dbErrorCatalog = {
   WITHDRAWAL_HAS_FUTURE_RECORDS: 'WITHDRAWAL_HAS_FUTURE_RECORDS',
   RECORD_ALREADY_EFFECTIVE: 'RECORD_ALREADY_EFFECTIVE',
   CANCEL_RECORD_REFERENCED: 'CANCEL_RECORD_REFERENCED',
+  CANCEL_TODAY_ONLY: 'CANCEL_TODAY_ONLY',
+  RECORD_ALREADY_CANCELLED: 'RECORD_ALREADY_CANCELLED',
+  RECORD_HAS_DEPENDENTS: 'RECORD_HAS_DEPENDENTS',
   GUARDIAN_ALREADY_LINKED: 'GUARDIAN_ALREADY_LINKED',
   ATTENDANCE_APPEND_ONLY: 'PERMISSION_DENIED',
   ATTENDANCE_TIME_INVALID: 'ATTENDANCE_TIME_INVALID',
@@ -150,6 +157,9 @@ export const exposedDbErrors = [
   'WITHDRAWAL_HAS_FUTURE_RECORDS',
   'RECORD_ALREADY_EFFECTIVE',
   'CANCEL_RECORD_REFERENCED',
+  'CANCEL_TODAY_ONLY',
+  'RECORD_ALREADY_CANCELLED',
+  'RECORD_HAS_DEPENDENTS',
   'GUARDIAN_ALREADY_LINKED',
   'ATTENDANCE_TIME_INVALID',
   'ATTENDANCE_STATE_CONFLICT',

@@ -15,6 +15,7 @@ import {
   addPickup,
   addRestriction,
   cancelFutureRecord,
+  cancelSameDayRecord,
   endLink,
   endPickup,
   endRestriction,
@@ -33,7 +34,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 const period = (s: DateSpan) =>
   s.toInclusive ? `${formatDay(s.from!)} – ${formatDay(s.toInclusive)}` : t('admin.children.pickups.since', { date: formatDay(s.from!) });
-const statePill: Record<Timing, string> = { past: 'departed', current: 'present', future: 'expected' };
+const statePill: Record<Timing, string> = { past: 'departed', current: 'present', future: 'expected', cancelled: 'departed' };
+const dayBefore = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
 
 /** A secondary form behind a disclosure button: the default view stays calm, every action is one click away. */
 function Disclose({ label, children, tone = 'secondary' }: { label: string; children: ReactNode; tone?: 'secondary' | 'text' }) {
@@ -89,29 +91,51 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
       </form>
     </Disclose>
   );
-  const EndFields = ({ recordId }: { recordId: string }) => (
+  // Three different things, three different actions: a planned record is cancelled (D-37), a record entered today by
+  // mistake is cancelled the same day (Q-T22), a record in effect is ended — at the earliest "as of today" (last day
+  // yesterday) if it started before today. Historical corrections are a separate procedure (D-41b).
+  const SameDayCancel = ({ kind, recordId }: { kind: 'enrollment' | 'child_guardian' | 'pickup_authorization'; recordId: string }) => (
+    <Disclose label={t('admin.children.cancel.sameDayAction')} tone="text">
+      <form action={cancelSameDayRecord} className="stack">
+        {ids}
+        <input type="hidden" name="kind" value={kind} />
+        <input type="hidden" name="recordId" value={recordId} />
+        <h3>{t('admin.children.cancel.sameDayTitle')}</h3>
+        <p className="small muted">{t('admin.children.cancel.sameDayNote')}</p>
+        <ReasonSelect />
+        <label className="radio">
+          <input type="checkbox" name="confirm" required /> {t('admin.children.cancel.sameDayConfirm')}
+        </label>
+        <button className="btn secondary" type="submit">
+          {t('admin.children.cancel.sameDayAction')}
+        </button>
+      </form>
+    </Disclose>
+  );
+  const EndFields = ({ recordId, span }: { recordId: string; span: DateSpan }) => (
     <>
       {ids}
       <input type="hidden" name="recordId" value={recordId} />
       <label className="field">
         {t('admin.children.guardians.lastDay')}
-        <input name="lastDay" type="date" required min={today} defaultValue={today} />
+        <input name="lastDay" type="date" required min={span.from !== null && span.from < today ? dayBefore(today) : today} defaultValue={today} />
       </label>
+      <p className="small muted">{t('admin.children.guardians.endNote')}</p>
       <button className="btn secondary" type="submit">
         {t('admin.children.guardians.endSubmit')}
       </button>
     </>
   );
-  const EndForm = ({ action, recordId, title }: { action: (f: FormData) => Promise<void>; recordId: string; title: string }) => (
+  const EndForm = ({ action, recordId, span, title }: { action: (f: FormData) => Promise<void>; recordId: string; span: DateSpan; title: string }) => (
     <form action={action} className="stack">
       <h3>{title}</h3>
-      <EndFields recordId={recordId} />
+      <EndFields recordId={recordId} span={span} />
     </form>
   );
-  const EndDisclose = ({ action, recordId, label }: { action: (f: FormData) => Promise<void>; recordId: string; label: string }) => (
+  const EndDisclose = ({ action, recordId, span, label }: { action: (f: FormData) => Promise<void>; recordId: string; span: DateSpan; label: string }) => (
     <Disclose label={label} tone="text">
       <form action={action} className="stack">
-        <EndFields recordId={recordId} />
+        <EndFields recordId={recordId} span={span} />
       </form>
     </Disclose>
   );
@@ -123,8 +147,8 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
     return <span className="pill expected">{t('admin.children.guardians.noAccount')}</span>;
   };
   const yesNo = (v: boolean) => t(v ? 'admin.children.guardians.yes' : 'admin.children.guardians.no');
-  const visibleLinks = child.links.filter((l) => l.timing !== 'past');
-  const pastLinks = child.links.filter((l) => l.timing === 'past');
+  const visibleLinks = child.links.filter((l) => l.timing === 'current' || l.timing === 'future');
+  const pastLinks = child.links.filter((l) => l.timing === 'past' || l.timing === 'cancelled');
 
   const lede = !active
     ? t('admin.children.ledeWithdrawn', { date: formatDay(child.withdrawnOn!) })
@@ -291,7 +315,7 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                               </form>
                             ) : null}
                             {restriction ? (
-                              <EndForm action={endRestriction} recordId={restriction.id} title={t('admin.children.guardians.endRestriction')} />
+                              <EndForm action={endRestriction} recordId={restriction.id} span={restriction.span} title={t('admin.children.guardians.endRestriction')} />
                             ) : (
                               <form action={addRestriction} className="stack danger-zone">
                                 {ids}
@@ -314,7 +338,8 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                                 </button>
                               </form>
                             )}
-                            <EndForm action={endLink} recordId={l.id} title={t('admin.children.guardians.end')} />
+                            <EndForm action={endLink} recordId={l.id} span={l.span} title={t('admin.children.guardians.end')} />
+                            {l.span.from === today ? <SameDayCancel kind="child_guardian" recordId={l.id} /> : null}
                           </>
                         )}
                       </div>
@@ -324,7 +349,9 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
               : null}
             {pastLinks.length ? (
               <p className="pad small muted">
-                {pastLinks.map((l) => `${l.guardianName} (${period(l.span)})`).join(' · ')}
+                {pastLinks
+                  .map((l) => `${l.guardianName} (${period(l.span)}${l.timing === 'cancelled' ? ` · ${t('admin.children.enrollments.state.cancelled')}` : ''})`)
+                  .join(' · ')}
               </p>
             ) : null}
             {active ? (
@@ -406,6 +433,14 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
             ) : (
               <p className="pad muted">{t('admin.children.enrollments.empty')}</p>
             )}
+            {active && current && current.span.from === today ? (
+              <div className="pad row-inline">
+                <span className="small">
+                  {t('admin.children.enrollments.state.current')}: <b>{current.groupName}</b> · {period(current.span)}
+                </span>
+                <SameDayCancel kind="enrollment" recordId={current.id} />
+              </div>
+            ) : null}
             {active
               ? child.enrollments
                   .filter((e) => e.timing === 'future')
@@ -499,7 +534,8 @@ export default async function ChildPage({ params, searchParams }: { params: Prom
                     </span>
                     <span className={`pill ${statePill[p.timing]}`}>{t(`admin.children.enrollments.state.${p.timing}`)}</span>
                     {active && p.timing === 'future' ? <CancelForm kind="pickup_authorization" recordId={p.id} /> : null}
-                    {active && p.timing === 'current' ? <EndDisclose action={endPickup} recordId={p.id} label={t('admin.children.pickups.end')} /> : null}
+                    {active && p.timing === 'current' ? <EndDisclose action={endPickup} recordId={p.id} span={p.span} label={t('admin.children.pickups.end')} /> : null}
+                    {active && p.timing === 'current' && p.span.from === today ? <SameDayCancel kind="pickup_authorization" recordId={p.id} /> : null}
                   </div>
                 ))}
               </div>

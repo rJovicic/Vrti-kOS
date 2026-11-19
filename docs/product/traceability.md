@@ -54,4 +54,4 @@ tablica, FR → AC) prolazi bez grešaka. Skripta se trenutno pokreće izvan rep
 | D-41 / D-41a (D-36 proširen) | FR-04 (upisi, veze, ograničenja, ovlaštene osobe) | `20261118100000_relationship_history_guard.sql`; admin `children/actions.ts` | pgTAP `30_relationship_history`, `11_access_restrictions`, `14_transfer_withdrawal`; integracija `relationship-history.test.ts`; e2e D2-G |
 | D-41b (plan) | — | [architecture/d41b-plan.md](../architecture/d41b-plan.md) | planirano |
 | D-42 (Q-T16, Q-T20) | FR-11-1, FR-11-6, FR-11-8; AC-11-1, AC-11-3, AC-11-4 | `20261118110000_conversation_per_guardian.sql`; mobilni `lib/conversations.ts`, `ConversationsScreen`, `ConversationView` | pgTAP `27_conversations`, `28_d4_negative`, `31_conversation_per_guardian`; integracija `conversations.test.ts`; render `conversations.render.test.tsx` |
-
+| Q-T22 (R-58) | FR-04-2…8; AC-04-9 | `20261119100000_child_event_lock.sql`, `20261119110000_same_day_cancellation.sql`; admin `cancelSameDayRecord`, kraj „od danas” | pgTAP `32_same_day_cancellation`; `pnpm db:concurrency`; e2e D2-G |

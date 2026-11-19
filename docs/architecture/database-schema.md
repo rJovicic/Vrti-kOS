@@ -440,3 +440,17 @@ Deliberate D0 limits (deny by default until the relationship tables exist):
 Finding during D0 (fixed): per-schema `ALTER DEFAULT PRIVILEGES … REVOKE` cannot remove PostgreSQL's global
 `EXECUTE` default for `PUBLIC`, so a trigger function in `private` was executable by `anon`. Caught by catalog check
 ST-RLS-00; fixed by a global default-privilege revoke and an explicit final revoke in the authorization migration.
+
+## Q-T22 — same-day cancellation (2026-11-19, `20261119110000_same_day_cancellation.sql`)
+- `enrollments`, `child_guardians`, `pickup_authorizations`: new columns `cancelled_at timestamptz`, `cancelled_period daterange`.
+  Constraint `<table>_not_empty_unless_cancelled` replaces `<table>_not_empty`: the period is empty **iff** the record is
+  cancelled, and then the original period is in `cancelled_period`. No client privilege on the new columns (select only).
+- A cancelled row is kept (no deletion) and frozen for clients (`*_cancelled_guard`, `RECORD_ALREADY_CANCELLED`); an empty
+  period matches no `@>`/`&&` test, so every access rule stops counting it at once.
+- `api.cancel_same_day_record(kind, id, reason)` (invoker) → `private.cancel_same_day_record` (definer): manager with MFA,
+  child locked FOR UPDATE, record must start today (`CANCEL_TODAY_ONLY`), no dependent event (`RECORD_HAS_DEPENDENTS`,
+  mapped per type in `private.same_day_dependents`), link without restriction (`CANCEL_RECORD_REFERENCED`), audit
+  `record.cancel_same_day`. D-37 (`api.cancel_future_record`, future records, deletion) is unchanged.
+- `private.lock_child_events(child)` (`20261119100000_child_event_lock.sql`): taken FOR SHARE first by
+  `record_attendance`, `record_missed_attendance`, `report_absence`, `record_absence_on_behalf`, `send_message`.
+

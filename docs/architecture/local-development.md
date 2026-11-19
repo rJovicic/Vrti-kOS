@@ -92,6 +92,7 @@ Run everything through Corepack (`corepack enable` once per machine; ADR-0016).
 | `pnpm db:reset` | drop + all migrations + `supabase/seed.sql` (refuses linked/remote targets) | ✅ from zero |
 | `pnpm db:test` | pgTAP: `supabase/tests/database/*.test.sql` (catalog checks, tenant isolation, staff assignments, invitations) | ✅ 105/105 (D1) |
 | `pnpm db:spike` | Phase 3 RLS spike in a throw-away database | ✅ 14/14 |
+| `pnpm db:concurrency` | two real sessions: same-day cancellations (Q-T22) and historical corrections (D-41b) serialize with attendance, absence and message writers (lock timeouts both ways; the second side waits and then refuses). Creates a synthetic kindergarten per run; local stack only | ✅ |
 | `pnpm db:types` | regenerates `packages/db-types/src/database.ts` (deterministic; CI diffs it) | ✅ |
 | `pnpm seed:generate` | regenerates `supabase/seed.sql` and `docs/architecture/demo-accounts.md` | ✅ deterministic |
 | `pnpm demo:reset` | guard (local only) → `db reset`: puts the database back into the D5 presentation scenario (dates relative to the day of loading; notifications created through the real database functions). Run before every presentation | ✅ |

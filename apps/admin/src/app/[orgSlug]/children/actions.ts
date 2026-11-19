@@ -4,9 +4,11 @@
 // (DAL), validates with the shared Zod schemas and writes AS THE USER: RLS, column grants, guard triggers and the RPCs
 // (transfer, withdrawal, D-37 cancellation) make the final decision. Results travel as allow-listed flash keys.
 import { parseDateRange, toDateRange } from '@vrticos/domain';
+
 import {
   fromPostgrestError,
   zCancelInput,
+  zCancelSameDayInput,
   zChildInput,
   zChildUpdateInput,
   zEndRecordInput,
@@ -25,6 +27,9 @@ import { redirect } from 'next/navigation';
 import { getOrgContext, type OrgContext } from '@/lib/dal';
 import type { FlashError, FlashOk } from '@/lib/flash';
 import { callInviteMember } from '@/lib/invite';
+
+/** The day before a YYYY-MM-DD day (calendar arithmetic in UTC, no time zone involved). */
+const dayBefore = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
 
 type Fields = Record<string, FormDataEntryValue | undefined>;
 
@@ -139,6 +144,19 @@ export async function cancelFutureRecord(formData: FormData) {
   done(ctx, 'cancelled', childId);
 }
 
+/** Q-T22: cancels a record entered today by mistake — kept as cancelled, never deleted (the database decides). */
+export async function cancelSameDayRecord(formData: FormData) {
+  const ctx = await context(formData);
+  const childId = childIdOf(formData);
+  const parsed = zCancelSameDayInput.safeParse(fields(formData));
+  if (!parsed.success) fail(ctx, 'VALIDATION_FAILED', childId);
+  const { error } = await ctx.supabase
+    .schema('api')
+    .rpc('cancel_same_day_record', { p_kind: parsed.data.kind, p_record_id: parsed.data.recordId, p_reason: parsed.data.reason });
+  if (error) dbFail(ctx, error, childId);
+  done(ctx, 'cancelledToday', childId);
+}
+
 // Guardians and links (FR-04-4, D-31, D-32) -----------------------------------------------------------------------
 export async function linkGuardian(formData: FormData) {
   const ctx = await context(formData);
@@ -194,8 +212,9 @@ async function endRecord(formData: FormData, table: 'child_guardians' | 'access_
   const ctx = await context(formData);
   const childId = childIdOf(formData);
   const parsed = zEndRecordInput.safeParse(fields(formData));
-  // Like D-36 for enrolments: an end is never set in the past from the admin screens.
-  if (!parsed.success || parsed.data.lastDay < ctx.today) fail(ctx, 'VALIDATION_FAILED', childId);
+  // D-36/D-41a: no day before today changes. The last day may be yesterday ("valid until yesterday, ends as of today")
+  // only for a record that started before today — checked below against the start read from the database.
+  if (!parsed.success || parsed.data.lastDay < dayBefore(ctx.today)) fail(ctx, 'VALIDATION_FAILED', childId);
   const { data: current, error: readError } = await ctx.supabase
     .from(table)
     .select('valid_during')
@@ -205,7 +224,7 @@ async function endRecord(formData: FormData, table: 'child_guardians' | 'access_
   if (readError) dbFail(ctx, readError, childId);
   const from = current ? parseDateRange(String(current.valid_during))?.from : null;
   if (!from) fail(ctx, 'NOT_FOUND', childId);
-  if (parsed.data.lastDay < from) fail(ctx, 'VALIDATION_FAILED', childId);
+  if (parsed.data.lastDay < from || (parsed.data.lastDay < ctx.today && from >= ctx.today)) fail(ctx, 'VALIDATION_FAILED', childId);
   const { data, error } = await ctx.supabase
     .from(table)
     .update({ valid_during: toDateRange(from, parsed.data.lastDay) })

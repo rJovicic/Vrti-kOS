@@ -25,6 +25,9 @@ export type Database = {
 "cancel_future_record":
 { Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
                            },
+"cancel_same_day_record":
+{ Args: { "p_kind": string,"p_reason": Database["public"]['Enums']["cancellation_reason"],"p_record_id": string }; Returns: undefined
+                           },
 "child_day_status":
 { Args: { "p_day"?: string,"p_group_id"?: string }; Returns: {
               "absence_is_late": boolean,"absence_reported": boolean,"arrived_at": string,"child_id": string,"departed_at": string,"group_id": string,"last_record_id": string,"last_record_kind": Database["public"]['Enums']["attendance_kind"],"local_date": string,"organization_id": string,"status": string
@@ -344,14 +347,14 @@ isOneToOne: false
                   ]
                 },"child_guardians": {
                   Row: {
-                    "can_report_absence": boolean,"can_view": boolean,"child_id": string,"created_at": string,"created_by": string | null,"guardian_id": string,"id": string,"organization_id": string,"receives_messages": boolean,"updated_at": string,"valid_during": unknown
+                    "can_report_absence": boolean,"can_view": boolean,"cancelled_at": string | null,"cancelled_period": unknown,"child_id": string,"created_at": string,"created_by": string | null,"guardian_id": string,"id": string,"organization_id": string,"receives_messages": boolean,"updated_at": string,"valid_during": unknown
                   }
                   ComputedFields: never
                   Insert: {
-                    "can_report_absence"?: boolean,"can_view"?: boolean,"child_id": string,"created_at"?: string,"created_by"?: string | null,"guardian_id": string,"id"?: string,"organization_id": string,"receives_messages"?: boolean,"updated_at"?: string,"valid_during": unknown
+                    "can_report_absence"?: boolean,"can_view"?: boolean,"cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id": string,"created_at"?: string,"created_by"?: string | null,"guardian_id": string,"id"?: string,"organization_id": string,"receives_messages"?: boolean,"updated_at"?: string,"valid_during": unknown
                   }
                   Update: {
-                    "can_report_absence"?: boolean,"can_view"?: boolean,"child_id"?: string,"created_at"?: string,"created_by"?: string | null,"guardian_id"?: string,"id"?: string,"organization_id"?: string,"receives_messages"?: boolean,"updated_at"?: string,"valid_during"?: unknown
+                    "can_report_absence"?: boolean,"can_view"?: boolean,"cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id"?: string,"created_at"?: string,"created_by"?: string | null,"guardian_id"?: string,"id"?: string,"organization_id"?: string,"receives_messages"?: boolean,"updated_at"?: string,"valid_during"?: unknown
                   }
                   Relationships: [
                     {
@@ -484,14 +487,14 @@ isOneToOne: false
                   ]
                 },"enrollments": {
                   Row: {
-                    "child_id": string,"created_at": string,"created_by": string | null,"group_id": string,"id": string,"organization_id": string,"updated_at": string,"valid_during": unknown
+                    "cancelled_at": string | null,"cancelled_period": unknown,"child_id": string,"created_at": string,"created_by": string | null,"group_id": string,"id": string,"organization_id": string,"updated_at": string,"valid_during": unknown
                   }
                   ComputedFields: never
                   Insert: {
-                    "child_id": string,"created_at"?: string,"created_by"?: string | null,"group_id": string,"id"?: string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
+                    "cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id": string,"created_at"?: string,"created_by"?: string | null,"group_id": string,"id"?: string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
                   }
                   Update: {
-                    "child_id"?: string,"created_at"?: string,"created_by"?: string | null,"group_id"?: string,"id"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
+                    "cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id"?: string,"created_at"?: string,"created_by"?: string | null,"group_id"?: string,"id"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
                   }
                   Relationships: [
                     {
@@ -786,14 +789,14 @@ isOneToOne: false
                   ]
                 },"pickup_authorizations": {
                   Row: {
-                    "child_id": string,"created_at": string,"created_by": string | null,"first_name": string,"id": string,"last_name": string,"organization_id": string,"updated_at": string,"valid_during": unknown
+                    "cancelled_at": string | null,"cancelled_period": unknown,"child_id": string,"created_at": string,"created_by": string | null,"first_name": string,"id": string,"last_name": string,"organization_id": string,"updated_at": string,"valid_during": unknown
                   }
                   ComputedFields: never
                   Insert: {
-                    "child_id": string,"created_at"?: string,"created_by"?: string | null,"first_name": string,"id"?: string,"last_name": string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
+                    "cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id": string,"created_at"?: string,"created_by"?: string | null,"first_name": string,"id"?: string,"last_name": string,"organization_id": string,"updated_at"?: string,"valid_during": unknown
                   }
                   Update: {
-                    "child_id"?: string,"created_at"?: string,"created_by"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
+                    "cancelled_at"?: string | null,"cancelled_period"?: unknown,"child_id"?: string,"created_at"?: string,"created_by"?: string | null,"first_name"?: string,"id"?: string,"last_name"?: string,"organization_id"?: string,"updated_at"?: string,"valid_during"?: unknown
                   }
                   Relationships: [
                     {

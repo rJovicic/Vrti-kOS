@@ -173,6 +173,13 @@ describe('admin app (browser)', () => {
     await page.locator('form:has(input[name=to]) input[name=lastName]').fill('Baka');
     await submit(page, page.getByRole('button', { name: 'Dodaj', exact: true }));
     await expect(page.locator('.row', { hasText: 'Mara Baka' }).isVisible()).resolves.toBe(true);
+    // Q-T22: entered today by mistake → cancelled the same day; the record stays, marked as cancelled (no deletion).
+    const mara = page.locator('.row', { hasText: 'Mara Baka' });
+    await mara.locator('summary', { hasText: 'Poništi pogrešan unos (od danas)' }).click();
+    await mara.getByLabel('Potvrđujem da je zapis unesen greškom.').check();
+    await submit(page, mara.getByRole('button', { name: 'Poništi pogrešan unos (od danas)' }));
+    await expect(page.locator('.flash.ok').textContent()).resolves.toBe('Pogrešan unos je poništen. Zapis ostaje u evidenciji kao poništen.');
+    await expect(page.locator('.row', { hasText: 'Mara Baka' }).textContent()).resolves.toContain('Poništeno (pogrešan unos)');
 
     // Restriction: refused without the confirmation (validation), saved with it; the row then shows no access.
     await page.locator('summary', { hasText: 'Upravljanje vezom: Ivana Testić' }).click();

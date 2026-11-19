@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   zCancelInput,
   zChildInput,
+  zCancelSameDayInput,
   zEndRecordInput,
   zGuardianInviteInput,
   zGuardianLinkInput,
@@ -58,6 +59,10 @@ describe('child forms (D2-G)', () => {
 
   it('dates, ends and invitations are validated', () => {
     expect(() => zTransferInput.parse({ childId: id, groupId: id2, effectiveOn: '12. 11. 2026.' })).toThrow();
+    // Q-T22: same-day cancellation needs a reason code and an explicit confirmation.
+    expect(() => zCancelSameDayInput.parse({ childId: id, kind: 'pickup_authorization', recordId: id2, reason: 'entered_in_error' })).toThrow();
+    expect(() => zCancelSameDayInput.parse({ childId: id, kind: 'access_restriction', recordId: id2, reason: 'entered_in_error', confirm: 'on' })).toThrow();
+    expect(zCancelSameDayInput.parse({ childId: id, kind: 'enrollment', recordId: id2, reason: 'entered_in_error', confirm: 'on' }).kind).toBe('enrollment');
     // D-41a: the start never travels with the form.
     expect(() => zEndRecordInput.parse({ childId: id, recordId: id2, from: '2026-11-12', lastDay: '2026-11-12' })).toThrow();
     expect(zEndRecordInput.parse({ childId: id, recordId: id2, lastDay: '2026-11-12' }).lastDay).toBe('2026-11-12');

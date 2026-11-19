@@ -50,6 +50,21 @@ export const zCancelInput = z
   })
   .strict();
 
+/**
+ * Q-T22: cancelling a record entered TODAY by mistake (separate from D-37 for future records). The manager confirms
+ * explicitly; the database decides whether it starts today and has no dependent events.
+ */
+export const zCancelSameDayInput = z
+  .object({
+    childId: z.uuid(),
+    kind: z.enum(['enrollment', 'child_guardian', 'pickup_authorization']),
+    recordId: z.uuid(),
+    reason: z.enum(cancellationReasons),
+    confirm: checkbox,
+  })
+  .strict()
+  .refine((v) => v.confirm, { message: 'confirmation_required', path: ['confirm'] });
+
 /** FR-04-4: link an existing guardian record or a new one (names only, no contact data). */
 const rights = { canView: checkbox, canReportAbsence: checkbox, receivesMessages: checkbox };
 export const zGuardianLinkInput = z

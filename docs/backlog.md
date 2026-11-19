@@ -104,7 +104,7 @@ Stavke su grupirane po fazi. Format: `[ID] opis — ovisnost`. Stavke ulaze u ra
 - [x] [D4] Komunikacija (D4-A…D4-G: obavijesti, centar obavijesti, objave s revizijama, dnevni pregled, razgovori) — izvedeno 2026-11-15; [architecture/d4-plan.md](architecture/d4-plan.md)
 - [x] [D-40] Dostava push obavijesti s lažnim adapterom, **bez aktivacije** — 2026-11-16; aktivacija čeka vlasnika (R-56, R-57)
 - [x] [D5] Demo poliranje (scenarij, `demo:reset`/`demo:verify`, demo traka, skripta prezentacije, Impeccable audit) — 2026-11-16; [architecture/d5-plan.md](architecture/d5-plan.md)
-- [ ] [R-58/Q-T22] Zapis unesen danas greškom ne može se ukloniti s učinkom od danas (osobito ovlaštena osoba) — čeka odluku vlasnika; [architecture/d41b-plan.md](architecture/d41b-plan.md) §7
+- [x] [Q-T22] (izvedeno 2026-11-19) Poništenje zapisa unesenog danas greškom bez brisanja i bez ovisnih događaja; kraj „od danas” u administraciji (R-58); [architecture/d41b-plan.md](architecture/d41b-plan.md) §7
 
 #### Nakon odluka D-41 i D-42 (2026-11-16) — čeka odobrenje implementacije; plan: [product/decision-followup.md](product/decision-followup.md)
 - [x] [D-41a] (izvedeno 2026-11-16) Baza odbija izmjenu prošlosti na vezama, ograničenjima i ovlaštenim osobama (okidač, `HISTORY_IMMUTABLE`); administracija ne nudi početak u prošlosti; pgTAP s kontrolnom provjerom (R-54)

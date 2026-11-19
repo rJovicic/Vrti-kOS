@@ -3,11 +3,18 @@ import type { OrgContext } from '@/lib/dal';
 
 // D2-G read models. Everything is read AS THE MANAGER (RLS + column grants decide); joins happen in memory.
 
-export type Timing = 'past' | 'current' | 'future';
+/** `cancelled`: entered today by mistake and cancelled (Q-T22) — kept as a record, grants nothing. */
+export type Timing = 'past' | 'current' | 'future' | 'cancelled';
 export const timingOf = (span: DateSpan, today: string): Timing =>
   spanContains(span, today) ? 'current' : span.from !== null && span.from > today ? 'future' : 'past';
 
 const spanOf = (range: unknown): DateSpan => parseDateRange(String(range)) ?? { from: null, toInclusive: null };
+/** A cancelled record (Q-T22) has an empty period; its original one is in `cancelled_period`. */
+const periodOf = (r: { valid_during: unknown; cancelled_at?: string | null; cancelled_period?: unknown }, today: string): { span: DateSpan; timing: Timing } => {
+  if (r.cancelled_at) return { span: spanOf(r.cancelled_period), timing: 'cancelled' };
+  const span = spanOf(r.valid_during);
+  return { span, timing: timingOf(span, today) };
+};
 
 export interface ChildListRow {
   id: string;
@@ -24,7 +31,8 @@ export async function loadChildren(ctx: OrgContext): Promise<ChildListRow[]> {
   const { supabase, org, today } = ctx;
   const [children, enrollments, groups] = await Promise.all([
     supabase.from('children').select('id, first_name, last_name, internal_ref, status, withdrawn_on').eq('organization_id', org.id),
-    supabase.from('enrollments').select('child_id, group_id, valid_during').eq('organization_id', org.id),
+    // Cancelled enrolments (Q-T22) have an empty period and are never "today's group".
+    supabase.from('enrollments').select('child_id, group_id, valid_during').eq('organization_id', org.id).is('cancelled_at', null),
     supabase.from('groups').select('id, name').eq('organization_id', org.id),
   ]);
   const groupName = new Map((groups.data ?? []).map((g) => [g.id, g.name]));
@@ -94,9 +102,9 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
     .maybeSingle();
   if (!child) return null;
   const [enrollments, links, pickups, groups, directory] = await Promise.all([
-    supabase.from('enrollments').select('id, group_id, valid_during').eq('child_id', childId),
-    supabase.from('child_guardians').select('id, guardian_id, can_view, can_report_absence, receives_messages, valid_during').eq('child_id', childId),
-    supabase.from('pickup_authorizations').select('id, first_name, last_name, valid_during').eq('child_id', childId),
+    supabase.from('enrollments').select('id, group_id, valid_during, cancelled_at, cancelled_period').eq('child_id', childId),
+    supabase.from('child_guardians').select('id, guardian_id, can_view, can_report_absence, receives_messages, valid_during, cancelled_at, cancelled_period').eq('child_id', childId),
+    supabase.from('pickup_authorizations').select('id, first_name, last_name, valid_during, cancelled_at, cancelled_period').eq('child_id', childId),
     supabase.from('groups').select('id, name, archived_at').eq('organization_id', org.id).order('name'),
     supabase.from('guardian_directory').select('id, first_name, last_name, status, has_account').eq('organization_id', org.id),
   ]);
@@ -130,13 +138,12 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
     withdrawnOn: child.withdrawn_on,
     enrollments: (enrollments.data ?? [])
       .map((e) => {
-        const span = spanOf(e.valid_during);
-        return { id: e.id, groupId: e.group_id, groupName: groupName.get(e.group_id) ?? '—', span, timing: timingOf(span, today) };
+        return { id: e.id, groupId: e.group_id, groupName: groupName.get(e.group_id) ?? '—', ...periodOf(e, today) };
       })
       .sort(byStart),
     links: (links.data ?? [])
       .map((l) => {
-        const span = spanOf(l.valid_during);
+        const { span, timing } = periodOf(l, today);
         const g = guardian.get(l.guardian_id);
         return {
           id: l.id,
@@ -149,7 +156,7 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
           canReportAbsence: l.can_report_absence,
           receivesMessages: l.receives_messages,
           span,
-          timing: timingOf(span, today),
+          timing,
           restrictions: (restrictions.data ?? [])
             .filter((r) => r.child_guardian_id === l.id)
             .map((r) => {
@@ -162,8 +169,7 @@ export async function loadChild(ctx: OrgContext, childId: string): Promise<Child
       .sort((a, b) => a.guardianName.localeCompare(b.guardianName, 'hr')),
     pickups: (pickups.data ?? [])
       .map((p) => {
-        const span = spanOf(p.valid_during);
-        return { id: p.id, name: `${p.first_name} ${p.last_name}`, span, timing: timingOf(span, today) };
+        return { id: p.id, name: `${p.first_name} ${p.last_name}`, ...periodOf(p, today) };
       })
       .sort(byStart),
     groups: (groups.data ?? []).filter((g) => !g.archived_at).map((g) => ({ id: g.id, name: g.name })),

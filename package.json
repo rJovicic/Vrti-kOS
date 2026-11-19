@@ -24,6 +24,7 @@
     "demo:reset": "node scripts/guard-local.mjs && node scripts/supabase.mjs db reset",
     "demo:verify": "pnpm --filter @vrticos/integration-tests run demo-verify",
     "db:spike": "node scripts/run-rls-spike.mjs",
+    "db:concurrency": "node scripts/guard-local.mjs && node scripts/run-concurrency-checks.mjs",
     "design:sync": "pnpm --filter @vrticos/tokens design-sync",
     "test:integration": "pnpm --filter @vrticos/integration-tests run integration"
   },
