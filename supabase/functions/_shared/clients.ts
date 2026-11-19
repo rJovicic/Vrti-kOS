@@ -1,8 +1,26 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const url = Deno.env.get('SUPABASE_URL')!;
-const publishable = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!;
-const secret = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+/**
+ * R-59: prefer the new API keys. Hosted projects provide them as JSON objects keyed by name (`SUPABASE_SECRET_KEYS`,
+ * `SUPABASE_PUBLISHABLE_KEYS`, key `default`); the local CLI stack provides single values. The legacy JWT-based keys
+ * (`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`) are only a fallback and stop working once they are disabled.
+ */
+function apiKey(jsonVar: string, singleVar: string, legacyVar: string): string {
+  const json = Deno.env.get(jsonVar);
+  if (json) {
+    try {
+      const key = (JSON.parse(json) as Record<string, unknown>).default;
+      if (typeof key === 'string' && key) return key;
+    } catch {
+      // fall through to the single-value variables
+    }
+  }
+  return Deno.env.get(singleVar) ?? Deno.env.get(legacyVar)!;
+}
+const publishable = apiKey('SUPABASE_PUBLISHABLE_KEYS', 'SUPABASE_PUBLISHABLE_KEY', 'SUPABASE_ANON_KEY');
+const secret = apiKey('SUPABASE_SECRET_KEYS', 'SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY');
 
 /**
  * Acts AS THE CALLER: every query is subject to RLS (SR-EF-01). Use for all authorization decisions.
