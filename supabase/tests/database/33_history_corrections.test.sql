@@ -184,9 +184,9 @@ select is((select count(*)::int from public.history_corrections), 5, 'an org_adm
 select throws_ok($$update public.history_corrections set note = 'promijenjeno, ne smije'$$, '42501', null, 'a client cannot change a correction');
 select throws_ok($$delete from public.history_corrections$$, '42501', null, 'nor delete one');
 reset role;
-select throws_ok($$update public.history_corrections set note = 'promijenjeno, ne smije'$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'even the owner cannot change a correction');
-select throws_ok($$delete from public.history_corrections$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'nor delete one');
-select throws_ok($$truncate public.history_corrections$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'nor truncate the table');
+select throws_ok($$update public.history_corrections set note = 'promijenjeno, ne smije'$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'the owner role in a normal session is also stopped by the trigger (it could still disable or drop the trigger — trust boundary, see threat model)');
+select throws_ok($$delete from public.history_corrections$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'nor delete one in a normal session');
+select throws_ok($$truncate public.history_corrections$$, '42501', 'HISTORY_CORRECTION_IMMUTABLE', 'nor truncate the table in a normal session');
 select pg_temp.login('a1');
 select is((select count(*)::int from public.history_corrections), 0, 'a manager without MFA reads nothing');
 reset role;

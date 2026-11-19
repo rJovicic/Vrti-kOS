@@ -5,6 +5,11 @@
 **CI:** run #56 na `f610167` (zaključak D5) — sva 4 posla uspješna; zadnji run #60 na `470d030` — sva 4 posla uspješna
 (provjereno kroz GitHub API).
 
+> **Dopuna 2026-11-19:** nakon ove procjene izvedeni su D-41b (povijesni ispravak) i Q-T22 (poništenje pogrešnog
+> unosa istog dana, s korekcijom provjere izostanaka). **R-54 je zatvoren**, R-58 ostaje otvoren do potvrde vlasnika.
+> Nepromjenjivost evidencije ispravaka vrijedi prema aplikaciji, ne prema privilegiranom operateru baze (model prijetnji
+> §3.1). Ostale ocjene ovog dokumenta nisu se promijenile.
+
 > Ovo je druga verzija procjene. Prva (commit `e458d83`, stanje `f610167`) ostaje u povijesti gita. Od tada su odobreni
 > i izvedeni D-41a (zaštita povijesti odnosa djeteta) i D-42 (razgovor po djetetu i skrbniku); D-41b je samo plan.
 > Ova procjena **ne mijenja kod ni odluke** — nalazi su samo dokumentirani. Nema mergea, deploya, promjena hosted

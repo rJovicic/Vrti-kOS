@@ -50,8 +50,10 @@ record to another child, group, guardian or kindergarten. A correction that only
 (a later correction of the same record points to the earlier one).
 
 - FK composite to `organizations`, `children`; `unique (organization_id, id)`.
-- **No client privileges** except `SELECT` for managers; no `UPDATE`/`DELETE` for anyone (also blocked by a trigger, so
-  even the owner role cannot change a row without dropping it — tested in the catalog).
+- **No client privileges** except `SELECT` for managers; no `UPDATE`/`DELETE`/`TRUNCATE` privilege for any application
+  role. A trigger additionally refuses them in every normal session, the table owner's included (tested). **Trust
+  boundary:** the table owner can disable or drop the trigger and a superuser can bypass triggers — this protects
+  against the application, not against a privileged database operator (see §2.8).
 - RLS select: `private.is_org_manager(organization_id)` (org_admin or director with AAL2). Educators, guardians, platform
   admin, other kindergartens: nothing.
 - Sensitivity **R4**: the note may name people or circumstances. The admin form warns not to enter health or
@@ -122,7 +124,16 @@ Access is always computed from the current rows for **today**, so a correction a
 - `history_corrections`: RLS on; one policy `select … using (private.is_org_manager(organization_id))`; no insert,
   update or delete policy; `revoke all` from `anon`, `authenticated`; `grant select` to `authenticated`. Rows are
   written only by the definer function (owner role).
-- Append-only trigger `before update or delete … raise 'HISTORY_CORRECTION_IMMUTABLE'` for every role.
+- Append-only triggers `before update or delete` and `before truncate` → `HISTORY_CORRECTION_IMMUTABLE` in every normal
+  session (application roles and the table owner); not effective against an owner/superuser who disables or drops them.
+
+### 2.8 Trust boundary of the evidence
+What is guaranteed: no application role (`anon`, `authenticated`, `service_role`) can change or delete a correction
+(no privilege, plus the trigger), only managers of the kindergarten with MFA read it, and the note never leaves the table.
+What is not: a privileged database operator (table owner `postgres`, superuser) can `ALTER TABLE … DISABLE TRIGGER`,
+`DROP TRIGGER` or set `session_replication_role = replica` and then change rows. Detecting that would need an external,
+append-only audit sink (e.g. write-once storage or a separate log service outside the operator's control) or another
+separate architecture — not built; it needs the owner's approval, a processor decision and a DPIA update.
 - `api.correct_relationship_history` executable by `authenticated` only; the definer is not executable by clients.
 - The note never leaves this table: not in `audit_events.details`, logs, notifications or push payloads.
 
@@ -146,7 +157,8 @@ AAL2); the database decides again.
 - dependencies: removing days with attendance / absence / handover rows → `CORRECTION_CONFLICTS`; extending → allowed;
 - recording: one `history_corrections` row with old and new values, actor, role, AAL, reason, note, affected; one audit
   event without note or names; `supersedes` chain on a second correction;
-- immutability: `UPDATE`/`DELETE` on `history_corrections` refused for every role (also as owner through the trigger);
+- immutability: `UPDATE`/`DELETE`/`TRUNCATE` on `history_corrections` refused for client roles (privilege) and in a normal
+  owner session (trigger); the operator boundary of §2.8 is documented, not tested;
 - access: corrected period applied on the next request (guardian sees / loses the child, educator sees / loses);
 - atomicity: injected failure after the correction row → nothing written, row unchanged;
 - regular path still closed: a direct `UPDATE` of a past day stays refused after the RPC exists;

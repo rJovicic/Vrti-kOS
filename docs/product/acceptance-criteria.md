@@ -153,7 +153,7 @@ autorizacije — obvezni su prije implementacije modula i kasnije postaju pgTAP 
 
 **AC-04-9 [NEG] — Poništenje pogrešnog unosa istog dana (Q-T22)** (FR-04-2…FR-04-8; R-58)
 - **Given** uprava s MFA-om danas je greškom unijela ovlaštenu osobu, vezu skrbnika ili upis koji počinje danas
-- **When** zapis nema ovisnih događaja (dolazak, predaja/preuzimanje, izostanak, poruka; za vezu ni ograničenje)
+- **When** zapis nema ovisnih događaja (dolazak, predaja/preuzimanje, izostanak, poruka; za vezu ni ograničenje) — izostanak je ovisan ako obuhvaća dan početka ili kasniji dan, bez obzira na to kada je prijavljen
 - **Then** poništenje uspijeva: zapis ostaje u evidenciji označen kao poništen (bez brisanja), odmah prestaje vrijediti i auditiran je
 - **And** ako ovisni događaj postoji, ako zapis počinje prije ili nakon danas, ili ako to pokuša druga uloga, drugi vrtić ili uprava bez MFA-a, poništenje se odbija; istodobni upis događaja i poništenje ne mogu oboje proći
 

@@ -449,7 +449,9 @@ ST-RLS-00; fixed by a global default-privilege revoke and an explicit final revo
   period matches no `@>`/`&&` test, so every access rule stops counting it at once.
 - `api.cancel_same_day_record(kind, id, reason)` (invoker) → `private.cancel_same_day_record` (definer): manager with MFA,
   child locked FOR UPDATE, record must start today (`CANCEL_TODAY_ONLY`), no dependent event (`RECORD_HAS_DEPENDENTS`,
-  mapped per type in `private.same_day_dependents`), link without restriction (`CANCEL_RECORD_REFERENCED`), audit
+  mapped per type in `private.same_day_dependents`; corrected by `20261119130000`: an absence counts when its period
+  `[starts_on, ends_on]` overlaps the start day or later, or when it was reported on/after the start day — for a link only
+  absences of that guardian; cancelled absences count too), link without restriction (`CANCEL_RECORD_REFERENCED`), audit
   `record.cancel_same_day`. D-37 (`api.cancel_future_record`, future records, deletion) is unchanged.
 - `private.lock_child_events(child)` (`20261119100000_child_event_lock.sql`): taken FOR SHARE first by
   `record_attendance`, `record_missed_attendance`, `report_absence`, `record_absence_on_behalf`, `send_message`.
@@ -458,8 +460,11 @@ ST-RLS-00; fixed by a global default-privilege revoke and an explicit final revo
 `history_corrections`: `id`, `organization_id`, `child_id`, `record_type`, `record_id`, `old_values jsonb`, `new_values jsonb`,
 `reason_code history_correction_reason`, `note` (10–1,000, trimmed), `corrected_by`, `corrected_role` (org_admin/director),
 `aal` (= aal2), `corrected_at`, `correlation_id`, `affected jsonb`, `supersedes`.
-- **Append-only** for every role, the owner included (`history_corrections_no_change`, `history_corrections_no_truncate`
-  → `HISTORY_CORRECTION_IMMUTABLE`); audit trigger.
+- **Append-only** for the application: no UPDATE/DELETE/TRUNCATE privilege for any client role, and triggers
+  (`history_corrections_no_change`, `history_corrections_no_truncate` → `HISTORY_CORRECTION_IMMUTABLE`) refuse them in every
+  normal session, the owner's included. **Not** a guarantee against a privileged operator: the owner can disable/drop the
+  triggers and a superuser can bypass them (`20261119140000_history_corrections_trust_boundary.sql`, d41b-plan §2.8);
+  audit trigger.
 - **RLS** S: `is_org_manager(organization_id)`; no insert/update/delete privilege for clients. **Sens. R4** (free-text note).
 - `api.correct_relationship_history(type, id, new_period, reason, note, first_name?, last_name?)` → definer; checks in
   `private.correction_conflicts` (attendance, handovers, absences, messages on removed days; for restrictions on changed

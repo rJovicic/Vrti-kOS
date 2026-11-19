@@ -110,6 +110,16 @@ flowchart LR
 | TB-7 | Tim/CI ↔ produkcija | kod, migracije, tajne, konzole | Najprivilegiraniji put; zaobilazi sve aplikacijske kontrole |
 | TB-8 | Tenant ↔ tenant | — | Logička granica unutar iste baze (ADR-0004) |
 
+### 3.1 Granica povjerenja: privilegirani operater baze (dopuna 2026-11-19)
+Zaštite „samo dodavanje” (`audit.audit_events`, `history_corrections`, `attendance_records`) ostvarene su privilegijama
+i okidačima. One štite od aplikacije i svih aplikacijskih uloga (`anon`, `authenticated`, `service_role`) te od
+vlasnika tablice u običnoj sesiji. **Ne štite od privilegiranog operatera baze:** vlasnik tablice može isključiti ili
+ukloniti okidač, a superuser može zaobići okidače (npr. `session_replication_role = replica`). Takav operater je unutar
+granice povjerenja (pristup ograničen na upravljanje platformom, SR-OPS). Jače jamstvo — dokaz da evidencija nije
+naknadno mijenjana — tražilo bi vanjski nepromjenjivi zapis (npr. pohranu tipa „write once” ili zasebnu uslugu izvan
+dosega operatera) ili drugu zasebnu arhitekturu; nije izgrađeno i traži odobrenje vlasnika, odluku o podizvršitelju i
+dopunu DPIA-e.
+
 ## 4. STRIDE analiza
 
 Oznake: **V** vjerojatnost, **U** utjecaj (1–5) **prije** mitigacija. Mitigacije su sigurnosni zahtjevi (SR) iz
