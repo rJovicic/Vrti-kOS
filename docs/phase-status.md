@@ -1,8 +1,8 @@
 # Status faza
 
 **Trenutna faza:** sloj **D5** (demo poliranje) — **izveden 2026-11-16** (plan i zaključak: [architecture/d5-plan.md](architecture/d5-plan.md); skripta prezentacije: [product/demo-script.md](product/demo-script.md)). D4 izveden 2026-11-15; D-40 (push) odobren i izveden s lažnim adapterom, bez aktivacije. Sljedeći sloj nije odobren.
-**Zadnja provjera:** 2026-11-16 (`470d030`, procjena spremnosti v2) — lint, typecheck, 193 unit testa (Vitest) + 75 render testova (Jest), **1.099 pgTAP** (32 datoteke), RLS spike, **122 integracijska**, **11 Playwright e2e**, Deno check/lint, Expo export iOS + Android, `demo:verify`; svih 17 koraka iz čistog stanja
-**CI:** GitHub Actions runovi #56 (`f610167`, zaključak D5), #59 (`3a1274f`, D-41a), #60 (`470d030`, D-42 i odluke) i [#61](https://github.com/rJovicic/Vrti-kOS/actions/runs/43892736883) (`aac1e58`) — sva 4 posla i svi koraci zeleni (#61 provjeren po poslovima 2026-11-19). Povijest nestabilnih testova: #33 i #40 (e-pošta s kodom, ublaženo), #45 (port na runneru), #55 (utrka nakon reseta, popravljeno)
+**Zadnja provjera:** 2026-11-19 (`f5e670b`, D-41b i Q-T22) — lint, typecheck, unit (Vitest), 75 render testova (Jest), **1.218 pgTAP** (34 datoteke), RLS spike, **125 integracijskih**, **10 scenarija istodobnosti** (`pnpm db:concurrency`), **11 Playwright e2e**, Deno check/lint, Expo export iOS + Android, `demo:verify`; svih 18 koraka iz čistog stanja
+**CI:** runovi [#63](https://github.com/rJovicic/Vrti-kOS/actions/runs/44497669165) (`a81d54c`, Q-T22) i [#64](https://github.com/rJovicic/Vrti-kOS/actions/runs/44499590701) (`f5e670b`, D-41b) — sva 4 posla i svi koraci zeleni (provjereno po poslovima), uključujući novi korak istodobnosti; raniji #56–#62 zeleni. Povijest nestabilnih testova: #33 i #40 (e-pošta s kodom, ublaženo), #45 (port na runneru), #55 (utrka nakon reseta, popravljeno)
 **Odluka vlasnika 2026-11-10:** izgraditi funkcionalni demo cijele aplikacije prije završetka intervjua; MVP ostaje nepotvrđen (D-19).
 **Faza 1:** specifikacija izrađena (nacrt); MVP nije zaključan
 **Paralelni tok:** V — validacija s kupcima → **nije započet**
