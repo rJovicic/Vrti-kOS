@@ -50,8 +50,8 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 | ST-TEN-05 | M12 s kontekstom Alfa traži D9; s kontekstom Beta traži D2; dohvat bez konteksta | D2 samo u Alfi, D9 samo u Beti; nijedan odgovor ne miješa vrtiće; kontekst ne mijenja ishod autorizacije | L3 | SR-AUTHZ-02 |
 | ST-TEN-06 | Svaki view i RPC izložen API-ju pozvan kao U1 i U9 | Vraća samo podatke vlastitog vrtića | L2 | SR-TEN-06, SR-API-02 |
 | ST-TEN-07 | U1 dohvaća postojeći ID zapisa Bete i nepostojeći ID; uspoređuje status, tijelo, zaglavlja i brojače (`count`) | Identični odgovori — nema otkrivanja postojanja | L3 | SR-API-04 |
-| ST-TEN-08 | Ako je Realtime uključen: G1 se pretplaćuje na promjene tablica i kanale | Prima samo događaje za koje ima pravo; bez Realtimea: pretplata odbijena | L3 | SR-API-05 |
-|  | ↳ stanje 2026-11-19 (staging) | `staging/smoke.ts`: javne teme odbijene (`private_only`), privatni kanal drugog vrtića odbijen, `postgres_changes` bez događaja nakon upisa dolaska; aplikacije nemaju Realtime ([architecture/realtime.md](../architecture/realtime.md)) | staging | SR-API-05 |
+| ST-TEN-08 | Realtime (D-43): pretplata na tuđu temu, javni kanal, slanje s klijenta, izgubljeno pravo uz otvorenu pretplatu, drugi vrtić, drugi skrbnik, premještaj, ponovno spajanje, duplikati | Prima samo vlastitu temu; baza šalje samo onima koji smiju čitati u tom trenutku; nema sadržaja u porukama | L3 | SR-API-05 |
+|  | ↳ stanje 2026-11-19 | ✅ pgTAP `34_realtime_broadcast` (31), integracija `realtime.test.ts` (9, stvarni lokalni Realtime), admin e2e (osvježavanje bez ponovnog učitavanja), staging `smoke.ts` (realtime i `/api/live`); kontrolna provjera: oslabljena politika kanala obara test uljeza ([architecture/realtime.md](../architecture/realtime.md)) | L1–L3 | SR-API-05 |
 
 ### 3.3 Pristup skrbnika djeci
 | ID | Scenarij | Očekivano | Razina | SR |
@@ -228,6 +228,6 @@ that exist; it must be re-proven for each new table (D3+).
 | NEG-11 own role/flags | ✅ | pgTAP 01, 02, 10 | — |
 | NEG-12 Storage | n/a | no bucket exists yet (photos are post-MVP) | first bucket |
 | NEG-13 audit immutable | ✅ | pgTAP 06 (append-only for every role), 01 | — |
-| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime off (SR-API-05, `config.toml`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15, 19–27 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
+| NEG-14 views, RPCs, Edge Functions | ✅ views and RPCs; Realtime: private personal topics only, recipients decided by the database (D-43, pgTAP 34, `realtime.test.ts`) | views: pgTAP 12 (`child_guardian_overview`), 17 (`guardian_directory`); RPCs: pgTAP 14, 15, 19–27 (invoker wrappers, definer in `private`, catalog check SR-API-01 in 00); Edge: integration `invitations`, `guardian-invitations` | Realtime when enabled |
 | NEG-15 anon | ✅ | pgTAP 00, 01, 09, 13, 14, 19–27 | — |
 

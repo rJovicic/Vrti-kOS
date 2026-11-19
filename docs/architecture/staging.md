@@ -48,13 +48,14 @@ setting below was applied through the Management API on 2026-11-19 and verified 
 
 | Area | Applied on staging | Hosted default that was wrong for us |
 |---|---|---|
-| Migrations | all 36 files in `supabase/migrations`, in order, each in one transaction, recorded in `supabase_migrations.schema_migrations` | — |
+| Migrations | all 37 files in `supabase/migrations` (36 on 2026-11-19 morning, `20261119150000_realtime_broadcast` added the same day), in order, each in one transaction, recorded in `supabase_migrations.schema_migrations` | — |
 | Catalog check | 27 tables in `public`/`audit`, **all with RLS**, 52 policies, 32 `api` and 108 `private` functions, 77 triggers; `btree_gist`, `citext` | — |
 | Seed | `supabase/seed.sql` (synthetic): 2 kindergartens (Alfa, Beta), 29 accounts, 31 children, 6 groups | — |
 | API (PostgREST) | exposed schemas `public, api`; `max_rows = 100` (SR-API-06) | `public, graphql_public`, 1000 rows — **`api` was not exposed, so no app call would have worked** |
 | Auth | sign-up off (ADR-0008); anonymous off; e-mail code 6 digits, 600 s (SR-AUTHN-02); access token 900 s (SR-SESS-02); refresh rotation; `custom_access_token` hook = `pg-functions://postgres/auth_hooks/custom_access_token` (R-49); TOTP MFA on, phone MFA off; password min 12 + all classes; reauthentication for password change; `site_url` and redirect allow-list = admin URL | sign-up **on**, 8-digit code valid 60 min, token 3600 s, hook off |
 | Auth e-mail template | **not applied**: the free plan refuses template changes without a custom SMTP provider. The default template sends a link, not a code. Codes are minted by the operator script (§4). | — |
-| Realtime | `private_only = true` (only authorized private channels), presence off; publication `supabase_realtime` empty | public channels open (measured: an Alfa user could relay a message to a Beta user) |
+| Realtime | `private_only = true` (only authorized private channels), presence off; publication `supabase_realtime` empty; D-43: policy `vrticos_receive_own_topic` (SELECT only) and 5 triggers from the migration ([realtime.md](realtime.md)) | public channels open (measured: an Alfa user could relay a message to a Beta user) |
+| API keys and JWT signing (R-59) | Edge Functions use the new keys (`SUPABASE_SECRET_KEYS`); legacy `anon`/`service_role` keys **disabled**; JWT signing key ES256 `in_use`, legacy HS256 secret **revoked** | legacy keys enabled; legacy HS256 secret still trusted (`previously_used`) |
 | Edge Functions | `invite-member`, `accept-invitations` (`verify_jwt` on), `push-dispatch` (`verify_jwt` off, internal secret; without it HTTP 403) | — |
 | Storage | no buckets (no feature uses storage yet) | — |
 
@@ -90,11 +91,17 @@ cd tests/integration
 NODE_USE_ENV_PROXY=1 STAGING_PUBLISHABLE_KEY=… STAGING_SECRET_KEY=… node --experimental-strip-types src/staging/smoke.ts
 ```
 
-(`NODE_USE_ENV_PROXY=1` only behind an HTTP proxy.) Result on 2026-11-19 after all settings: **25 PASS, 0 FAIL,
-2 INFO** — health (4), Auth (7: sign-up refused, no account for unknown address, code sign-in, 900 s token, AAL1,
-password session refused by the R-49 hook, TOTP → AAL2), RLS and isolation (11, including writes: an Alfa educator
-records attendance for an own child and gets `PERMISSION_DENIED` for a Beta child), Realtime (3, see
-[realtime.md](realtime.md)). A network failure can never count as an expected refusal (preflight + message checks).
+(`NODE_USE_ENV_PROXY=1` only behind an HTTP proxy; add `STAGING_MANAGEMENT_TOKEN=<Supabase access token>` for the
+configuration comparison, otherwise that section prints SKIPPED.) Result on 2026-11-19 after R-59 and D-43: **46 PASS,
+0 FAIL** — health (4); Auth (7: sign-up refused, no account for an unknown address, code sign-in, 900 s token, AAL1,
+password session refused by the R-49 hook, TOTP → AAL2); RLS and isolation (11, including writes: an Alfa educator
+records attendance for an own child and gets `PERMISSION_DENIED` for a Beta child); configuration (9: compared with
+`tests/integration/src/staging/expected-config.json` — exposed schemas and row limit, 18 Auth settings, Realtime,
+legacy keys disabled, only ES256 trusted, `verify_jwt` per function, no push activation secrets; plus `graphql_public`
+not exposed and 6-digit codes); Realtime D-43 (11: own topic, public and foreign topics refused, live attendance with
+ids only, no duplicate on replay, nothing to Beta or to the second guardian, live message to the educator, no text in
+events); admin `/api/live` on Railway (4: 401 without session, stream for an MFA manager, the educator's arrival
+arrives live, no token or names in the stream). A network failure can never count as an expected refusal.
 
 The first runs found the two configuration gaps above (`api` schema not exposed; public Realtime channels open); both
 are fixed and now asserted. The smoke run writes a few synthetic attendance events and creates and deletes one
@@ -102,22 +109,68 @@ temporary `smoke.lozinka.*@demo.vrtic.test` account.
 
 ## 6. Mobile on iPhone (Expo Go)
 
-All native modules of `apps/mobile` are part of Expo Go (secure store, router, localization); push registration has no
-provider (D-40), so no Expo Push, APNs or FCM credentials exist. A staging bundle was exported (`expo export
---platform ios`) and passed the CI secret scan. **Not yet verified on a device** (R-44, R-55).
+**Expo Go is enough.** Every native module of `apps/mobile` ships in Expo Go (expo-secure-store, expo-router,
+expo-localization, expo-constants, expo-linking, react-native-screens, safe-area-context); Realtime is plain WebSocket in
+supabase-js. Push registration has no provider (D-40): no Expo Push, APNs or FCM credentials exist or are needed. The
+app uses Expo SDK 58: the App Store Expo Go must support SDK 58 (Expo Go shows an "incompatible SDK" message
+otherwise; then a development build is needed, which requires an Expo account and is not part of this approval).
+A staging iOS bundle was exported (`expo export --platform ios`) and passed the CI secret scan. **Not yet verified on a
+device** (R-44, R-55).
 
-1. Install **Expo Go** from the App Store on the iPhone.
-2. On the laptop: `apps/mobile/.env.local` with the three `EXPO_PUBLIC_*` staging values (§2).
-3. `pnpm install`, then `pnpm --filter @vrticos/mobile start` (same Wi-Fi as the phone; otherwise `-- --tunnel`).
-4. Scan the QR code with the iPhone camera → opens in Expo Go. The DEMO bar must be visible.
-5. Sign in with a synthetic address (e.g. `odgojitelj.alfa.1@demo.vrtic.test`), then type the operator code (§4).
+1. Install **Expo Go** from the App Store.
+2. On the laptop (same Wi-Fi as the phone): create `apps/mobile/.env.local` with
+   `EXPO_PUBLIC_SUPABASE_URL=https://hfwlfdgzgulbutnjttnq.supabase.co`, the staging publishable key
+   (`EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`, public by design) and `EXPO_PUBLIC_APP_ENV=staging`.
+3. `pnpm install`, then `pnpm --filter @vrticos/mobile start` (if the phone cannot reach the laptop:
+   `pnpm --filter @vrticos/mobile start -- --tunnel`).
+4. Scan the QR code with the iPhone camera → it opens in Expo Go. The "DEMO: izmišljeni podaci" bar must be visible.
+5. Sign in with a synthetic address (e.g. `odgojitelj.alfa.1@demo.vrtic.test`); on the code screen type the code from
+   the operator script (§4).
+6. Live check (D-43): keep the educator's "Danas" screen open on the phone; in the admin (§7) or a second phone record
+   an arrival or send a message — the list updates within a few seconds without pulling to refresh. Put the phone in
+   flight mode, record another arrival, switch the network back on: the screen refetches on reconnect.
 
-A development build (EAS) is only needed if a module outside Expo Go is added; that requires an Expo account and is
-not part of this approval.
+## 7. Admin on staging
 
-## 7. Cost and limits
+1. Open https://admin-staging-7d208881.up.railway.app — the DEMO bar is visible; `/api/health` shows `appEnv: staging`.
+2. Sign in as `uprava.alfa@demo.vrtic.test` (or `ravnateljica.alfa@…`); type the operator code (§4).
+3. First sign-in: enrol TOTP with an authenticator app (SR-AUTHN-07); keep it — the smoke run creates and removes only
+   its own factor.
+4. "Dolasci" → group Galebovi: when the educator records an arrival on the phone, the row changes without reloading.
+
+## 8. Cost and limits
 
 - Supabase: free plan, $0. Free projects pause after about a week without activity; restore from the dashboard.
 - Railway: existing account plan (not visible to the tools; region selection worked, which the free plan does not
   offer, so the account is on Hobby: $5/month including $5 usage). One small Next.js service is expected to stay
   within the included usage; no new subscription was created.
+
+## 9. R-59 remediation (2026-11-19) and the Supabase access token
+
+**What happened.** A Management API response printed the staging legacy JWT secret into a session transcript (never
+into the repository, logs, CI or a bundle). A baseline check confirmed it was usable: a forged user token for the
+synthetic Alfa manager and a forged `service_role` token were both accepted (HTTP 200).
+
+**What was done (Management API, staging only):**
+1. Edge Functions read the new keys first (`288ebe1`) and were redeployed; with an ES256 user token
+   `accept-invitations` answers 200 and `invite-member` reaches its input validation.
+2. Legacy `anon` and `service_role` API keys disabled (`PUT /api-keys/legacy?enabled=false`).
+3. The legacy HS256 signing key revoked (`PATCH /config/auth/signing-keys/<id> {"status":"revoked"}`); the ES256 key
+   (already `in_use` on this new project) signs all tokens. No signed-in user lost a session: all live tokens were
+   already ES256.
+4. Verification (script that reads the secrets into memory only and prints statuses): forged user token → **401**,
+   forged `service_role` token → **401**, legacy `service_role` and `anon` keys → **401**; signing keys
+   `ES256:in_use, HS256:revoked`. The smoke `config` section asserts this permanently.
+5. Search for the legacy secret, the legacy keys and the new secret key in the whole Git history, the working tree,
+   the admin and mobile builds and the scratchpad: **0 hits** each. CI never receives staging values.
+
+If the owner prefers to repeat it by hand: Dashboard → Project Settings → **JWT Keys** (rotate to a standby ES256 key,
+then revoke the legacy secret) and **API Keys** → Legacy → disable. Both are reversible there.
+
+**Supabase personal access token (PAT).** It was used for the migrations, settings, function deploys and the
+configuration comparison. It is account-wide (all projects of the account), so keep it only while staging work is
+active. It was not exposed. Revocation is an owner action (no API for it):
+Dashboard → avatar → **Account preferences → Access Tokens → Revoke**, then remove the `api.supabase.com` network
+secret from this cloud environment (environment settings → Network secrets). Afterwards the smoke prints
+`config: SKIPPED` until a new token is provided for a run; no new token is created by Claude.
+

@@ -53,7 +53,7 @@ A hosted project does **not** read this file: the values applied to staging, and
 | `[auth.email] otp_length` / `otp_expiry` | 6 / 3600 s | 6 / 600 s | SR-AUTHN-02 |
 | `[auth.mfa.totp] enroll_enabled` / `verify_enabled` | false / false | true / true | SR-AUTHN-07 |
 | `[auth] enable_signup` | true | false (invitation-only; accounts are created by the `invite-member` Edge Function via the Auth admin API) | ADR-0008, ADR-0017 |
-| `[realtime] enabled` | true | false | SR-API-05 |
+| `[realtime] enabled` | true | true — private Broadcast only, authorized by RLS on `realtime.messages` (D-43; `private_only` is set on hosted projects) | SR-API-05 |
 | `[api] schemas` | `public, graphql_public` | `public, api` (no `graphql_public`, no `private`) | SR-API-01, SR-TEN-01 |
 | `[auth.email.template.magic_link]`, `[auth.email.template.confirmation]` | CLI templates with a link | `supabase/templates/login-code.html` (6-digit code only, Croatian) | SR-AUTHN-01, SR-AUTHN-04 |
 | `[auth.rate_limit] email_sent` | 2 / hour | 60 / hour — **local demo and tests only** | ADR-0010 decides production |

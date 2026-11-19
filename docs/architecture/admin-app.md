@@ -101,3 +101,13 @@ child name) → pickup person → restriction with confirmation (row shows "Bez 
 the past refused (D-36) → transfer from today → withdrawal with confirmation → record read-only.
 Vitest for actions/helpers; Playwright e2e against local stack + seed: manager flows (create child → link guardian →
 invite → verify invitation email in Mailpit), negative checks (U1 cannot open Beta URLs), CSP header presence (ST-WEB-01).
+
+## Live updates (D-43)
+
+`/api/live` (Route Handler, Node runtime) subscribes on the **server** to the caller's private Realtime topic
+`user:<id>` with the access token from the httpOnly session cookie (MFA session required, 401 otherwise) and streams
+validated hints (kind + ids) as Server-Sent Events; the stream closes before the token expires and the browser's
+`EventSource` reconnects through the proxy, which refreshes the session. `components/LiveRefresh.tsx` (in the
+kindergarten layout) calls `router.refresh()` for attendance and announcement hints and after every reconnect, so
+Server Components re-read the data under RLS. Page scripts never receive a token (SR-WEB-03). E2E: an arrival recorded
+by the educator appears on the open attendance page without reloading it. Details: [realtime.md](realtime.md).

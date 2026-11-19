@@ -296,3 +296,19 @@ odlukom D-3 i zabranom promjena hosted Supabasea.
 - **Razina B** je sada moguća bez lokalnog stacka (iPhone s Expo Go prema stagingu), ali još nije provedena na
   uređaju (R-44, R-55).
 - Realtime nije značajka proizvoda; scenariji i prijedlog: [architecture/realtime.md](../architecture/realtime.md).
+
+## Dodatak 2026-11-19 (2) — R-59 i D-43
+
+Odvojeno prema vrsti dokaza:
+
+- **Lokalno (stvarni lokalni Supabase stack s Realtimeom):** pgTAP 1.256 (35 datoteka, uklj. `34_realtime_broadcast`),
+  139 integracijskih (uklj. 9 Realtime: isporuka uživo, drugi skrbnik, drugi vrtić, izgubljeno pravo uz otvorenu
+  pretplatu, premještaj, izravni pokušaji preko Realtime API-ja, ponovno spajanje, duplikati), 12 scenarija
+  istodobnosti, 12 admin e2e (stranica dolazaka osvježava se bez ponovnog učitavanja), 76 mobilnih render testova,
+  Expo export, `demo:verify`.
+- **CI:** isti koraci na čistom runneru po commitu (vidi fazni status).
+- **Staging (hostani Supabase + Railway):** smoke 46/46 — Auth, RLS, usporedba hostanih postavki s
+  `expected-config.json`, Realtime događaji uživo i `/api/live` na Railwayu; R-59: lažni tokeni i legacy ključevi
+  vraćaju 401.
+- **Nije dokazano:** rad na fizičkom iPhoneu (R-44, R-55), ponašanje pod opterećenjem.
+- R-59 zatvoren; R-60 i R-61 ostaju ublaženi; R-58 ostaje zatvoren (bez regresije).

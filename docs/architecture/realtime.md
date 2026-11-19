@@ -1,53 +1,86 @@
-# Realtime — current state, staging evidence and a minimal design (not implemented)
+# Realtime (D-43) — private Broadcast hints
 
-## 1. Current state (2026-11-19)
+Approved by the owner on 2026-11-19 (D-43); implemented the same day. Migration
+`supabase/migrations/20261119150000_realtime_broadcast.sql`. SR-API-05 is amended accordingly (security-requirements).
 
-- **No feature uses Realtime.** Neither app subscribes to a channel; the only listener is Supabase Auth
-  `onAuthStateChange` (`apps/mobile/src/lib/session.tsx`). Lists refresh on focus and on pull-to-refresh
-  (technical-architecture §Realtime, mobile-app §query keys).
-- SR-API-05: Realtime is off in the MVP unless a module explicitly needs it; if enabled, only authorized channels with RLS.
-- Local stack: `[realtime] enabled = false` (`supabase/config.toml`).
-- Hosted staging (`vrticos-staging`): the Realtime service cannot be removed from a hosted project, so it is locked down
-  instead: `private_only = true` (public channels refused), presence off, publication `supabase_realtime` empty, no
-  policies on `realtime.messages` (so every private channel is refused too).
+## 1. What it does (and does not)
 
-## 2. The eight requested scenarios — results on staging
+- Live **refresh hints** for four existing features: attendance (admin and educator), private messages
+  (conversation participants), in-app notifications (their recipient) and announcements (their audience and the
+  managers). No new business function.
+- A hint carries **ids and a kind only** (`kind`, `organization_id`, plus e.g. `child_id`, `record_id`,
+  `conversation_id`, `message_id`, `notification_id`, `announcement_id`, `local_date`). Never names, message text,
+  announcement text or child data. The client **refetches through the normal API**, where RLS (and MFA for managers)
+  decides again.
+- **Not** used: `postgres_changes` (publication `supabase_realtime` stays empty), Presence, client-to-client
+  Broadcast, public channels.
 
-Measured with `tests/integration/src/staging/smoke.ts` (§Realtime) against staging on 2026-11-19.
-"Not supported" means the product has no such behaviour; it is **not** claimed as working.
+## 2. Authorization model
 
-| # | Scenario | Result |
+```
+writer transaction (e.g. api.record_attendance)
+  └─ AFTER trigger  →  recipients = the read rules at THIS moment
+                        (child_educator_participants, conversation_participant_ids,
+                         notification recipient, announcement_recipients, active managers)
+                    →  realtime.send(payload ids-only, event, 'user:<recipient>', private => true)
+Realtime  ── delivers committed messages only ──►  channel 'user:<id>' (private)
+           join/receive allowed only if  realtime.topic() = 'user:' || auth.uid()  and extension = 'broadcast'
+```
+
+- **Why personal topics.** Supabase Realtime evaluates the RLS policies on `realtime.messages` when a client joins a
+  channel and **caches the result for the connection**; it re-evaluates only on a new join or when the client sends a
+  new access token (Supabase docs, "Realtime Authorization → Updating RLS policies"). A topic per group or kindergarten
+  would therefore keep a revoked person subscribed until their next token refresh. With personal topics the channel rule
+  never changes for a person, and **who receives an event is decided in the database at send time** — a revoked right
+  takes effect on the very next event while the subscription stays open (proved in pgTAP 34 and `realtime.test.ts`).
+- **No sending by clients.** There is no insert/update/delete policy on `realtime.messages`; a client cannot broadcast,
+  not even to its own topic (pgTAP), and a REST broadcast with a user token to another user's topic delivers nothing
+  (integration).
+- **Public channels.** Hosted projects: Realtime setting `private_only = true` (refused at join; staging smoke). The
+  database only sends private messages, so a public channel with the same name receives nothing (integration, local
+  stack where `private_only` cannot be configured).
+- **Archive / edit of announcements** also tells the previous audience (BEFORE trigger) so their list refreshes.
+- **Remaining metadata exposure (accepted):** a recipient learns that *something* of a kind happened and its ids at
+  the moment they are entitled to read it. A person who loses a right keeps the hints already received (ids only).
+
+## 3. Clients
+
+| Client | How | Token |
 |---|---|---|
-| 1 | Educator records attendance → admin sees it without reload | **Not supported.** Attendance write succeeded; a `postgres_changes` subscription of the Alfa director received **0 events** (publication empty; with `private_only` the join itself is refused). The admin shows it after reload. |
-| 2 | Parent sends a message → educator sees it live | **Not supported.** Same mechanism; the educator sees it on focus/refresh. |
-| 3 | New notification appears live | **Not supported.** Notifications are rows read on focus/refresh (push is not active, D-40). |
-| 4 | Announcement change appears live | **Not supported.** Re-read on focus/refresh. |
-| 5 | User who lost access receives no further events | **Holds, trivially:** nobody receives any Realtime event. Access loss for the API itself is enforced by RLS on every read (pgTAP, integration). |
-| 6 | Other kindergarten receives nothing | **Holds at protocol level:** a Beta guardian's join to the private channel `org:<Alfa id>` → `CHANNEL_ERROR`; public topics refused. Before `private_only` was set, a public topic **did** relay a message from an Alfa user to a Beta user (no database data, but an open relay) — fixed and now asserted. |
-| 7 | Reconnect keeps a consistent state | **Not applicable** without subscriptions; after reconnect the apps refetch on focus. |
-| 8 | No duplicates | **Not applicable** for Realtime. Writes are idempotent by key (attendance, absences — D3) independent of Realtime. |
+| Mobile (`apps/mobile/src/lib/live.tsx`) | `LiveEventsProvider` subscribes to `user:<id>` after `realtime.setAuth()`; screens call `useLiveRefresh(kinds, load)` (attendance, conversations, conversation view, notifications, home) | session token from the keychain; supabase-js sends refreshed tokens to Realtime |
+| Admin (`/api/live` + `LiveRefresh`) | the browser opens an `EventSource('/api/live')`; the **server** subscribes with the caller's token from the httpOnly cookie and forwards validated hints; the page calls `router.refresh()` | never in the browser (SR-WEB-03); stream ends ≤ 10 min / before token expiry, then reconnects through the proxy that refreshes the session |
+| Shared (`packages/domain/src/live-events.ts`) | strict payload parser (unknown kinds, non-uuid ids and extra fields dropped), de-duplication by message id, `onResync` after a drop or a failed first join, coalescing of bursts (400 ms) | — |
 
-## 3. Minimal design if the owner wants live updates (proposal — needs a security decision)
+**Reconnect.** Realtime does not replay messages sent while a client was disconnected. Every client refetches what it
+shows when the channel is joined again (and after a failed first join), so the state converges.
+**Duplicates.** Idempotent writes (replayed key) insert no row → no trigger → no event (pgTAP, integration, staging).
+A hint delivered twice only causes a second refetch of the same rows.
 
-Goal: live refresh hints for scenarios 1–4 without sending any personal data over Realtime and without a second
-authorization model.
+## 4. Evidence
 
-1. **Broadcast from the database, never `postgres_changes`.** An `AFTER INSERT/UPDATE` trigger on
-   `attendance_records`, `absence_records`, `messages`, `notifications`, `announcements` calls
-   `realtime.send(payload, event, topic, private => true)` with a payload of **IDs only**
-   (`{kind, organization_id, group_id|conversation_id, id}`), no names, no text.
-2. **Topics per authorization scope:** `group:<id>` (staff of the group), `conversation:<id>` (its participants),
-   `user:<profile id>` (own notifications), `org:<id>:managers` (managers with AAL2).
-3. **Authorization in Postgres:** RLS policies on `realtime.messages` for `select` (receive) that reuse the existing
-   private functions (`private.is_org_manager`, group assignment, `private.conversation_participant_ids`, guardian
-   links), and **no** `insert` policy (clients never send). Topic parsing in one `private` function.
-4. **Clients treat an event as a hint:** on event → refetch the affected query through the normal API (RLS decides
-   again). Missed events after reconnect → full refetch, so scenario 7 and 8 reduce to existing behaviour.
-5. **Tests in the same change:** pgTAP for the `realtime.messages` policies (own group / other group / other org /
-   ended assignment / restricted guardian), and the staging smoke extended so scenarios 1–6 become real assertions.
+| Scenario | Local (pgTAP 34 / integration / e2e) | CI | Staging (smoke 2026-11-19) |
+|---|---|---|---|
+| Attendance visible to the manager without refresh | ✅ integration (event + refetch), ✅ admin e2e (open page updates, no reload) | ✅ #71 | ✅ director receives the event; ✅ Railway `/api/live` streams it to an MFA manager |
+| Message to the right participant only | ✅ pgTAP, integration (second guardian gets nothing) | ✅ | ✅ (second guardian of the same child: 0 events) |
+| Notification and announcement to the right audience | ✅ pgTAP (audience, draft → managers only, archive → previous audience), integration | ✅ | notification via message ✅; announcement local only |
+| Alfa does not receive Beta | ✅ pgTAP, integration | ✅ | ✅ (Beta manager: 0 events) |
+| Second guardian gets no private messages | ✅ | ✅ | ✅ |
+| Former educator, **subscription kept open** | ✅ integration (channel still `joined`, 0 events), pgTAP | ✅ | — (local proof) |
+| Group change moves the scope | ✅ pgTAP, integration | ✅ | — |
+| Guardian restricted while subscribed | ✅ pgTAP, integration | ✅ | — |
+| Public channel refused | public copy receives nothing (local) | ✅ | ✅ join refused (`private_only`) |
+| Reconnect after a network drop | ✅ integration (disconnect → resync → new events), unit | ✅ | — |
+| Duplicates do not duplicate data | ✅ pgTAP, integration, unit, mobile render | ✅ | ✅ replay sends nothing |
+| Direct Realtime API without rights | ✅ integration (foreign private topic `CHANNEL_ERROR`, REST broadcast forges nothing), pgTAP (policy, no insert) | ✅ | ✅ foreign topic refused |
+| Negative control | weakening the channel policy makes the intruder test fail | — | — |
 
-Cost: no new subprocessor (Supabase already processes the data); Realtime is included in the plan. Risk: policy
-mistakes leak metadata (IDs, timing) — mitigated by IDs-only payloads and negative tests.
+**Not proven:** live behaviour on a physical iPhone (R-44, R-55); delivery under load; Realtime availability SLAs.
 
-**Decision needed (owner):** change SR-API-05 from "off" to "authorized private broadcast with IDs only" and approve
-the implementation as a new work package. Until then Realtime stays locked down as in §1.
+## 5. Limits
+
+- Revocation of the **channel** itself is not instantaneous on Supabase (cached per connection); this design does not
+  depend on it, because the channel only ever authorizes the person's own topic. A suspended account keeps a joined
+  channel until its token expires (≤ 15 min, SR-SESS-02) but receives no events, because the database no longer lists it
+  as a recipient.
+- Hints after the fact cannot be recalled. They contain no content.
+- Local Realtime cannot be set to `private_only`; the public-channel refusal is proved on staging.

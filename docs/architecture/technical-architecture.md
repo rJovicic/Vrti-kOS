@@ -117,9 +117,9 @@ flowchart TB
 | **Bootstrap RPC** | `api.accept_invitations(user_id, email)` creates the profile and membership from a pending invitation (ADR-0017). Replaces the planned profile-bootstrap trigger | `SECURITY INVOKER`, EXECUTE for `service_role` only |
 | **Triggers** | Audit events (`private.audit_row`), guard triggers, `updated_at`; later notification fan-out and derived columns | Live in `private`, fixed `search_path`, no client EXECUTE (SR-API-01) |
 
-Realtime is **off** for the demo (SR-API-05); clients refetch on focus and pull-to-refresh. Revisit for messages.
-On the hosted staging project the service is locked down instead (`private_only`, empty publication); state, staging
-evidence and a minimal design: [realtime.md](realtime.md).
+Realtime (D-43, 2026-11-19): private Broadcast hints on personal topics `user:<id>`; the database decides the recipients
+at event time; ids only; clients refetch (mobile directly, admin through the server-side `/api/live` SSE route).
+Details and evidence: [realtime.md](realtime.md).
 
 ## 5. Shared packages in practice
 - **tokens:** TypeScript source (`palette.ts`, `theme.ts`, `scale.ts`) consumed directly by RN; `build-css.ts` writes

@@ -133,7 +133,7 @@ Oznake: **V** vjerojatnost, **U** utjecaj (1–5) **prije** mitigacija. Mitigaci
 | T-TEN-03 | I | `organization_id` poslan iz klijenta prihvaćen bez provjere članstva (insert u tuđi vrtić) | 3 | 5 | SR-TEN-05 (WITH CHECK), SR-AUTHZ-01 | ST-TEN-03 |
 | T-TEN-04 | I | View, materializirani view ili RPC zaobilazi RLS (view se izvodi s pravima vlasnika) | 3 | 5 | SR-TEN-06 (`security_invoker`), SR-API-02 | ST-RLS-00, ST-TEN-06 |
 | T-TEN-05 | I | Otkrivanje postojanja zapisa drugog vrtića kroz različite poruke grešaka, brojače ili FK greške | 2 | 3 | SR-API-04 | ST-TEN-07 |
-| T-TEN-06 | I | Realtime pretplata ili pretraga vraća podatke drugih vrtića | 2 | 5 | SR-API-05, SR-TEN-01 | ST-TEN-08 |
+| T-TEN-06 | I | Realtime pretplata ili pretraga vraća podatke drugih vrtića | 2 | 5 | SR-API-05, SR-TEN-01; D-43: samo osobna privatna tema, primatelji iz pravila čitanja u trenutku događaja, samo ID-ovi | ST-TEN-08 |
 | T-TEN-07 | I | Korisnik s članstvom u dva vrtića vidi miješane podatke (kontekst klijenta zamijenjen za autorizaciju) | 3 | 4 | SR-AUTHZ-02 | ST-TEN-05 |
 
 ### 4.2 Autentikacija i sesije (FS-01)

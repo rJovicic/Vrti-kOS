@@ -164,7 +164,7 @@ opening marks the conversation's notifications read. Sending needs a connection;
 tests 5.
 
 ## 5. Data and offline (attendance queue implemented in D3-E; everything else online-only)
-- Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus (no Realtime in demo).
+- Queries keyed by `organizationId` + resource; pull-to-refresh and refetch on focus; D-43 live hints (`lib/live.tsx`, `useLiveRefresh`) trigger the same refetch on attendance, conversations, notifications and home, and after every reconnect ([realtime.md](realtime.md)).
 - Offline: only attendance mutations are queued (ADR-0012); other screens show cached data read-only with an
   "offline" banner; caches are memory-only (no persisted query cache with child data).
 - Logout / org switch / account deactivated (401/403 on refresh): clear query cache, secure store, offline queue
