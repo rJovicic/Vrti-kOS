@@ -8,4 +8,5 @@ export const env = {
   appEnv: process.env.EXPO_PUBLIC_APP_ENV ?? 'demo',
 } as const;
 
-export const isDemo = env.appEnv === 'demo' || env.appEnv === 'local';
+// 'staging' runs on synthetic data only (Railway staging + vrticos-staging), so it carries the same marker (R-37).
+export const isDemo = env.appEnv === 'demo' || env.appEnv === 'local' || env.appEnv === 'staging';
