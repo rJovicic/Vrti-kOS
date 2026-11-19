@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useLiveRefresh } from '../../lib/live';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AbsenceReportView } from '../../features/guardian-home/AbsenceReportView';
@@ -52,6 +53,7 @@ function GuardianHomeRoute() {
   useEffect(() => {
     void load();
   }, [load]);
+  useLiveRefresh(['notification', 'announcement', 'message'], () => void load(true));
 
   const closeReport = useCallback(() => setReportFor(null), []);
   if (reportFor) {

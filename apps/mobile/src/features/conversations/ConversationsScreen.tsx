@@ -1,3 +1,4 @@
+import { useLiveRefresh } from '../../lib/live';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,7 @@ export function ConversationsScreen({ mode, onSessionExpired }: {
   useEffect(() => {
     if (!open) void load();
   }, [load, open]);
+  useLiveRefresh(['message', 'notification'], () => (open ? undefined : void load()));
 
   if (open) return <ConversationView child={open} onBack={close} onSessionExpired={onSessionExpired} />;
   const title = t(mode === 'educator' ? 'nav.conversations' : 'nav.messages');

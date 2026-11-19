@@ -92,7 +92,30 @@ export function createFakeSupabase(state: FakeState) {
     return api;
   }
 
+  // Realtime (D-43): records joined topics; `broadcast` delivers a payload to every channel of that topic.
+  const channels: Array<{ topic: string; private: boolean; deliver: (payload: unknown) => void }> = [];
+  const broadcast = (topic: string, payload: unknown) => channels.filter((c) => c.topic === topic).forEach((c) => c.deliver(payload));
   const client = {
+    channel: (topic: string, opts: { config: { private: boolean } }) => {
+      const entry = { topic, private: opts.config.private, deliver: (_p: unknown) => undefined as void };
+      channels.push(entry);
+      const ch = {
+        on: (_type: string, _filter: unknown, cb: (m: { payload?: unknown }) => void) => {
+          entry.deliver = (payload) => cb({ payload });
+          return ch;
+        },
+        subscribe: (cb?: (status: string) => void) => {
+          cb?.('SUBSCRIBED');
+          return ch;
+        },
+      };
+      return ch;
+    },
+    realtime: { setAuth: async (_token?: string) => undefined },
+    removeChannel: async (ch: unknown) => {
+      void ch;
+      return 'ok';
+    },
     from: (table: string) => builder(table),
     schema: (_name: string) => ({ rpc: (fn: string, args: Row = {}) => rpcCall(fn, args) }),
     auth: {
@@ -111,7 +134,7 @@ export function createFakeSupabase(state: FakeState) {
       stopAutoRefresh: async () => undefined,
     },
   };
-  return { client, requests, emit };
+  return { client, requests, emit, channels, broadcast };
 }
 
 export const session = (id: string): FakeSession => ({ access_token: 'test-token', user: { id, email: `${id}@demo.vrtic.test` } });

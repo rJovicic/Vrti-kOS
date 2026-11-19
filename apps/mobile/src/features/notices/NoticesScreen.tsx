@@ -1,3 +1,4 @@
+import { useLiveRefresh } from '../../lib/live';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,7 @@ export function NoticesScreen({ kindergartens, showAbsences, onSessionExpired }:
   useEffect(() => {
     void load();
   }, [load]);
+  useLiveRefresh(['notification', 'announcement'], () => void load());
 
   const close = useCallback(() => setOpen(null), []);
   useEffect(() => {

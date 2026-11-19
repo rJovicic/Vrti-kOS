@@ -3,7 +3,7 @@
 // error states, the educator's absence reports (with a report that is no longer readable), and push preferences per
 // type in the profile. What each person may read is proven by pgTAP 24/25 and the integration tests.
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import { join } from 'node:path';
 import { hr } from '@vrticos/i18n';
 import { CORRELATION_HEADER, CORRELATION_ID_PATTERN } from '../../lib/correlation';
@@ -95,6 +95,32 @@ describe('notification centre and announcements (D4-D)', () => {
     expect(rpcCalls('mark_notifications_read')[0]!.values).toEqual({});
     await screen.findByText('Promjena radnog vremena');
     expect(screen.queryByText(hr.notices.new)).toBeNull();
+  });
+
+  it('D-43: a live hint on the own private topic refetches the list without any tap', async () => {
+    const s = state('guardian');
+    await start(s);
+    expect(await screen.findByText('Roditeljski sastanak u četvrtak')).toBeTruthy();
+    expect(mockFake.channels.map((c) => [c.topic, c.private])).toContainEqual(['user:guardian-1', true]);
+    s.tables.announcements!.push({ id: 'a3', organization_id: ALFA.id, title: 'Novi izlet', body: 'Petak.', status: 'published', published_at: '2026-11-16T08:00:00Z', edited_at: null });
+    s.tables.notifications!.push({ id: 'n3', type: 'announcement.published', resource_id: 'a3', created_at: '2026-11-16T08:00:00Z', read_at: null });
+    const reads = () => mockFake.requests.filter((r) => r.table === 'announcements').length;
+    const before = reads();
+    // The router test harness runs on fake timers: let the 400 ms coalescing window pass explicitly.
+    await act(async () => {
+      mockFake.broadcast('user:guardian-1', { id: '7b0c3a8f-631d-4212-aac6-427bdb61cc57', kind: 'notification', notification_id: '7b0c3a8f-631d-4212-aac6-427bdb61cc58' });
+      jest.advanceTimersByTime(500);
+    });
+    expect(await screen.findByText('Novi izlet')).toBeTruthy();
+    expect(reads()).toBe(before + 1);
+    // An event of an unrelated kind, a duplicate or an invalid id triggers nothing.
+    await act(async () => {
+      mockFake.broadcast('user:guardian-1', { id: 'not-a-uuid', kind: 'notification' });
+      mockFake.broadcast('user:guardian-1', { id: 'b7e9fdd6-acd5-40f6-8149-e1f907e96ccf', kind: 'attendance' });
+      mockFake.broadcast('user:guardian-1', { id: '7b0c3a8f-631d-4212-aac6-427bdb61cc57', kind: 'notification' });
+      jest.advanceTimersByTime(500);
+    });
+    expect(reads()).toBe(before + 1);
   });
 
   it('empty and error states', async () => {

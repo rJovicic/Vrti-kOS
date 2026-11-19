@@ -342,9 +342,15 @@ importers:
 
   tests/integration:
     dependencies:
+      '@supabase/ssr':
+        specifier: 0.12.7
+        version: 0.12.7(@supabase/supabase-js@2.119.0)
       '@supabase/supabase-js':
         specifier: 2.119.0
         version: 2.119.0
+      '@vrticos/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
     devDependencies:
       playwright:
         specifier: 1.63.0

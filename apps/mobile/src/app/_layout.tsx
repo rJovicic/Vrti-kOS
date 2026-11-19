@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { LiveEventsProvider } from '../lib/live';
 import { SessionProvider, useSession } from '../lib/session';
 import { DemoBanner } from '../ui/DemoBanner';
 import { useColors } from '../ui/theme';
@@ -43,10 +44,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
+        <LiveEventsProvider>
         <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: c.bgCanvas }}>
           <DemoBanner />
           <RootNavigator />
         </SafeAreaView>
+        </LiveEventsProvider>
       </SessionProvider>
       <StatusBar style="auto" />
     </SafeAreaProvider>

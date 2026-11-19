@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { signOut } from '@/app/actions';
+import { LiveRefresh } from '@/components/LiveRefresh';
 import { Nav } from '@/components/Nav';
 import { getOrgContext } from '@/lib/dal';
 import { t } from '@/lib/i18n';
@@ -40,6 +41,7 @@ export default async function OrgLayout({ children, params }: { children: ReactN
         </form>
       </aside>
       <main className="main">{children}</main>
+      <LiveRefresh />
     </div>
   );
 }

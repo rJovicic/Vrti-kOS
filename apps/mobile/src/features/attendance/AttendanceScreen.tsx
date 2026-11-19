@@ -1,3 +1,4 @@
+import { useLiveRefresh } from '../../lib/live';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, AppState, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -98,6 +99,7 @@ export function AttendanceScreen({ userId, groups, onSessionExpired, now = () =>
   useEffect(() => {
     void load();
   }, [load]);
+  useLiveRefresh(['attendance'], () => void load());
   // Retry unsent taps when the app returns to the foreground and periodically while any are waiting.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => (s === 'active' ? void load() : undefined));

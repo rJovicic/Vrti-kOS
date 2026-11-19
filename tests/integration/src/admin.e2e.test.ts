@@ -2,7 +2,8 @@
 // (ADMIN_URL, default http://localhost:3000). Fresh synthetic kindergarten per run; seed data only for negatives.
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createKindergarten, email, latestMail, service } from './helpers.ts';
+import { randomUUID } from 'node:crypto';
+import { createKindergarten, email, latestMail, service, signInWithCode } from './helpers.ts';
 import { totp } from './totp.ts';
 
 const ADMIN = process.env.ADMIN_URL ?? 'http://localhost:3000';
@@ -271,6 +272,20 @@ describe('admin app (browser)', () => {
     await page.locator('.row', { hasText: 'Ivo Dolazak' }).locator('summary').click();
     await submit(page, page.locator('.row', { hasText: 'Ivo Dolazak' }).getByRole('button', { name: 'Otkaži dane koji nisu prošli' }));
     await expect(page.locator('.flash.ok').textContent()).resolves.toContain('otkazana');
+  });
+
+  it('D-43: an arrival recorded by the educator appears on the open attendance page without reloading it', async () => {
+    // The page is already showing Dupini with Ivo "U vrtiću" (previous test). No goto/reload from here on.
+    await expect(page.getByRole('row', { name: /Ivo Dolazak/ }).textContent()).resolves.toContain('U vrtiću');
+    await page.waitForTimeout(1500); // let /api/live join the private topic
+    const { data: child } = await service.from('children').select('id').eq('organization_id', kg.orgId).eq('first_name', 'Ivo').eq('last_name', 'Dolazak').single().throwOnError();
+    const educator = (await signInWithCode(kg.educatorEmail)).client;
+    const { error } = await educator.schema('api').rpc('record_attendance', { p_child_id: child!.id, p_kind: 'check_out', p_idempotency_key: randomUUID() });
+    expect(error).toBeNull();
+    await page.getByRole('row', { name: /Ivo Dolazak/ }).getByText(/Otišlo/).waitFor({ timeout: 15_000 });
+    // The browser never receives a token or content: the live stream sends only hints.
+    const cookies = await page.context().cookies();
+    expect(cookies.filter((c) => c.name.startsWith('sb-')).every((c) => c.httpOnly)).toBe(true);
   });
 
   it('D4-C: announcements — draft for a group, warning, publish, edit with history, archive', async () => {

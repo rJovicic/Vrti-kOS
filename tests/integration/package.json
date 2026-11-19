@@ -10,7 +10,9 @@
     "demo-verify": "vitest run src/demo-reset.demo.test.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.119.0"
+    "@supabase/supabase-js": "2.119.0",
+    "@vrticos/domain": "workspace:*",
+    "@supabase/ssr": "0.12.7"
   },
   "devDependencies": {
     "playwright": "1.63.0"

@@ -1,3 +1,4 @@
+import { useLiveRefresh } from '../../lib/live';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -45,6 +46,7 @@ export function ConversationView({ child, onBack, onSessionExpired, now = () => 
   useEffect(() => {
     void load();
   }, [load]);
+  useLiveRefresh(['message'], () => void load());
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       onBack();
