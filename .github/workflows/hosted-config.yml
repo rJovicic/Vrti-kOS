@@ -1,0 +1,60 @@
+# Hosted Supabase configuration check (staging only). Manual: never runs on push and never applies anything.
+#
+# It runs the checks that need NO credentials (auth settings, exposed schemas, JWKS, admin health) against the staging
+# project described in supabase/hosted/staging.json. The Management API checks, `plan` and `apply` need the operator's
+# Supabase access token, which by decision is never stored in GitHub (R-59, docs/architecture/hosted-config.md); run
+# those locally. The publishable key is public by design (it is in every client bundle) and is passed as an input.
+name: hosted-config
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Only check-public is available in CI (plan/apply need the operator token and run locally)'
+        type: choice
+        options: [check-public]
+        default: check-public
+      project_ref:
+        description: 'Must be the staging project ref from supabase/hosted/staging.json'
+        type: string
+        required: true
+        default: hfwlfdgzgulbutnjttnq
+      publishable_key:
+        description: 'Staging publishable key (sb_publishable_…, public by design)'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-config
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: hosted config · ${{ inputs.action }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: refuse anything but the staging project
+        env:
+          REF: ${{ inputs.project_ref }}
+          ACTION: ${{ inputs.action }}
+        run: |
+          expected=$(jq -r '.project.ref + " " + .project.environment' supabase/hosted/staging.json)
+          [ "$expected" = "$REF staging" ] || { echo "refused: $REF is not the staging project"; exit 3; }
+          [ "$ACTION" = "check-public" ] || { echo "refused: only check-public runs in CI"; exit 3; }
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - name: check (public probes only; management checks are reported as skipped, not as passed)
+        env:
+          HOSTED_PUBLISHABLE_KEY: ${{ inputs.publishable_key }}
+          REF: ${{ inputs.project_ref }}
+        run: pnpm --filter @vrticos/hosted-config run cli check --project "$REF" --public-only

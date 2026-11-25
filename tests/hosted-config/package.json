@@ -1,0 +1,12 @@
+{
+  "name": "@vrticos/hosted-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Configuration as code for the hosted Supabase staging project: check, plan, apply (staging only).",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "cli": "node --experimental-strip-types --no-warnings src/cli.ts"
+  }
+}

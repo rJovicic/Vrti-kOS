@@ -103,6 +103,12 @@ ids only, no duplicate on replay, nothing to Beta or to the second guardian, liv
 events); admin `/api/live` on Railway (4: 401 without session, stream for an MFA manager, the educator's arrival
 arrives live, no token or names in the stream). A network failure can never count as an expected refusal.
 
+**Since 2026-11-25** the configuration section evaluates the shared spec `supabase/hosted/staging.json` (52 settings;
+the former `expected-config.json` was removed) — see [hosted-config.md](hosted-config.md). Result 2026-11-25:
+**81 PASS, 0 FAIL, 10 INFO** (open decisions, manual settings and informational values are INFO, never PASS). Joins
+now wait up to 15 s for `SUBSCRIBED`: after the project's Realtime had been idle for six days the first private join
+failed once and supabase-js retried it successfully (the clients already refetch after such a failed first join).
+
 The first runs found the two configuration gaps above (`api` schema not exposed; public Realtime channels open); both
 are fixed and now asserted. The smoke run writes a few synthetic attendance events and creates and deletes one
 temporary `smoke.lozinka.*@demo.vrtic.test` account.

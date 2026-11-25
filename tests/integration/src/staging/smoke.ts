@@ -10,7 +10,9 @@
 import { randomUUID } from 'node:crypto';
 import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
 import { totp } from '../totp.ts';
-import { readFileSync } from 'node:fs';
+import { ManagementClient, PublicClient } from '../../../hosted-config/src/clients.ts';
+import { evaluate } from '../../../hosted-config/src/evaluate.ts';
+import { loadSpec } from '../../../hosted-config/src/spec.ts';
 import { createServerClient } from '@supabase/ssr';
 import { STAGING_ADMIN_URL, STAGING_REF, anon, ensureSmokeManager, mintCode, signIn, stagingTarget } from './target.ts';
 
@@ -154,43 +156,24 @@ const ids = await section('rls', async () => {
   return { alfaId: alfa!.id as string, betaId: beta!.id as string, ownChild, eduAlfa, parent, parentChild };
 });
 
-// ── 4. Hosted configuration drift (R-60, R-61) ───────────────────────────────────────────────────────────────────
-// With a Supabase access token (operator; behind the cloud proxy it is injected) the smoke compares the security-relevant
-// hosted settings with expected-config.json. Without one the section is skipped and says so (never silently passes).
+// ── 4. Hosted configuration (R-60, R-61): the same source of truth as tests/hosted-config ───────────────────────────
+// supabase/hosted/staging.json is compared with the live project. With STAGING_MANAGEMENT_TOKEN (operator only) every
+// setting is read; without it only the token-free probes run and the rest prints SKIPPED (never a pass).
 await section('config', async () => {
+  const spec = loadSpec(new URL('../../../../supabase/hosted/staging.json', import.meta.url).pathname);
   const token = process.env.STAGING_MANAGEMENT_TOKEN;
-  if (!token) {
-    info('config: hosted settings', 'SKIPPED — set STAGING_MANAGEMENT_TOKEN to compare with expected-config.json');
-    return;
+  const results = await evaluate({
+    spec,
+    mgmt: token ? new ManagementClient({ ref: STAGING_REF, token }) : null,
+    pub: new PublicClient({ apiUrl: spec.project.apiUrl, adminUrl: spec.project.adminUrl, publishableKey: t.publishableKey }),
+    migrationsDir: new URL('../../../../supabase/migrations', import.meta.url).pathname,
+  });
+  for (const r of results) {
+    if (r.class === 'security' || r.class === 'functional') {
+      if (r.status === 'skipped') info(`config: ${r.id}`, 'SKIPPED — needs STAGING_MANAGEMENT_TOKEN; not verified');
+      else check(`config: ${r.id}`, r.status === 'ok', r.status === 'ok' ? JSON.stringify(r.actual) : `${r.status}: actual ${JSON.stringify(r.actual)}, expected ${JSON.stringify(r.expected)}${r.note ? ` (${r.note})` : ''}`);
+    } else if (r.status !== 'skipped') info(`config: ${r.id}`, `${r.status}: ${JSON.stringify(r.actual ?? r.expected)}`);
   }
-  const expected = JSON.parse(readFileSync(new URL('./expected-config.json', import.meta.url), 'utf8')) as {
-    postgrest: Record<string, unknown>; auth: Record<string, unknown>; realtime: Record<string, unknown>;
-    functions: Record<string, boolean>; function_secrets_absent: string[];
-  };
-  const mgmt = async (path: string) => {
-    const r = await fetch(`https://api.supabase.com/v1/projects/${STAGING_REF}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!r.ok) throw new Error(`management API ${path}: HTTP ${r.status}`);
-    return r.json() as Promise<unknown>;
-  };
-  const compare = (area: string, actual: Record<string, unknown>, want: Record<string, unknown>) => {
-    const diff = Object.entries(want).filter(([k, v]) => actual[k] !== v).map(([k, v]) => `${k}: ${JSON.stringify(actual[k])} ≠ ${JSON.stringify(v)}`);
-    check(`config: ${area} matches expected-config.json`, diff.length === 0, diff.join('; ') || `${Object.keys(want).length} settings`);
-  };
-  compare('API (exposed schemas, max rows)', (await mgmt('/postgrest')) as Record<string, unknown>, expected.postgrest);
-  compare('Auth (sign-up, code, token, hook, MFA, redirects)', (await mgmt('/config/auth')) as Record<string, unknown>, expected.auth);
-  compare('Realtime (private only, no presence)', (await mgmt('/config/realtime')) as Record<string, unknown>, expected.realtime);
-  const legacy = (await mgmt('/api-keys/legacy')) as { enabled?: boolean };
-  check('config: legacy anon/service_role keys disabled (R-59)', legacy.enabled === false, JSON.stringify(legacy));
-  const sk = (await mgmt('/config/auth/signing-keys')) as { keys?: Array<{ algorithm: string; status: string }> };
-  const keys = sk.keys ?? [];
-  const trusted = keys.filter((k) => k.status === 'in_use' || k.status === 'previously_used' || k.status === 'standby');
-  check('config: only the ES256 signing key is trusted (legacy JWT secret revoked, R-59)', trusted.length === 1 && trusted[0]!.algorithm === 'ES256',
-    keys.map((k) => `${k.algorithm}:${k.status}`).join(', '));
-  const fns = (await mgmt('/functions')) as Array<{ slug: string; verify_jwt: boolean }>;
-  const fnState = Object.fromEntries(fns.map((f) => [f.slug, f.verify_jwt]));
-  compare('Edge Functions (verify_jwt)', fnState, expected.functions);
-  const secrets = ((await mgmt('/secrets')) as Array<{ name: string }>).map((x) => x.name);
-  check('config: push activation secrets are absent (D-40, no Expo Push)', expected.function_secrets_absent.every((n) => !secrets.includes(n)), secrets.filter((n) => !n.startsWith('SUPABASE_')).join(', '));
 });
 
 // Behaviour that shows the same settings without any token.
@@ -205,14 +188,18 @@ await section('config-behaviour', async () => {
 
 // ── 5. Realtime D-43: real events on the hosted project ─────────────────────────────────────────────────────────────
 type Status = 'SUBSCRIBED' | 'CHANNEL_ERROR' | 'TIMED_OUT' | 'CLOSED';
-const join = (channel: RealtimeChannel, ms = 10_000) =>
+// Waits up to `ms` for SUBSCRIBED; supabase-js retries a failed join on its own (e.g. the first join after the
+// project's Realtime was idle for days fails once). Resolves SUBSCRIBED as soon as it happens, otherwise the last
+// status seen. A negative check therefore means: never subscribed within the whole window.
+const join = (channel: RealtimeChannel, ms = 15_000) =>
   new Promise<Status>((resolve) => {
-    const timer = setTimeout(() => resolve('TIMED_OUT'), ms);
+    let last: Status = 'TIMED_OUT';
+    const timer = setTimeout(() => resolve(last), ms);
     channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+      if (status === 'SUBSCRIBED') {
         clearTimeout(timer);
-        resolve(status as Status);
-      }
+        resolve('SUBSCRIBED');
+      } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') last = status as Status;
     });
   });
 interface Ear { events: Array<Record<string, unknown>>; status: Status; client: SupabaseClient }

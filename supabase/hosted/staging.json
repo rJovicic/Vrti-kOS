@@ -1,0 +1,71 @@
+{
+  "$comment": "Source of truth for the hosted staging project (synthetic data only; not production, not D-3). The hosted project does not read supabase/config.toml. Checked, planned and applied by tests/hosted-config (docs/architecture/hosted-config.md). Every expected value names the decision it comes from; values without a decision are class 'decision' and never pass silently.",
+  "project": {
+    "ref": "hfwlfdgzgulbutnjttnq",
+    "name": "vrticos-staging",
+    "environment": "staging",
+    "region": "eu-central-1",
+    "apiUrl": "https://hfwlfdgzgulbutnjttnq.supabase.co",
+    "adminUrl": "https://admin-staging-7d208881.up.railway.app"
+  },
+  "settings": [
+    { "id": "auth.disable_signup", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "disable_signup" }, "expected": true, "apply": "safe", "decision": "ADR-0008 (invitation only)" },
+    { "id": "auth.external_email_enabled", "class": "functional", "source": { "kind": "field", "path": "/config/auth", "field": "external_email_enabled" }, "expected": true, "apply": "safe", "decision": "ADR-0017 (e-mail code sign-in)" },
+    { "id": "auth.external_phone_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "external_phone_enabled" }, "expected": false, "apply": "safe", "decision": "ADR-0017; config.toml [auth.sms] enabled = false" },
+    { "id": "auth.external_anonymous_users_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "external_anonymous_users_enabled" }, "expected": false, "apply": "safe", "decision": "config.toml enable_anonymous_sign_ins = false" },
+    { "id": "auth.security_manual_linking_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "security_manual_linking_enabled" }, "expected": false, "apply": "safe", "decision": "config.toml enable_manual_linking = false" },
+    { "id": "auth.mailer_otp_length", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mailer_otp_length" }, "expected": 6, "apply": "safe", "decision": "SR-AUTHN-02; config.toml otp_length = 6" },
+    { "id": "auth.mailer_otp_exp", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mailer_otp_exp" }, "expected": 600, "apply": "safe", "decision": "SR-AUTHN-02; config.toml otp_expiry = 600" },
+    { "id": "auth.jwt_exp", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "jwt_exp" }, "expected": 900, "apply": "safe", "decision": "SR-SESS-02 (Q-S10); config.toml jwt_expiry = 900" },
+    { "id": "auth.refresh_token_rotation_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "refresh_token_rotation_enabled" }, "expected": true, "apply": "safe", "decision": "SR-SESS-02" },
+    { "id": "auth.security_refresh_token_reuse_interval", "class": "functional", "source": { "kind": "field", "path": "/config/auth", "field": "security_refresh_token_reuse_interval" }, "expected": 10, "apply": "safe", "decision": "config.toml refresh_token_reuse_interval = 10" },
+    { "id": "auth.password_min_length", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "password_min_length" }, "expected": 12, "apply": "safe", "decision": "R-49 defence in depth; config.toml minimum_password_length = 12" },
+    { "id": "auth.security_update_password_require_reauthentication", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "security_update_password_require_reauthentication" }, "expected": true, "apply": "safe", "decision": "R-49; config.toml secure_password_change = true" },
+    { "id": "auth.hook_custom_access_token_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "hook_custom_access_token_enabled" }, "expected": true, "apply": "safe", "decision": "R-49 (no token for password sessions); migration 20261111170000" },
+    { "id": "auth.hook_custom_access_token_uri", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "hook_custom_access_token_uri" }, "expected": "pg-functions://postgres/auth_hooks/custom_access_token", "apply": "safe", "decision": "R-49" },
+    { "id": "auth.mfa_totp_enroll_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mfa_totp_enroll_enabled" }, "expected": true, "apply": "safe", "decision": "SR-AUTHN-07" },
+    { "id": "auth.mfa_totp_verify_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mfa_totp_verify_enabled" }, "expected": true, "apply": "safe", "decision": "SR-AUTHN-07" },
+    { "id": "auth.mfa_phone_enroll_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mfa_phone_enroll_enabled" }, "expected": false, "apply": "safe", "decision": "config.toml [auth.mfa.phone] enroll_enabled = false" },
+    { "id": "auth.mfa_phone_verify_enabled", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "mfa_phone_verify_enabled" }, "expected": false, "apply": "safe", "decision": "config.toml [auth.mfa.phone] verify_enabled = false" },
+    { "id": "auth.site_url", "class": "functional", "source": { "kind": "field", "path": "/config/auth", "field": "site_url" }, "expected": "https://admin-staging-7d208881.up.railway.app", "apply": "safe", "decision": "staging.md §3 (redirects to the staging admin only)" },
+    { "id": "auth.uri_allow_list", "class": "security", "source": { "kind": "field", "path": "/config/auth", "field": "uri_allow_list" }, "expected": "https://admin-staging-7d208881.up.railway.app/**", "apply": "safe", "decision": "staging.md §3 (no foreign redirect targets)" },
+    { "id": "auth.mailer_autoconfirm", "class": "informational", "source": { "kind": "field", "path": "/config/auth", "field": "mailer_autoconfirm" }, "expected": null, "apply": "none", "decision": "none — accounts are created confirmed by invite-member; sign-up is off" },
+    { "id": "auth.sessions_timebox", "class": "decision", "source": { "kind": "field", "path": "/config/auth", "field": "sessions_timebox" }, "expected": null, "apply": "none", "decision": "open: SR-SESS-04 / Q-S10 (session limits); config.toml leaves [auth.sessions] unset" },
+    { "id": "auth.sessions_inactivity_timeout", "class": "decision", "source": { "kind": "field", "path": "/config/auth", "field": "sessions_inactivity_timeout" }, "expected": null, "apply": "none", "decision": "open: SR-SESS-04 / Q-S10" },
+    { "id": "auth.rate_limit_email_sent", "class": "decision", "source": { "kind": "field", "path": "/config/auth", "field": "rate_limit_email_sent" }, "expected": null, "apply": "none", "decision": "open: decided with the e-mail provider (ADR-0010); config.toml value is local demo only" },
+    { "id": "auth.email_templates", "class": "unsupported", "source": { "kind": "none" }, "expected": "6-digit code template supabase/templates/login-code.html", "apply": "manual", "decision": "SR-AUTHN-01/04", "manual": "Free plan refuses template changes without a custom SMTP provider (Management API: 'Email template modification is not available for free tier projects'). Staging uses operator-minted codes (staging.md §4). Needs ADR-0010 (SMTP) before it can be applied." },
+
+    { "id": "postgrest.db_schema", "class": "security", "source": { "kind": "field", "path": "/postgrest", "field": "db_schema" }, "expected": "public,api", "apply": "safe", "decision": "SR-API-01, SR-TEN-01; config.toml [api] schemas" },
+    { "id": "postgrest.max_rows", "class": "security", "source": { "kind": "field", "path": "/postgrest", "field": "max_rows" }, "expected": 100, "apply": "safe", "decision": "SR-API-06" },
+    { "id": "postgrest.db_extra_search_path", "class": "functional", "source": { "kind": "field", "path": "/postgrest", "field": "db_extra_search_path" }, "expected": "public, extensions", "apply": "safe", "decision": "config.toml [api] extra_search_path" },
+
+    { "id": "realtime.private_only", "class": "security", "source": { "kind": "field", "path": "/config/realtime", "field": "private_only" }, "expected": true, "apply": "safe", "decision": "SR-API-05 (D-43), R-61" },
+    { "id": "realtime.presence_enabled", "class": "security", "source": { "kind": "field", "path": "/config/realtime", "field": "presence_enabled" }, "expected": false, "apply": "safe", "decision": "D-43 (no Presence)" },
+    { "id": "realtime.suspend", "class": "functional", "source": { "kind": "field", "path": "/config/realtime", "field": "suspend" }, "expected": false, "apply": "none", "decision": "D-43 needs Realtime running" },
+    { "id": "realtime.message_retention", "class": "unsupported", "source": { "kind": "none" }, "expected": "platform managed (documented: 3 days)", "apply": "manual", "decision": "R-53", "manual": "Not configurable by the project (no Management API field; partitions owned by supabase_realtime_admin). Observed with tests/hosted-config retention-probe; see docs/security/data-retention.md." },
+
+    { "id": "keys.legacy_api_keys_enabled", "class": "security", "source": { "kind": "legacy-keys" }, "expected": false, "apply": "manual", "decision": "R-59", "manual": "Dashboard → Project Settings → API Keys → Legacy → disable (reversible). Not auto-applied: it changes who can call the API." },
+    { "id": "keys.trusted_signing_keys", "class": "security", "source": { "kind": "signing-keys" }, "expected": "ES256 only", "apply": "manual", "decision": "R-59", "manual": "Dashboard → Project Settings → JWT Keys: rotate to an ES256 key, revoke every other key. Not auto-applied: key state changes are throttled (~5 min) and can sign users out." },
+    { "id": "functions.verify_jwt", "class": "security", "source": { "kind": "functions" }, "expected": { "invite-member": true, "accept-invitations": true, "push-dispatch": false }, "apply": "manual", "decision": "ADR-0014, SR-EF-01; config.toml [functions.*]", "manual": "Set by deployment: supabase functions deploy <name> --remote=<ref> --use-api (reads supabase/config.toml)." },
+    { "id": "functions.no_push_activation_secrets", "class": "security", "source": { "kind": "secrets-absent", "names": ["PUSH_ACTIVATION_APPROVED", "EXPO_ACCESS_TOKEN"] }, "expected": true, "apply": "manual", "decision": "D-40 (push not activated), R-56", "manual": "Never set these on staging. Removal: Dashboard → Edge Functions → Secrets." },
+
+    { "id": "db.migrations_applied", "class": "functional", "source": { "kind": "sql", "query": "migrations" }, "expected": "all files in supabase/migrations", "apply": "manual", "decision": "CLAUDE.md (schema changes only via migrations)", "manual": "Apply missing migrations in order (staging.md §3)." },
+    { "id": "db.tables_without_rls", "class": "security", "source": { "kind": "sql", "query": "tables_without_rls" }, "expected": 0, "apply": "none", "decision": "ADR-0004, CLAUDE.md (RLS on every tenant table)" },
+    { "id": "db.anon_table_grants_public_api", "class": "security", "source": { "kind": "sql", "query": "anon_table_grants" }, "expected": 0, "apply": "none", "decision": "SR-API-01 (no anonymous table access)" },
+    { "id": "db.realtime_publication_tables", "class": "security", "source": { "kind": "sql", "query": "publication_tables" }, "expected": 0, "apply": "none", "decision": "SR-API-05 (no postgres_changes)" },
+    { "id": "db.realtime_write_policies", "class": "security", "source": { "kind": "sql", "query": "realtime_write_policies" }, "expected": 0, "apply": "none", "decision": "D-43 (clients never send)" },
+    { "id": "db.realtime_receive_policy", "class": "security", "source": { "kind": "sql", "query": "realtime_receive_policy" }, "expected": 1, "apply": "none", "decision": "D-43 (own topic only)" },
+    { "id": "db.public_storage_buckets", "class": "security", "source": { "kind": "sql", "query": "public_buckets" }, "expected": 0, "apply": "none", "decision": "CLAUDE.md (storage buckets are private)" },
+    { "id": "db.storage_buckets", "class": "informational", "source": { "kind": "sql", "query": "buckets" }, "expected": null, "apply": "none", "decision": "no feature uses storage yet (photos: Phase 11)" },
+
+    { "id": "network.ssl_enforcement", "class": "decision", "source": { "kind": "field", "path": "/ssl-enforcement", "field": "currentConfig.database" }, "expected": null, "apply": "none", "decision": "open: no requirement yet for direct database connections (no client connects directly; Railway has no database credentials)" },
+    { "id": "network.db_allowed_cidrs", "class": "decision", "source": { "kind": "field", "path": "/network-restrictions", "field": "config.dbAllowedCidrs" }, "expected": null, "apply": "none", "decision": "open: direct database access is not used by any component" },
+    { "id": "pooler.pool_mode", "class": "informational", "source": { "kind": "pooler" }, "expected": null, "apply": "none", "decision": "platform default; not used by any component" },
+
+    { "id": "public.signup_disabled", "class": "security", "source": { "kind": "public", "probe": "auth-settings-signup" }, "expected": true, "apply": "none", "decision": "ADR-0008" },
+    { "id": "public.only_email_provider", "class": "security", "source": { "kind": "public", "probe": "auth-settings-providers" }, "expected": ["email"], "apply": "none", "decision": "ADR-0017" },
+    { "id": "public.exposed_schemas", "class": "security", "source": { "kind": "public", "probe": "schema-exposure" }, "expected": { "public": true, "api": true, "graphql_public": false, "private": false, "audit": false, "auth_hooks": false }, "apply": "none", "decision": "SR-API-01" },
+    { "id": "public.jwks_es256_only", "class": "security", "source": { "kind": "public", "probe": "jwks" }, "expected": ["ES256"], "apply": "none", "decision": "R-59" },
+    { "id": "public.admin_points_at_staging", "class": "security", "source": { "kind": "public", "probe": "admin-health" }, "expected": { "status": "ok", "appEnv": "staging", "supabaseHost": "hfwlfdgzgulbutnjttnq.supabase.co" }, "apply": "none", "decision": "staging.md §2 (Railway staging never points at another project)" }
+  ]
+}
