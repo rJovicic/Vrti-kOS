@@ -69,6 +69,8 @@ vidi pravila u [../product/validation-plan.md](../product/validation-plan.md) §
 | DI-F7 | Biometrija, lokacija, analitika ponašanja | zabranjeno briefom / ADR-0007 |
 
 ## 4. Pitanja o rokovima čuvanja (⚖️ Q-P09 — odluku donosi voditelj obrade)
+
+Centralni pregled mehanizama, ovisnosti i dokaza: [../security/data-retention.md](../security/data-retention.md).
 | ID | Pitanje |
 |---|---|
 | DI-01–03 | Koliko dugo nakon prestanka zadnjeg članstva račun ostaje? Briše li se račun automatski kad skrbnik nema više nijedno aktivno dijete? |
