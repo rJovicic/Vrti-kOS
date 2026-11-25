@@ -52,6 +52,9 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 | ST-TEN-07 | U1 dohvaća postojeći ID zapisa Bete i nepostojeći ID; uspoređuje status, tijelo, zaglavlja i brojače (`count`) | Identični odgovori — nema otkrivanja postojanja | L3 | SR-API-04 |
 | ST-TEN-08 | Realtime (D-43): pretplata na tuđu temu, javni kanal, slanje s klijenta, izgubljeno pravo uz otvorenu pretplatu, drugi vrtić, drugi skrbnik, premještaj, ponovno spajanje, duplikati | Prima samo vlastitu temu; baza šalje samo onima koji smiju čitati u tom trenutku; nema sadržaja u porukama | L3 | SR-API-05 |
 |  | ↳ stanje 2026-11-19 | ✅ pgTAP `34_realtime_broadcast` (35), integracija `realtime.test.ts` (9, stvarni lokalni Realtime), admin e2e (osvježavanje bez ponovnog učitavanja), staging `smoke.ts` (realtime i `/api/live`); kontrolna provjera: oslabljena politika kanala obara test uljeza ([architecture/realtime.md](../architecture/realtime.md)) | L1–L3 | SR-API-05 |
+| ST-CFG-01 | Hostana konfiguracija (ADR-0018): stvarno stanje staginga uspoređeno sa `supabase/hosted/staging.json`; pogrešno očekivanje, izazvano odstupanje, nepoznata vrijednost, nedostupan API, djelomičan odgovor, pogrešan project ref, nedostajući token, neodobrena promjena | Odstupanje i nepoznato obaraju provjeru; `apply` samo na stagingu, samo sigurne postavke, uz potvrdu | L2–L3 | R-60, R-61 |
+|  | ↳ stanje 2026-11-25 | ✅ `tests/hosted-config` (18 unit), staging `check` 42/42 i izazvano odstupanje ispravljeno `apply`-em; smoke na istoj specifikaciji ([architecture/hosted-config.md](../architecture/hosted-config.md)) | L1–L3 | R-60 |
+| ST-RET-01 | Retencija: klijenti ne brišu; nema kaskade na zapise; brisanje osobe/djeteta/vrtića sa zapisima odbijeno; račun bez profila se može ukloniti | ✅ pgTAP `35_data_retention` (9) ([data-retention.md](data-retention.md)) | L1 | R-53 |
 
 ### 3.3 Pristup skrbnika djeci
 | ID | Scenarij | Očekivano | Razina | SR |

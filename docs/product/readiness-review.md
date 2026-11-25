@@ -321,3 +321,13 @@ Odvojeno prema vrsti dokaza:
   stižu, što je dokazano).
 - Fizički test na iPhoneu pripremljen ([iphone-test-protocol.md](iphone-test-protocol.md)), **nije izveden**: R-44 i
   R-55 ostaju otvoreni. Opterećenje Realtimea nije testirano (procjena troška prije bilo kakvog testa opterećenja).
+
+## Dodatak 2026-11-25 — konfiguracija kao kod i retencija
+
+| Tvrdnja | Lokalno | CI | Hostani staging | Ručno | Nije dokazano |
+|---|---|---|---|---|---|
+| Hostana konfiguracija odgovara specifikaciji | — | unit testovi alata | ✅ `check` 42/42, smoke 81/0 | — | kontinuirano (nema zakazane provjere s tokenom) |
+| Odstupanje obara provjeru, `apply` je ograničen na staging | unit (18) | ✅ #74 | ✅ izazvano odstupanje + `apply` | — | GitHub workflow (nije pokretljiv prije mergea) |
+| Nijedno brisanje ne uništava evidenciju | pgTAP 35 | ✅ | — | — | — |
+| Retencija `realtime.messages` 3 dana | — | — | ❌ opaženo ≥ 6 dana | — | ponašanje uz stalni promet |
+| Rokovi čuvanja i anonimizacija | — | — | — | — | nisu odlučeni (Q-P09) |
