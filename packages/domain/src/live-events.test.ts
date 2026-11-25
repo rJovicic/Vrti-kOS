@@ -68,7 +68,7 @@ describe('live events (D-43)', () => {
     const f = fakeClient();
     const statuses: string[] = [];
     let resyncs = 0;
-    subscribeLiveEvents(f.client, 'u1', { onEvent: () => undefined, onResync: () => resyncs++, onStatus: (s) => statuses.push(s) });
+    subscribeLiveEvents(f.client, 'u1', { onEvent: () => undefined, onResync: () => resyncs++, onStatus: (s) => statuses.push(s) }, { settleMs: 0 });
     f.status('SUBSCRIBED');
     expect(resyncs).toBe(0);
     f.status('CHANNEL_ERROR');
@@ -79,10 +79,32 @@ describe('live events (D-43)', () => {
     expect(resyncs).toBe(1);
     const g = fakeClient();
     let resyncs2 = 0;
-    subscribeLiveEvents(g.client, 'u1', { onEvent: () => undefined, onResync: () => resyncs2++ });
+    subscribeLiveEvents(g.client, 'u1', { onEvent: () => undefined, onResync: () => resyncs2++ }, { settleMs: 0 });
     g.status('CHANNEL_ERROR');
     g.status('SUBSCRIBED');
     expect(resyncs2).toBe(1);
+  });
+
+  it('resyncs once shortly after the first join (Realtime replication may start late), not again after later joins', () => {
+    vi.useFakeTimers();
+    const f = fakeClient();
+    let resyncs = 0;
+    subscribeLiveEvents(f.client, 'u1', { onEvent: () => undefined, onResync: () => resyncs++ });
+    f.status('SUBSCRIBED');
+    vi.advanceTimersByTime(4_999);
+    expect(resyncs).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(resyncs).toBe(1);
+    f.status('SUBSCRIBED');
+    vi.advanceTimersByTime(10_000);
+    expect(resyncs).toBe(1);
+    const g = fakeClient();
+    let late = 0;
+    const stop = subscribeLiveEvents(g.client, 'u1', { onEvent: () => undefined, onResync: () => late++ });
+    g.status('SUBSCRIBED');
+    stop();
+    vi.advanceTimersByTime(10_000);
+    expect(late).toBe(0);
   });
 
   it('stops forwarding and removes the channel on unsubscribe', () => {

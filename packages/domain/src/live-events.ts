@@ -59,14 +59,27 @@ export interface LiveHandlers {
   onStatus?: (status: LiveStatus) => void;
 }
 
+export interface LiveOptions {
+  /**
+   * One extra resync this long after the first successful join (0 disables). After Supabase Realtime starts for an
+   * idle project, its replication of realtime.messages begins only with the first client connection; events written
+   * in that window are never delivered (measured in CI #77, 2026-11-25). The settle resync closes that gap.
+   */
+  settleMs?: number;
+}
+
 const SEEN_LIMIT = 500;
+export const SETTLE_RESYNC_MS = 5_000;
 
 /**
  * Joins the caller's own private topic and forwards validated, de-duplicated events. Returns the unsubscribe function.
  * Authorization is not decided here: the topic is only readable by its owner (RLS on realtime.messages) and the
  * database only sends events the person may read at that moment.
  */
-export function subscribeLiveEvents(client: LiveClientLike, userId: string, handlers: LiveHandlers): () => void {
+export function subscribeLiveEvents(client: LiveClientLike, userId: string, handlers: LiveHandlers, options: LiveOptions = {}): () => void {
+  const settleMs = options.settleMs ?? SETTLE_RESYNC_MS;
+  let settleTimer: ReturnType<typeof setTimeout> | null = null;
+  let joinedOnce = false;
   const seen: string[] = [];
   const seenSet = new Set<string>();
   // Resync whenever a join succeeds after anything other than a clean first join (a drop, or a failed first attempt):
@@ -91,6 +104,13 @@ export function subscribeLiveEvents(client: LiveClientLike, userId: string, hand
       handlers.onStatus?.('live');
       if (needsResync) handlers.onResync();
       needsResync = false;
+      if (!joinedOnce && settleMs > 0) {
+        settleTimer = setTimeout(() => {
+          settleTimer = null;
+          if (!closed) handlers.onResync();
+        }, settleMs);
+      }
+      joinedOnce = true;
     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
       handlers.onStatus?.('offline');
       needsResync = true;
@@ -99,6 +119,7 @@ export function subscribeLiveEvents(client: LiveClientLike, userId: string, hand
 
   return () => {
     closed = true;
+    if (settleTimer) clearTimeout(settleTimer);
     void client.removeChannel(channel);
   };
 }

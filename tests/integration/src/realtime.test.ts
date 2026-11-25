@@ -135,7 +135,20 @@ beforeAll(async () => {
   g1 = await signed(p1.address);
   g2 = await signed(p2.address);
   outsider = await signed(px.address);
-}, 120_000);
+
+  // Warm-up: on a freshly started stack Realtime creates its replication of realtime.messages only after the first
+  // client connects, and events written before that are never delivered (CI #77). The checks below are about who
+  // receives what, so wait until delivery demonstrably works (a fresh child, so no test state is touched).
+  const warm = await child(alfa.orgId, alfa.groupId, 'Topli');
+  const probe = await listen(managerA);
+  let delivered = false;
+  for (let attempt = 0; attempt < 8 && !delivered; attempt++) {
+    await arrive(edu1, warm, attempt % 2 === 0 ? 'check_in' : 'check_out');
+    delivered = await waitFor(() => kinds(probe, 'attendance').length > 0, 5_000);
+  }
+  await managerA.removeAllChannels();
+  if (!delivered) throw new Error('Realtime did not deliver any event within 40 s after start');
+}, 180_000);
 
 afterAll(async () => {
   for (const c of clients) await c.removeAllChannels();
@@ -279,7 +292,7 @@ describe('D-43: Realtime private Broadcast (local Realtime server)', () => {
     const events: string[] = [];
     let resyncs = 0;
     await managerA.realtime.setAuth();
-    const stop = subscribeLiveEvents(managerA, managerId, { onEvent: (e) => events.push(e.kind), onResync: () => resyncs++ });
+    const stop = subscribeLiveEvents(managerA, managerId, { onEvent: (e) => events.push(e.kind), onResync: () => resyncs++ }, { settleMs: 0 });
     expect(await waitFor(() => managerA.getChannels().some((c) => c.state === 'joined'))).toBe(true);
     managerA.realtime.disconnect();
     await sleep(500);
