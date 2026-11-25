@@ -329,5 +329,5 @@ Odvojeno prema vrsti dokaza:
 | Hostana konfiguracija odgovara specifikaciji | — | unit testovi alata | ✅ `check` 42/42, smoke 81/0 | — | kontinuirano (nema zakazane provjere s tokenom) |
 | Odstupanje obara provjeru, `apply` je ograničen na staging | unit (18) | ✅ #74 | ✅ izazvano odstupanje + `apply` | — | GitHub workflow (nije pokretljiv prije mergea) |
 | Nijedno brisanje ne uništava evidenciju | pgTAP 35 | ✅ | — | — | — |
-| Retencija `realtime.messages` 3 dana | — | — | ❌ opaženo ≥ 6 dana | — | ponašanje uz stalni promet |
+| Retencija `realtime.messages` ~3 dana | — | — | ⚠️ samo uz aktivni Realtime (bez prometa ≥ 6 dana; nakon buđenja obrisano u nekoliko sati) | — | točan raspored čišćenja |
 | Rokovi čuvanja i anonimizacija | — | — | — | — | nisu odlučeni (Q-P09) |

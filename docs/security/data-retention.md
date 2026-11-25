@@ -73,10 +73,13 @@ deleted” (Realtime Architecture), „deleted after 3 days” (Broadcast) [dok.
 | 2026-11-25 13:25 | nakon 6 dana bez Realtime konekcija | **iste** 2026_11_18 … 2026_11_22; nema novih | **2026-11-19 14:17 (36 redaka)** |
 | 2026-11-25 13:38 | nekoliko minuta nakon prve nove konekcije | dodane 2026_11_24 … 2026_11_28; **stare nisu uklonjene** | 2026-11-19 14:17 |
 | 2026-11-25 13:45 | ~10 min aktivnosti | isto | 2026-11-19 14:17 |
+| 2026-11-25 18:53 | ~5 h nakon buđenja | **2026_11_22 … 2026_11_28** — particije 18.–21. 11. uklonjene | **2026-11-25 13:37** (poruke od 19. 11. obrisane) |
 
-**Zaključak.** Tvrdnja „3 dana” **nije potvrđena**: na projektu bez Realtime prometa poruke su čuvane najmanje 6 dana, a
-upravljanje particijama očito radi samo dok je Realtime za projekt aktivan. Za projekt u stalnoj upotrebi (pilot)
-ponašanje može biti drukčije — to treba izmjeriti, ne pretpostaviti.
+**Zaključak.** Brisanje radi, ali samo dok je Realtime za projekt aktivan: na projektu bez Realtime prometa poruke su
+čuvane najmanje 6 dana; nakon buđenja platforma je u roku od nekoliko sati uklonila particije starije od 3 dana (ostala
+je particija od 22. 11. uz današnju 25. 11.) i s njima poruke od 19. 11. Za projekt u stalnoj upotrebi (pilot) to znači
+rok od približno 3–4 dana; za projekt bez prometa rok nije ograničen. Točan raspored čišćenja nije dokumentiran ni
+izmjeren.
 
 **Metodologija daljnjeg dokaza (bez destruktivnih pokusa):** pokrenuti `retention` na dan 0, zatim nakon ≥ 4 i ≥ 7 dana
 uz redovitu Realtime aktivnost (npr. dnevni smoke); kriterij potvrde: najstarija particija nikad starija od 3–4 dana.
