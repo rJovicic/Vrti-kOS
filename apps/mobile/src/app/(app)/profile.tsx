@@ -20,13 +20,15 @@ export default function Profile() {
   const { gate, mode, setMode } = useShell();
   const access = gate.kind === 'ready' ? gate.access : null;
   const [unsent, setUnsent] = useState(0);
+  const [everywhere, setEverywhere] = useState(false);
 
   // AC-05-5: before a sign-out by choice, warn when attendance taps have not been sent; sign-out wipes them (SR-MOB-02).
-  const requestSignOut = async () => {
+  const requestSignOut = async (all: boolean) => {
     const userId = session?.user.id;
     const n = userId ? (await queueFor(userId).load()).length : 0;
+    setEverywhere(all);
     if (n > 0 && unsent === 0) return setUnsent(n);
-    await signOut();
+    await signOut('signedOut', { everywhere: all });
   };
 
   return (
@@ -80,11 +82,19 @@ export default function Profile() {
       {unsent > 0 ? (
         <View style={shellStyles.section} accessibilityRole="alert">
           <Notice tone="error" title={t('attendance.signOutQueuedTitle')} body={`${t('attendance.queued', { count: unsent })}. ${t('attendance.signOutQueuedBody')}`} />
-          <Button label={t('attendance.signOutQueuedConfirm')} onPress={() => void signOut()} />
+          <Button label={t('attendance.signOutQueuedConfirm')} onPress={() => void signOut('signedOut', { everywhere })} />
           <Button variant="secondary" label={t('attendance.cancel')} onPress={() => setUnsent(0)} />
         </View>
       ) : (
-        <Button variant="secondary" label={t('auth.signOut')} onPress={() => void requestSignOut()} />
+        <>
+          <Button variant="secondary" label={t('auth.signOut')} onPress={() => void requestSignOut(false)} />
+          <Button
+            variant="text"
+            label={t('auth.signOutEverywhere')}
+            accessibilityHint={t('auth.signOutEverywhereHint')}
+            onPress={() => void requestSignOut(true)}
+          />
+        </>
       )}
     </ScrollView>
   );

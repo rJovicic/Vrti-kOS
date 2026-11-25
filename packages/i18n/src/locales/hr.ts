@@ -99,6 +99,8 @@ export const hr = {
     mfaVerifyLede: 'Upišite šesteroznamenkasti kod iz aplikacije za autentifikaciju.',
     mfaCode: 'Kod iz aplikacije',
     signOut: 'Odjava',
+    signOutEverywhere: 'Odjava sa svih uređaja',
+    signOutEverywhereHint: 'Završava prijavu na svim telefonima i preglednicima, npr. ako ste izgubili uređaj.',
     noAdminAccess: 'Ovaj račun nema pristup administraciji.',
     noAdminAccessHelp: 'Administracija je namijenjena upravi vrtića. Odgojitelji i roditelji koriste mobilnu aplikaciju VrtićOS.',
     chooseOrg: 'Odaberite vrtić',

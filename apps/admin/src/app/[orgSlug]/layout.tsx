@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { signOut } from '@/app/actions';
+import { signOut, signOutEverywhere } from '@/app/actions';
 import { LiveRefresh } from '@/components/LiveRefresh';
 import { Nav } from '@/components/Nav';
 import { getOrgContext } from '@/lib/dal';
@@ -37,6 +37,11 @@ export default async function OrgLayout({ children, params }: { children: ReactN
         <form action={signOut}>
           <button className="btn text" type="submit">
             {t('auth.signOut')}
+          </button>
+        </form>
+        <form action={signOutEverywhere}>
+          <button className="btn text" type="submit" title={t('auth.signOutEverywhereHint')}>
+            {t('auth.signOutEverywhere')}
           </button>
         </form>
       </aside>

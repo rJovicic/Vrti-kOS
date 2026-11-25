@@ -340,7 +340,7 @@ describe('admin app (browser)', () => {
 
   it('sign-out ends the session', async () => {
     await page.goto(`${ADMIN}/${slug}`);
-    await page.getByRole('button', { name: 'Odjava' }).click();
+    await page.getByRole('button', { name: 'Odjava', exact: true }).click();
     await page.waitForURL(`${ADMIN}/sign-in`);
     await page.goto(`${ADMIN}/${slug}`);
     expect(page.url()).toBe(`${ADMIN}/sign-in`);

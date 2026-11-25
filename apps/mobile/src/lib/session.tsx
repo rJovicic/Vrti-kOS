@@ -40,14 +40,15 @@ export const useSession = (): SessionState => useContext(SessionContext);
 /**
  * Sign-out removes the session from this device even if the network call fails (FR-01-10): the server
  * revokes the refresh token when reachable, the keychain entry is always deleted. `expired` is used when a request
- * proved the token is no longer accepted; the person then sees why they were signed out.
+ * proved the token is no longer accepted; the person then sees why they were signed out. `everywhere` ends every
+ * session of the person, on all devices (SR-SESS-03, e.g. a lost phone); other devices lose access at their next refresh.
  */
-export async function signOut(reason: SessionEnd = 'signedOut'): Promise<void> {
+export async function signOut(reason: SessionEnd = 'signedOut', options: { everywhere?: boolean } = {}): Promise<void> {
   userInitiatedSignOut = reason === 'signedOut';
   try {
     // AC-08-3: the device stops receiving push for this account (needs the session, so it runs first).
     await unregisterDevice();
-    await supabase.auth.signOut({ scope: 'local' });
+    await supabase.auth.signOut({ scope: options.everywhere ? 'global' : 'local' });
   } finally {
     await sessionStorage.removeItem(SESSION_KEY);
     // SR-MOB-02: unsent attendance taps never outlive the session (the app warns before a sign-out by choice).
