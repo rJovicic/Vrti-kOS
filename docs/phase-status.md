@@ -24,6 +24,7 @@
 - DPIA screening v0 → [privacy/dpia-screening.md](privacy/dpia-screening.md)
 
 ## 🔄 U tijeku
+- **Sigurnosna priprema prije fizičkog testa i pilota (2026-11-25):** [security/pre-pilot-decisions.md](security/pre-pilot-decisions.md). Izvedeno: **odjava sa svih uređaja** (SR-SESS-03) u administraciji i aplikaciji; `sessions.test.ts` mjeri opoziv (lokalna/globalna odjava, access token vrijedi do isteka nakon odjave, ponovna uporaba refresh tokena ne gasi sesiju — PP-S1); popravak CI #77 (Realtime replikacija kreće tek s prvim klijentom → jednokratno osvježavanje 5 s nakon prvog spajanja; CI #78 zelen). Pregled: RLS, `security definer` (nijedna za `anon`), Edge Functions, Server Actions, Realtime, SSE, kolačići, tajne — bez nalaza autorizacije. Čeka vlasnika: opcija sesija (A/B/C), pružatelj e-pošte (preporuka Scaleway TEM), dijeljeni IP limit uprave (PP-S2), SSL i zatvaranje mreže baze (PP-S3), rokovi i anonimizacija (vrtić + DPO + pravnik). Rizici R-62…R-64.
 - Faza 1: kompletan nacrt specifikacije (PRD, FS-01…FS-15, kriteriji prihvaćanja, inventar podataka, plan validacije) — **čeka tok V** (intervjui) za zaključavanje MVP-a.
 - Supabase skill: službene smjernice učitane za arhitekturni rad; instalacija u projekt još nije provedena.
 - **Faza 4 — dizajn (2026-11-11):** ✅ [DESIGN.md](../DESIGN.md) (tokeni generirani iz `packages/tokens`), prototip 18 mobilnih i 5 admin ekrana u [design/prototype/](../design/prototype/) sa svim stanjima evidencije dolazaka; Impeccable detektor bez blokirajućih nalaza (2 savjetodavna).

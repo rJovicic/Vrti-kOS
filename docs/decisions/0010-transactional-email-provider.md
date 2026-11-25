@@ -33,3 +33,10 @@ itself (EU-headquartered provider, owner approval) is unchanged.
 
 ## Cost (approximate, verify)
 Free tiers typically cover pilot volume (thousands of emails/month).
+
+## Pre-pilot comparison (2026-11-25)
+Provider comparison for the pilot and 10 kindergartens (price, limits, data location, DNS authentication, integration),
+capacity estimate, abuse controls and finding PP-S2 (admin sign-in shares one Auth IP rate limit because requests come
+from the admin server): [security/pre-pilot-decisions.md §2](../security/pre-pilot-decisions.md). Recommendation:
+Scaleway TEM, Brevo (paid) as alternative, after a DPA review and a deliverability test. Status unchanged: **Proposed**;
+no account was created.

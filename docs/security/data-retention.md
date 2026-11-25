@@ -102,6 +102,8 @@ Ne postoji test brisanja ili anonimizacije jer ne postoji mehanizam — i ne uvo
 
 ## 6. Otvorene odluke (vlasnik / voditelj obrade / DPO / pravnik)
 
+Tablica odluka po kategoriji (svrha, prijedlog roka, posljedice čuvanja i brisanja, anonimizacija, veze, prava, potpis) i razlike pet radnji za vlasnika, DPO-a i pravnika: [pre-pilot-decisions.md §4](pre-pilot-decisions.md).
+
 1. **Rokovi čuvanja** po kategoriji iz §2 (Q-P09), uključujući je li VrtićOS dio pedagoške dokumentacije (Q-P10) i
    zakonske rokove za evidenciju prisutnosti.
 2. **Model brisanja identiteta:** anonimizacija profila (ime → oznaka, brisanje e-pošte i Auth računa) uz zadržavanje
