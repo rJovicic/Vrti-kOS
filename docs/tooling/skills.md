@@ -1,6 +1,6 @@
 # Skillovi — instalirani i preporučeni
 
-Datum provjere: 2026-11-10. Metapodaci provjereni iz primarnih izvora (npm registry, plitki git klon
+Datum provjere: 2026-11-10; ažurirano 2026-11-26. Metapodaci provjereni iz primarnih izvora (npm registry, plitki git klon
 službenog repozitorija: datum zadnjeg commita, LICENSE, sadržaj). GitHub API nije bio dostupan u okruženju,
 pa broj zvjezdica/održavatelja nije provjeren osim gdje je navedeno.
 
@@ -10,6 +10,19 @@ pa broj zvjezdica/održavatelja nije provjeren osim gdje je navedeno.
 |---|---|---|---|---|---|
 | **impeccable** | [pbakaus/impeccable](https://github.com/pbakaus/impeccable), autor Paul Bakaus | 4.8.2 (tag `skill-v4.8.2`, engine 0.1.21) | Apache-2.0 | `npx impeccable install` nije uspio (mrežna politika blokira `impeccable.style`), pa je kopiran `.claude/skills/impeccable` iz službenog repozitorija na tagu `skill-v4.8.2`. Native engine iz npm paketa `@impeccable/cli-linux-x64@0.1.21`, **SHA-256 provjeren** prema `engine-checksums.txt`. Binarni engine je gitignored. | Telemetrija isključena (`~/.impeccable/config.json`). Hookovi **nisu uključeni** — čeka odobrenje (D-11). |
 | **ui-ux-pro-max** | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill); npm `ui-ux-pro-max-cli` (maintainer *mrgoonie*) | CLI 2.15.0 | MIT | `npx ui-ux-pro-max-cli@2.15.0 init --ai claude --offline` (bundled assets, bez mreže) | Installer je dodao još 6 skillova (banner-design, brand, design, design-system, slides, ui-styling). **Uklonjeni** jer se preklapaju s Impeccableom (tokeni/DESIGN.md) ili su izvan opsega (banneri, slajdovi, generiranje logotipa preko Gemini API-ja). Napomena: stariji paket `uipro-cli` je zastario. |
+
+### Ažuriranje 2026-11-26 (zahtjev vlasnika)
+
+| Zahtjev | Što je napravljeno | Zašto tako |
+|---|---|---|
+| `npx skills add pbakaus/impeccable` | **impeccable 4.8.2 → 4.11.1** (`skills@1.9.0`, samo Claude Code, project scope; izvor commit `2fc5e14`, zapisan u `skills-lock.json`). Engine `0.1.31` provjeren: `engine-probe` i `detect` (4 anti-uzorka na testnoj stranici). Hookovi i dalje **nisu uključeni** (D-11) | Instalirano kako je traženo |
+| `npm install motion && npx motion-ai` | `motion@14.14.0` **samo u `apps/admin`** (`pnpm --filter @vrticos/admin add`). Motion AI Kit iz npm paketa `motion-ai@14.2.0` (MIT): skill `.claude/skills/motion`, agent `.claude/agents/motion-reviewer.md`, besplatni MCP `https://mcp.motion.dev` u `.mcp.json` (bez ključa; Motion+ MCP nije dodan — plaćen) | `npm install` u pnpm monorepu stvara `package-lock.json` i zaobilazi lockfile; Motion je React DOM biblioteka pa ne smije u `apps/mobile` (pravilo: bez React DOM-a u mobilnoj aplikaciji; za RN animacije koristi se Reanimated). `npx motion-ai` je samo interaktivan, pa su njegove datoteke postavljene ručno, isto kao što ga installer postavlja za Claude Code u project scopeu. MCP prima samo upite o dokumentaciji — **ne slati kod s osobnim podacima ni seed podatke** |
+| `uipro init --ai claude --global` | **Nije pokrenuto** | `uipro-cli` (2.2.3) je zastarjeli paket; projekt već ima `ui-ux-pro-max` iz nasljednika `ui-ux-pro-max-cli@2.15.0` (najnovija verzija) u project scopeu. `--global` piše u `~/.claude`, koji se u cloud sesiji gubi |
+| `npx skills add Leonxlnx/taste-skill --skill design-taste-frontend` | **Nije instalirano** — čeka potvrdu vlasnika | Pregledan izvor (MIT, commit `d1a2bb4`, 40 MB): skill za **marketinške web stranice** (hero, „jedna sekcija po ekranu”, shader efekti, stock fotografije) s automatskim `Stop` hookom koji pokreće Node skriptu do 10 min. Opis ga aktivira i za „polish/review” u Next.js projektu, pa bi se natjecao s Impeccableom i vodio admin prema smjeru suprotnom od PRODUCT.md (miran, pouzdan) |
+| `npx @21st-dev/cli install-skill` | `@21st-dev/cli@1.18.1`, **project scope**, samo Claude Code: `21st-cli-use`, `21st-ui-build`, `21st-ui-explore`, `21st-ui-review` (MIT, hashevi u `.21st/skills.lock`) | **Uklonjeni** `21st-design-sync` i `21st-registry` (objavljuju dizajn/komponente projekta **javno** na 21st.dev, a okruženje ima 21st.dev vjerodajnice), `21st-ai` (troši plaćene AI kredite — odobrenje za plaćene usluge), `21st-video` (marketinški video, izvan opsega). Uklonjene i kopije za Cursor/Codex (`.cursor/`, `.codex/`) — projekt koristi Claude Code. `install-skill` = `skills install --global`, što se u cloud sesiji gubi |
+
+Pravila za korištenje: 21st generiranje (`21st generate`/`iterate`) troši kredite → samo uz odobrenje vlasnika;
+ništa iz projekta se ne objavljuje na 21st.dev. Motion samo u adminu, uz `prefers-reduced-motion`.
 
 ### Rezultati provjere
 - Impeccable: `engine-probe` → `impeccable-engine 0.1.21`; `detect` na testnom HTML-u pronašao 10 anti-uzoraka

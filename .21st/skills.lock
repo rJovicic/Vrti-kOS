@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "pack": {
+    "name": "21st-design-runtime",
+    "version": "1.1.0",
+    "source": "https://github.com/21st-dev/21st/tree/main/distribution/source"
+  },
+  "installations": [
+    {
+      "name": "21st-cli-use",
+      "version": "1.0.1",
+      "hash": "88ff054abb4334a5095462dd20b5c4ec214c9b99f3256eae60dadb384d136bca",
+      "owner": "21st.dev",
+      "license": "MIT",
+      "source": "https://github.com/21st-dev/21st/tree/main/distribution/source",
+      "scope": "project",
+      "harness": "claude",
+      "path": ".claude/skills/21st-cli-use/SKILL.md",
+      "bundledScripts": [],
+      "capabilities": [],
+      "external": false,
+      "trust": "first-party",
+      "installedAt": "2026-11-26T13:28:31.145Z"
+    },
+    {
+      "name": "21st-ui-build",
+      "version": "1.0.1",
+      "hash": "151dbc3e97289a4ba945438f6552c0f597a40d8b5b1dc5d917dd9a5b65389641",
+      "owner": "21st.dev",
+      "license": "MIT",
+      "source": "https://github.com/21st-dev/21st/tree/main/distribution/source",
+      "scope": "project",
+      "harness": "claude",
+      "path": ".claude/skills/21st-ui-build/SKILL.md",
+      "bundledScripts": [],
+      "capabilities": [],
+      "external": false,
+      "trust": "first-party",
+      "installedAt": "2026-11-26T13:28:31.148Z"
+    },
+    {
+      "name": "21st-ui-explore",
+      "version": "1.0.1",
+      "hash": "1b94d8d00e7ae87c3737e37c2019cbdc680393ef17a96388e9845f541367f1ec",
+      "owner": "21st.dev",
+      "license": "MIT",
+      "source": "https://github.com/21st-dev/21st/tree/main/distribution/source",
+      "scope": "project",
+      "harness": "claude",
+      "path": ".claude/skills/21st-ui-explore/SKILL.md",
+      "bundledScripts": [],
+      "capabilities": [],
+      "external": false,
+      "trust": "first-party",
+      "installedAt": "2026-11-26T13:28:31.149Z"
+    },
+    {
+      "name": "21st-ui-review",
+      "version": "1.0.0",
+      "hash": "78939e830bceb64b8e2d32f831b80472008d5d2e50b31c8a8f38af5e5a015088",
+      "owner": "21st.dev",
+      "license": "MIT",
+      "source": "https://github.com/21st-dev/21st/tree/main/distribution/source",
+      "scope": "project",
+      "harness": "claude",
+      "path": ".claude/skills/21st-ui-review/SKILL.md",
+      "bundledScripts": [],
+      "capabilities": [],
+      "external": false,
+      "trust": "first-party",
+      "installedAt": "2026-11-26T13:28:31.150Z"
+    }
+  ]
+}
