@@ -341,8 +341,9 @@ Izvori ([dok.]): [Supabase — rate limits](https://supabase.com/docs/guides/aut
 
 Rokovi za skrbnike odobreni za pilot 2026-11-26: **30 dana / 14 dana** (prije 90 / 30). Migracija je izmijenjena na mjestu jer
 nije bila primijenjena ni na jednom hostanom projektu.
-Migracija `supabase/migrations/20261126100000_session_limits.sql` (**lokalno i u CI-ju; na staging nije primijenjena** —
-promjena staginga traži odobrenje vlasnika).
+Migracija `supabase/migrations/20261126100000_session_limits.sql` — lokalno i u CI-ju; **na staging primijenjena 2026-11-26 u 08:09:53 UTC**
+(projekt `hfwlfdgzgulbutnjttnq`, commit `6ff7eba`, uz izričito odobrenje vlasnika; dokazi: [staging.md §3a](../architecture/staging.md)).
+Produkcija ne postoji.
 
 | Uloga | Najdulja dob sesije (od `auth.sessions.created_at`) | Neaktivnost (od zadnjeg osvježavanja, `refreshed_at`) |
 |---|---|---|
@@ -407,8 +408,8 @@ Tehnički opis: [architecture/admin-rate-limit.md](../architecture/admin-rate-li
   ukupnu kvotu (prijava kasni do 5 min); ciljana blokada jedne e-adrese do 15 min. R-63 **ostaje otvoren** (ublažen).
 
 ### 7.3 Odluke koje ostaju vlasniku
-1. Primjena migracije `20261126100000` na staging (a kasnije produkciju) — staging je namjerno nepromijenjen; čeka izričito
-   odobrenje vlasnika.
+1. ~~Primjena migracije `20261126100000` na staging~~ — **primijenjeno 2026-11-26** (staging.md §3a); produkcija samo uz zasebno
+   odobrenje.
 2. R-62: prihvatiti preostali rizik (krađa se ne otkriva do roka) ili tražiti vezanje sesije uz uređaj / kraće rokove za
    skrbnike.
 3. R-63: **prihvaćen kao preostali rizik ograničenog pilota** (vlasnik, 2026-11-26), uz uvjet da administracija ostane na

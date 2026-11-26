@@ -57,7 +57,7 @@ before and at every limit), `tests/integration/src/session-limits.test.ts` (14, 
 No cost. One migration (one table, two functions); no client change (mobile treats the 401 as an expired session).
 
 ## Open points / approval needed
-- Applying the migration to staging, then production — **waits for the owner's explicit approval**; until then the
-  hosted configuration check reports it as the one expected drift.
+- Staging: **Applied to staging** (`hfwlfdgzgulbutnjttnq`, owner approval 2026-11-26) at **2026-11-26 08:09:53 UTC** from commit `6ff7eba` (file sha256 `770b5768…46ec3`, unchanged since `d357d4d`), through the Management API in one transaction with its `schema_migrations` row and a guard that aborts if the version is already recorded. Verification: see [staging.md](../architecture/staging.md) §3a.
+- Production: not created yet; the migration is applied there only with a separate owner approval.
 - Re-verify the GoTrue facts the hook relies on (hook inside the token transaction; `refreshed_at` updated after the
   token) when Supabase Auth is upgraded.

@@ -48,7 +48,7 @@ setting below was applied through the Management API on 2026-11-19 and verified 
 
 | Area | Applied on staging | Hosted default that was wrong for us |
 |---|---|---|
-| Migrations | all 37 files in `supabase/migrations` (36 on 2026-11-19 morning, `20261119150000_realtime_broadcast` added the same day), in order, each in one transaction, recorded in `supabase_migrations.schema_migrations` | — |
+| Migrations | all 38 files in `supabase/migrations` (36 on 2026-11-19 morning, `20261119150000_realtime_broadcast` added the same day, `20261126100000_session_limits` on 2026-11-26 — §3a), in order, each in one transaction, recorded in `supabase_migrations.schema_migrations` | — |
 | Catalog check | 27 tables in `public`/`audit`, **all with RLS**, 52 policies, 32 `api` and 108 `private` functions, 77 triggers; `btree_gist`, `citext` | — |
 | Seed | `supabase/seed.sql` (synthetic): 2 kindergartens (Alfa, Beta), 29 accounts, 31 children, 6 groups | — |
 | API (PostgREST) | exposed schemas `public, api`; `max_rows = 100` (SR-API-06) | `public, graphql_public`, 1000 rows — **`api` was not exposed, so no app call would have worked** |
@@ -60,6 +60,27 @@ setting below was applied through the Management API on 2026-11-19 and verified 
 | Storage | no buckets (no feature uses storage yet) | — |
 
 Region of the database: eu-central-1. Region of the admin server: europe-west4. Both EU.
+
+### 3a. Session limits migration (SR-SESS-04, ADR-0019) — applied 2026-11-26
+
+**Applied to staging** (`hfwlfdgzgulbutnjttnq`, owner approval 2026-11-26) at **2026-11-26 08:09:53 UTC** from commit
+`6ff7eba` (file sha256 `770b5768…46ec3`, unchanged since `d357d4d`), through the Management API in one transaction with
+its `schema_migrations` row and a guard that aborts if the version is already recorded.
+
+| Check (all read-only, or rolled back) | Result |
+|---|---|
+| Project before applying | `ref = id = hfwlfdgzgulbutnjttnq`, name `vrticos-staging`, `eu-central-1`, `ACTIVE_HEALTHY`, Postgres 17.12 |
+| State before applying | 37 migrations, newest `20261119150000`; `20261126100000` absent; no `auth_hooks.session_limits`, no `session_role_limits`; hook = R-49 version (stable, invoker); `postgres` may read and reference `auth.sessions` |
+| Content | identical to commit `6ff7eba`; limits 7 days / 8 hours, 30 / 30 days, 30 / 14 days; no role → 7 days / 8 hours |
+| State after applying | 38 migrations incl. `20261126100000 session_limits`; table with RLS, FK `ON DELETE CASCADE` → `auth.sessions`, readable by no API role and not by `supabase_auth_admin`; hook volatile + security definer, keeps the password refusal, contains the session check; `supabase_auth_admin` may execute it, `authenticated` may not execute the hook or `session_role_limits` |
+| Limits of real synthetic accounts | `uprava.alfa`, `ravnateljica.alfa`, `platforma` → manager 7 days / 8 hours; `odgojitelj.alfa.1` → staff 30 / 30 days; `roditelj.alfa.1`, `roditelj.oba` → guardian 30 / 14 days |
+| Boundaries through the real hook (inside a `DO` block that ends with an exception, so the whole transaction — test sessions included — is rolled back) | manager: age 7 d − 1 s token / 7 d refused 401; idle 8 h − 1 s token / 8 h refused · staff: age 30 d − 1 s token / 30 d refused; idle 30 d − 1 s token · guardian: age 30 d − 1 s token / 30 d refused; idle 14 d − 1 s token / 14 d refused · no session id → 401 · unknown session → 401 |
+| Nothing kept by the check | sessions 53 and `session_limits` rows 0 before and after |
+| Effect on existing sessions | of 53 staging sessions, 13 are already past their new limits (refused at their next refresh — sign in again), 40 within |
+| Hosted configuration check (`tests/hosted-config check`, read-only) | **44 ok, 0 drift**, 0 unknown, 3 decision, 2 manual, 3 info (before: 43 ok + the expected drift "missing 20261126100000") |
+
+No account was created or deleted, no other migration or data changed, the smoke run (which deletes a temporary account)
+was not run, and Railway was not touched.
 
 ### Reproducing / resetting staging
 
