@@ -2,6 +2,7 @@
 
 Stanje: **pripremljeno, nije izvedeno.** R-44 i R-55 ostaju otvoreni dok vlasnik ne potvrdi rezultate.
 Okruženje: staging (samo izmišljeni podaci; nije produkcija) — [architecture/staging.md](../architecture/staging.md).
+Web pregled u Safariju (bez Expo Goa): [iphone-safari-test-plan.md](iphone-safari-test-plan.md); nalazi: [pre-pilot-findings.md](pre-pilot-findings.md).
 
 ## 1. Priprema (jednom)
 
