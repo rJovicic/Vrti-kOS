@@ -57,7 +57,7 @@ Stupci: **FR / dozvole** — povezani funkcionalni zahtjevi i ključevi kataloga
 | SR-SESS-01 | Mobilni tokeni u sigurnoj pohrani OS-a (Keychain/Keystore); u webu bez tokena u `localStorage` gdje je izvedivo (kolačići uz `Secure`, `SameSite`), uz CSP (SR-WEB-02) kao glavnu zaštitu. | High | FR-01-10 | DI-06 | T-SESS-01 | ST-SESS-01 |
 | SR-SESS-02 | Kratko trajanje access tokena (prijedlog 10–15 min, Q-S10) i rotacija refresh tokena s detekcijom ponovne uporabe. | High | FR-01-8 | DI-06 | T-SESS-02 | ST-REV-06 |
 | SR-SESS-03 | Korisnik i uprava mogu odjaviti sve sesije; deaktivacija članstva odmah ukida pristup podacima (SR-AUTHZ-03), a opoziv refresh tokena sprječava novu sesiju. | High | FR-01-8 | DI-06 | T-DEV-01, R-09 | ST-REV-01, ST-DEV-01 |
-| SR-SESS-04 | Opcija za odluku (Q-S10): politike provjeravaju da sesija iz JWT-a još postoji, čime odjava djeluje odmah i na access token. | Medium | FR-01-8 | DI-06 | T-SESS-02 | ST-REV-06 |
+| SR-SESS-04 | **Odluka vlasnika 2026-11-25: opcija B** ([pre-pilot-decisions.md](pre-pilot-decisions.md) §1.4). Auth hook pri svakom izdavanju tokena (prijava, MFA, osvježavanje) odbija sesiju stariju od najdulje dobi ili neaktivnu dulje od dopuštenog: uprava 7 dana / 8 h, osoblje 30 / 30 dana, skrbnici 90 / 30 dana; najstroži rok kod više uloga; rokovi se po sesiji samo pooštravaju; bez sesije ili kod greške nema tokena. Odjava djeluje na access token najkasnije pri isteku JWT-a (≤ 15 min); provjera postojanja sesije u svakoj politici (opcija A) nije usvojena. Izvedeno 2026-11-26 (migracija `20261126100000`). | Medium | FR-01-8 | DI-06 | T-SESS-02 | ST-REV-06 |
 
 ## 4. API, RPC i Edge Functions (API, EF)
 | ID | Zahtjev | Prioritet | FR / dozvole | DI | Rizik / T | Test |

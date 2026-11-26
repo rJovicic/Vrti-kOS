@@ -88,6 +88,8 @@ Isti kao u [acceptance-criteria.md](../product/acceptance-criteria.md): vrtići 
 | ST-REV-04 | Zastavica `receives_messages` uklonjena G1 | G1 više ne čita razgovor (Should modul) | L2 | SR-AUTHZ-04 |
 | ST-REV-05 | Članstvo M12 u Beti deaktivirano | M12 i dalje ima pristup u Alfi, nikakav u Beti | L3 | SR-AUTHZ-03, SR-TEN-05 |
 | ST-REV-06 | Odjava svih sesija; korištenje starog refresh tokena; korištenje access tokena nakon odjave | Refresh odbijen (detekcija ponovne uporabe); access token odbijen ako je SR-SESS-04 usvojen, inače vrijedi najviše do isteka (mjeriti i dokumentirati) — **izmjereno 2026-11-25** (`tests/integration/src/sessions.test.ts`): globalna odjava gasi sve refresh tokene; access token vrijedi do isteka; ponovna uporaba se odbija, ali ne gasi sesiju (PP-S1, R-62) | L3 | SR-SESS-02, 03, 04 |
+| ST-SESS-04 | Rokovi sesije po ulozi (SR-SESS-04 opcija B): granice najdulje dobi i neaktivnosti (sekundu prije / na roku), više uloga, suspenzija, promjena uloge, globalna odjava, greška i nedostupnost hooka | Token izdan do roka, odbijen na roku (401); najstroži rok; promjena uloge samo pooštrava; bez tokena kod greške — pgTAP 36 (55), `session-limits.test.ts` (12) | L3 | SR-SESS-04 |
+| ST-AUTH-07 | Ograničenje pokušaja prijave u administraciji (PP-S2): po adresi, e-adresi, paru i ukupno; lažna proxy zaglavlja; konkurentni zahtjevi; istek prozora; greška brojača; jednak slijed za poznatu i nepoznatu adresu | Odbijanje s generičkom porukom, vremenom čekanja i `Retry-After`; zaglavlja klijenta ne zaobilaze ograničenje; fail-closed — `sign-in-guard.test.ts` (18), admin e2e | L3 | SR-AUTHN-03, SR-SESS-04 |
 
 ### 3.6 Autentikacija i sesije
 | ID | Scenarij | Očekivano | Razina | SR |

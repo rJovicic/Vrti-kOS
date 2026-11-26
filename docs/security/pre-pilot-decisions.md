@@ -1,6 +1,6 @@
 # Sigurnosne odluke prije fizičkog testiranja i pilota
 
-- Datum: 2026-11-25 · Grana: `claude/vrtricos-master-init-zv9c14` · Status: **prijedlozi — odluke donosi vlasnik projekta**
+- Datum: 2026-11-25 (izvedba odluka 1 i PP-S2: 2026-11-26, §7) · Grana: `claude/vrtricos-master-init-zv9c14` · Status: **prijedlozi — odluke donosi vlasnik projekta**
   (uz voditelja obrade / DPO-a / pravnika gdje je navedeno)
 - Opseg: sesije (SR-SESS-04), e-pošta (ADR-0010), izravne veze na bazu, SSL i mrežna ograničenja, retencija i brisanje
   identiteta (Q-P09/Q-P10), završni sigurnosni pregled
@@ -16,8 +16,8 @@ Oznake dokaza: **[test]** automatski test u repozitoriju, **[mjereno]** izmjeren
 
 | # | Tema | Stanje | Najvažniji rizik | Preporuka | Tko odlučuje |
 |---|---|---|---|---|---|
-| 1 | Sesije | Access token 15 min; refresh token bez isteka; odjava na jednom uređaju; **novo: odjava sa svih uređaja** | Ukraden refresh token vrijedi neograničeno; ponovna uporaba ne gasi sesiju (nalaz PP-S1) | **Opcija B (uravnotežena)** — izvedivo i na besplatnom planu kroz Auth hook | vlasnik (+ ravnatelj za UX) |
-| 2 | E-pošta | Samo Mailpit lokalno; staging bez SMTP-a (2 poruke/h) | Bez pružatelja nema pilota; dijeljeni IP limit uprave (nalaz PP-S2) | **Scaleway TEM** (EU), alternativa Brevo; testirati isporučivost prije odluke | vlasnik + DPO (ugovor o obradi) |
+| 1 | Sesije | **Odlučeno i izvedeno 2026-11-26 (opcija B, §7.1):** rokovi po ulozi u Auth hooku; odjava sa svih uređaja | Krađa refresh tokena se ne otkriva trenutačno (PP-S1); ograničena rokom uloge | — | migracija na staging/produkciju: odobrenje vlasnika |
+| 2 | E-pošta | Samo Mailpit lokalno; staging bez SMTP-a (2 poruke/h); **PP-S2 izveden 2026-11-26 (§7.2)** | Bez pružatelja nema pilota | **Scaleway TEM** (EU), alternativa Brevo; testirati isporučivost prije odluke | vlasnik + DPO (ugovor o obradi) |
 | 3 | Baza: veze, SSL, mreža | Nitko ne koristi izravnu vezu; SSL nije prisiljen; mreža otvorena `0.0.0.0/0` | Lozinka baze je jedina zaštita izravnog pristupa | Uključiti SSL i zatvoriti mrežu (plan u §3.4) — **uz odobrenje**, kratki restart | vlasnik |
 | 4 | Retencija i brisanje | Ništa se ne briše; baza odbija brisanje osobe/djeteta sa zapisima | Nema postupka za zahtjev za brisanje; nema rokova | Odluka po kategoriji (§4.3), anonimizacija umjesto brisanja zapisa | vrtić (voditelj obrade) + DPO + pravnik |
 | 5 | Sigurnosni pregled | Bez kritičnih nalaza u autorizaciji; 3 nalaza (§5.3) | — | Jedan popravljen (SR-SESS-03), dva traže odluku | — |
@@ -307,8 +307,8 @@ zahtjeva, audit, tajne i varijable okruženja, odvojenost staginga i produkcije.
 | ID | Ozbiljnost | Nalaz | Status |
 |---|---|---|---|
 | PP-S0 | Visoka (zahtjev SR-SESS-03 nije bio ispunjen) | Nije postojala odjava sa svih uređaja; izgubljen telefon mogao se „odjaviti” samo suspenzijom članstva | **Popravljeno**: gumb u administraciji i aplikaciji; test `sessions.test.ts` |
-| PP-S1 | Srednja | Ponovna uporaba refresh tokena ne gasi sesiju (izmjereno, GoTrue v2.197); ukradeni token vrijedi neograničeno | Odluka: §1.4 (opcija B ograničava); R-62 |
-| PP-S2 | Srednja | Uprava dijeli jedan IP limit Autha (zahtjevi idu s Railwaya) → moguća blokada prijave svim upravama | Odluka: §2.3; R-63 |
+| PP-S1 | Srednja | Ponovna uporaba refresh tokena ne gasi sesiju (izmjereno, GoTrue v2.197) | **Ublaženo** (§7.1): ukradena sesija traje najviše do roka uloge; otkrivanje krađe nije riješeno — R-62 otvoren |
+| PP-S2 | Srednja | Uprava dijeli jedan IP limit Autha (zahtjevi idu s Railwaya) → moguća blokada prijave svim upravama | **Ublaženo** (§7.2): ograničenje u administraciji ispod Authova limita; preostaje distribuirani napad na ukupnu kvotu — R-63 otvoren |
 | PP-S3 | Srednja | Staging: SSL nije prisiljen, mreža otvorena za cijeli internet | Odluka: §3.4; R-64 |
 
 Nisu nađeni: zaobilaženje RLS-a, curenje među vrtićima, eskalacija preko Edge Functions ili Realtimea, tajne u kodu.
@@ -320,8 +320,8 @@ Ograničenje pregleda: nije rađen vanjski penetracijski test (ostaje preporuka 
 
 | Tema | Trenutno stanje | Dokaz | Rizik | Prijedlog | Odluka vlasnika | Bez daljnjeg odobrenja |
 |---|---|---|---|---|---|---|
-| Sesije | JWT 15 min, refresh bez isteka, odjava lokalna + **sa svih uređaja** | `sessions.test.ts`, staging spec | ukradena sesija neograničeno (PP-S1) | opcija B (hook) | opcija, rokovi, Pro plan ili hook | testovi i odjava sa svih uređaja — gotovo |
-| E-pošta | samo Mailpit; staging 2/h | ADR-0010, staging spec | bez pružatelja nema pilota; PP-S2 | Scaleway TEM, alternativa Brevo | pružatelj, domena, limit, PP-S2 | adapter i limiter nakon izbora |
+| Sesije | JWT 15 min; **rokovi po ulozi (opcija B)**; odjava lokalna i sa svih uređaja | pgTAP 36, `session-limits.test.ts`, `sessions.test.ts` | krađa se ne otkriva do roka (PP-S1) | — | primjena migracije na staging/produkciju | gotovo (lokalno + CI) |
+| E-pošta | samo Mailpit; staging 2/h; **limiter uprave izveden** | ADR-0010, `sign-in-guard.test.ts`, e2e, staging provjera | bez pružatelja nema pilota | Scaleway TEM, alternativa Brevo | pružatelj, domena, limit | adapter nakon izbora |
 | Baza | nitko ne koristi izravnu vezu; SSL off; mreža otvorena | Management API (čitanje), Railway varijable | lozinka kao jedina zaštita (PP-S3) | SSL + zatvorena mreža | odobrenje restarta i pravila | plan i spec |
 | Retencija | ništa se ne briše; brisanje sa zapisima odbijeno | pgTAP 35, data-retention.md | nema postupka za zahtjev | anonimizacija + rokovi po kategoriji | vrtić + DPO + pravnik | nacrt postupka |
 
@@ -332,3 +332,80 @@ Izvori ([dok.]): [Supabase — rate limits](https://supabase.com/docs/guides/aut
 [Scaleway TEM](https://www.scaleway.com/en/transactional-email-tem/), [Brevo pricing](https://www.brevo.com/pricing/),
 [Mailjet pricing](https://www.mailjet.com/pricing/), [Amazon SES pricing](https://aws.amazon.com/ses/pricing/),
 [Postmark pricing](https://postmarkapp.com/pricing), [Resend pricing](https://resend.com/pricing).
+
+---
+
+## 7. Izvedba odluka (2026-11-26)
+
+### 7.1 SR-SESS-04 — opcija B
+Migracija `supabase/migrations/20261126100000_session_limits.sql` (**lokalno i u CI-ju; na staging nije primijenjena** —
+promjena staginga traži odobrenje vlasnika).
+
+| Uloga | Najdulja dob sesije (od `auth.sessions.created_at`) | Neaktivnost (od zadnjeg osvježavanja, `refreshed_at`) |
+|---|---|---|
+| Uprava (`org_admin`, `director`, platform admin) | 7 dana | 8 sati |
+| Odgojitelji / osoblje (`educator`) | 30 dana | 30 dana |
+| Skrbnici (`guardian`) | 90 dana | 30 dana |
+
+Kako radi:
+- Auth poziva hook **pri svakom izdavanju access tokena**: prijava kodom, potvrda MFA-a, svako osvježavanje. Hook radi u
+  istoj transakciji kao Auth (izvorni kod GoTrue v2.197): kad hook odbije ili pogriješi, token se ne izdaje.
+- Dob i neaktivnost čitaju se samo iz `auth.sessions` (piše ih isključivo Auth), nikad iz zahtjeva, claimova ili
+  korisničkih metapodataka. U trenutku poziva hooka `refreshed_at` je još prethodno osvježavanje (= zadnja aktivnost).
+- Uloge: aktivna članstva važeća danas (vremenska zona vrtića), kao i za pristup podacima; više uloga → najstroži rok
+  svake vrste.
+- **Rokovi se po sesiji samo pooštravaju** (`auth_hooks.session_limits`, briše se zajedno sa sesijom): novo članstvo u
+  drugom vrtiću, gubitak uloge ili „degradacija” ne produljuju tekuću sesiju; unapređenje (npr. odgojitelj → ravnatelj)
+  skraćuje je pri sljedećem tokenu. Osoba bez aktivne uloge dobiva najstrože rokove, ali se oni ne zamrzavaju (pozvana
+  osoba prijavi se prije prihvaćanja pozivnice).
+- **Fail-closed:** bez `session_id`, nepoznata sesija, tuđa sesija, neispravni ID-ovi ili greška u provjeri → nema tokena.
+  Ako baza ne odgovara, Auth čeka hook (izmjereno) — token se nikad ne izdaje bez provjere.
+- Nepromijenjeno: JWT 15 min, odbijanje lozinki (R-49), AAL2 (MFA) u tokenu.
+
+Dokazi:
+
+| Vrsta isteka / slučaj | pgTAP 36 (granica: 1 s prije / na roku) | Integracija sa stvarnim Authom (`session-limits.test.ts`, ±60 s) |
+|---|---|---|
+| Nova sesija svake uloge | ✅ token, rokovi zamrznuti | ✅ prijava, osvježavanje, zamrznuti rokovi |
+| Najdulja dob (7 / 30 / 90 dana) | ✅ sve tri uloge | ✅ sve tri uloge, 401 „Session expired. Sign in again.” |
+| Neaktivnost (8 h / 30 / 30 dana) | ✅ sve tri uloge + nikad osvježena | ✅ sve tri uloge + nikad osvježena |
+| Aktivna sesija koja se redovito osvježava | ✅ vrijedi do najdulje dobi, ne dulje | ✅ svako osvježavanje pomiče zadnju aktivnost; odbijena nakon 7 dana |
+| Više uloga | ✅ ravnatelj + skrbnik, odgojitelj + skrbnik | ✅ ravnatelj + skrbnik u drugom vrtiću |
+| Suspendirano članstvo | ✅ suspendirana uloga se ne broji | ✅ najstroži rokovi; nakon reaktivacije nova sesija dobiva rokove uloge |
+| Promjena uloge tijekom sesije | ✅ degradacija ne produljuje, unapređenje skraćuje, članstvo u drugom vrtiću ne produljuje | ✅ isto, sa stvarnim Authom |
+| Globalna odjava | — | ✅ osvježavanje odbijeno, zamrznuti rokovi obrisani sa sesijama |
+| Postojeći access token nakon opoziva / odbijenog osvježavanja | — | ✅ vrijedi do isteka (≤ 15 min) — svjesno prihvaćeno (opcija B) |
+| Greška ili nedostupnost hooka | ✅ neispravan ID baca grešku; nepoznata/tuđa sesija 401 | ✅ greška: nema tokena, isti refresh token radi nakon oporavka; baza ne odgovara: Auth čeka, nema tokena bez provjere |
+| MFA/AAL2 | ✅ claimovi nepromijenjeni | ✅ AAL2 ostaje pri osvježavanju; vrijede rokovi uprave |
+
+Ponašanje nakon globalne odjave: Auth briše sve sesije osobe → svako osvježavanje odbijeno na svim uređajima; zamrznuti
+rokovi nestaju sa sesijama; access token koji je već izdan vrijedi do isteka (najviše 15 min) — za REST, Realtime i SSE.
+
+Što ostaje (R-62 **ostaje otvoren**, ublažen): krađa refresh tokena **ne otkriva se trenutačno** (PP-S1) — napadač koji
+prvi osvježi ukradeni token zadržava sesiju do roka uloge (skrbnik do 90 dana, uz 30 dana neaktivnosti), dok je ne prekine
+odjava sa svih uređaja ili suspenzija. Učinkovito trajanje = rok + do 15 min JWT-a.
+
+### 7.2 PP-S2 — ograničenje prijave u administraciji
+Tehnički opis: [architecture/admin-rate-limit.md](../architecture/admin-rate-limit.md).
+- Brojanje u serveru administracije **prije** poziva Autha, za slanje koda, provjeru koda i TOTP: po adresi klijenta, po
+  e-adresi, po paru i ukupno; ukupni limiti (20 i 25 / 5 min) ispod Authovih (30 / 5 min) — Auth se preko
+  administracije više ne može iscrpiti.
+- Adresa klijenta samo iz `X-Real-IP` i samo na Railwayu; **provjereno na stagingu**: Railwayev edge prepisuje lažne
+  `X-Real-IP` i `X-Forwarded-For` (privremeni dijagnostički zapis samo oblika zaglavlja, uklonjen). `X-Forwarded-For` se ne
+  čita; adresa Railway servera se nikad ne koristi.
+- Generička poruka s vremenom čekanja („Pokušajte ponovno za N min.”) i `Retry-After`; nema razlike za postojeće i
+  nepostojeće adrese (e2e); dodatno, Authovo odbijanje drugog koda unutar minute više se ne prikazuje (R-42).
+- E-adrese i IP-ovi samo kao ključani hashevi u memoriji; zapisi bez osobnih podataka; kod greške brojača — odbijanje
+  (fail-closed).
+- **Ograničenja:** brojači u memoriji jednog procesa — reset pri restartu/deployu, nisu dijeljeni među instancama;
+  servis ima jednu repliku. **Nije distribuirani rate limiter.** Distribuirani napad s mnogo adresa i dalje može potrošiti
+  ukupnu kvotu (prijava kasni do 5 min); ciljana blokada jedne e-adrese do 15 min. R-63 **ostaje otvoren** (ublažen).
+
+### 7.3 Odluke koje ostaju vlasniku
+1. Primjena migracije `20261126100000` na staging (a kasnije produkciju) — staging je namjerno nepromijenjen.
+2. R-62: prihvatiti preostali rizik (krađa se ne otkriva do roka) ili tražiti vezanje sesije uz uređaj / kraće rokove za
+   skrbnike.
+3. R-63: prihvatiti preostali rizik za pilot ili kasnije `Sb-Forwarded-For` (tajni ključ na serveru administracije) /
+   zajednička pohrana brojača prije više instanci.
+4. Ne povećavati broj replika administracije bez zajedničke pohrane brojača.
+

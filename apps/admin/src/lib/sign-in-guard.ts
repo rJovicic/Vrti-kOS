@@ -4,7 +4,8 @@
 // Auth's own per-IP limit (docs/architecture/admin-rate-limit.md).
 //
 // Client address: only `X-Real-IP`, and only when running on Railway, whose edge sets it to the connecting client
-// (docs.railway.com, Networking › Specs & Limits). X-Forwarded-For is never read. Anywhere else (local, CI) the client
+// (docs.railway.com, Networking › Specs & Limits) and overwrites a value sent by the client (verified on staging
+// 2026-11-26: forged X-Real-IP / X-Forwarded-For never reached the app). X-Forwarded-For is never read. Anywhere else (local, CI) the client
 // address is unknown and every request shares the "unknown" address bucket — stricter, never spoofable.
 // Privacy: e-mail addresses and IPs are kept only as keyed hashes in memory; nothing personal is logged.
 import { createHmac, randomBytes } from 'node:crypto';
@@ -69,13 +70,6 @@ export function normalizeIp(raw: string): string | null {
 export function clientAddress(headers: Pick<Headers, 'get'>, env: RuntimeEnv): string {
   if (!onRailway(env)) return 'unknown';
   const value = headers.get('x-real-ip');
-  // TEMPORARY diagnostic (PP-S2 staging check, removed in the next commit): header shape only, no addresses.
-  {
-    const xff = (headers.get('x-forwarded-for') ?? '').split(',').map((v) => v.trim()).filter(Boolean);
-    const probe = xff.map((v) => (v.startsWith('198.51.100.') ? 'probe' : isIP(v) ? `v${isIP(v)}` : 'bad'));
-    const real = value?.trim() ?? '';
-    console.warn(JSON.stringify({ event: 'client_ip_shape', xff: probe, real: real.startsWith('198.51.100.') ? 'probe' : isIP(real) ? `v${isIP(real)}` : real ? 'bad' : 'none', realIndex: xff.indexOf(real) }));
-  }
   return (value && normalizeIp(value)) || 'unknown';
 }
 
