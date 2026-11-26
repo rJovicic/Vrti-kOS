@@ -1,7 +1,8 @@
 # Mobile app as a staging web preview (Expo web on Railway)
 
-- Status: **implemented on the branch; Railway service prepared as staged changes — not deployed** (deploying creates a
-  new billed Railway service → owner approval). Date: 2026-11-26.
+- Status: **live on staging** — **https://mobile-web-staging-ba0c5e13.up.railway.app** (Railway service `mobile-web`).
+  The staged service was committed from the owner's Railway account on 2026-11-26 (~08:43 UTC; the operator never ran
+  `accept-deploy`); the operator then generated the `*.up.railway.app` domain. Date: 2026-11-26.
 - Goal: test the whole mobile app on a phone through an ordinary HTTPS link — no Expo Go, no QR code, no computer.
 - Scope: **staging only, synthetic data only.** Not a product channel: the pilot app remains the native app (Expo Go /
   development build), which keeps tokens in the OS keychain.
@@ -15,6 +16,7 @@
 | Inline scripts in `index.html`? | None (three `<script src>` tags); one inline reset `<style>` | `dist-web/index.html` → CSP can use `script-src 'self'` |
 | Navigation (Expo Router, tabs) | Works; reloads and direct URLs (`/today`, `/attendance`, `/profile`) work with the server's fallback. Tab bar: the empty icon slot cut the labels off on the web → slot hidden on the web only | e2e, screenshots |
 | Session storage | **`expo-secure-store` has no web implementation** (its web module is an empty object). Web build uses `deviceStore.web.ts` → the tab's `sessionStorage` (survives reload and direct URLs; not persistent; ends with the tab). iOS/Android unchanged (keychain) | `node_modules/expo-secure-store/src/ExpoSecureStore.web.ts`; `apps/mobile/src/lib/deviceStore*.ts` |
+| Code request refused by Auth (429) | Previously shown as "Previše pokušaja", which revealed existing accounts and blocked staging tests (built-in mailer: 2 e-mails/hour). Since `5679336` the app always continues to the code step, as the admin does (R-42) | `apps/mobile/src/app/sign-in.tsx` |
 | Supabase (Auth, PostgREST, Realtime) | Works unchanged: browser → `https://hfwlfdgzgulbutnjttnq.supabase.co` (CORS open for REST/Auth); Realtime over WSS | e2e (live attendance update) |
 | `accept-invitations` Edge Function | Called after sign-in; blocked by CORS from the web origin (allow-list = admin origin). Failure is caught → existing (already accepted) accounts are unaffected; a **brand-new invitee's first sign-in via the web does not link the invitation** (works via the native app or after the allow-list is extended — a staging security setting, not changed) | `apps/mobile/src/app/sign-in.tsx` |
 | Push (D-40) | Not activated anywhere; the web has no push provider either | — |
@@ -51,10 +53,11 @@ Mitigations: strict CSP (no inline or third-party scripts), no third-party code,
 session limits, synthetic data only, `noindex`, the environment guard in both server and build. This is why the web
 preview is **not** a pilot channel (risk R-65).
 
-## 4. Railway service (prepared, not deployed)
+## 4. Railway service
 
 Project `vrticos-staging`, environment `staging`, service **`mobile-web`** (`3ef8b1a7-0aeb-4b0e-a3e5-17717c52010d`),
-created as **staged changes only** on 2026-11-26 (no instance, no deployment, no cost until committed):
+created as staged changes on 2026-11-26 and committed by the owner; public domain
+`mobile-web-staging-ba0c5e13.up.railway.app` → port 8080:
 
 | Setting | Value |
 |---|---|
@@ -66,11 +69,24 @@ created as **staged changes only** on 2026-11-26 (no instance, no deployment, no
 | Watch patterns | `apps/mobile/**`, `packages/**`, `pnpm-lock.yaml`, `package.json` |
 | Variables (public only) | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (sb_publishable_…), `EXPO_PUBLIC_APP_ENV=staging`, `EXPO_NO_TELEMETRY=1`, `RAILPACK_NODE_VERSION=22` |
 
-**To go live (owner):** approve the cost of one more small service on the existing Railway plan, then either commit the
-staged changes in the Railway dashboard (project → staging → "Deploy"/review changes) or let the operator run
-`accept-deploy` for the staging environment; then generate a `*.up.railway.app` domain for `mobile-web` and check
-`https://<domain>/health` → `{"status":"ok","app":"mobile-web","appEnv":"staging",…}`. The staged change list contains
-only `mobile-web` (checked); the admin service is not part of it. To abandon: discard the staged changes.
+**Deployments:** builds from every push to the branch that touches the watch patterns (like the admin). The admin
+service was not changed (its settings and variables are untouched; the staged change list contained only `mobile-web`).
+
+### 4.1 Live verification (2026-11-26, after deployment `5679336`)
+
+| Check | Result |
+|---|---|
+| `/health` | 200 `{"status":"ok","app":"mobile-web","appEnv":"staging","supabaseHost":"hfwlfdgzgulbutnjttnq.supabase.co"}` |
+| Headers on `/today` | 200, `no-store`, CSP as above, HSTS, `noindex`; missing bundle → 404; title "VrtićOS (staging web)" |
+| Live bundles (1.6 MB) | no `sb_secret_…` key, no `service_role`; only the staging URL and publishable key |
+| Educator `odgojitelj.alfa.1` (Chromium, iPhone 13 viewport, operator code) | STAGING bar; Galebovi, Vrtić Alfa; nothing of Vrtić Beta; no console errors; reload keeps the session; direct URL `/attendance` shows statuses; `/profile` shows the account; sign-out clears tab storage |
+| Educator `odgojitelj.beta.1` | first sign-in shows the privacy notice to confirm (FR-01-5 — not confirmed, to write nothing); no Alfa data |
+| Guardian `roditelj.alfa.1` | "Moja djeca" with own children only; nothing of Vrtić Beta |
+| Manager `uprava.alfa` | "Uprava vrtića radi u web administraciji." |
+| Session policy on the live sessions (`auth_hooks.session_limits`, read-only) | educator `staff 30 days / 30 days`, guardian `guardian 30 days / 14 days`, manager `manager 7 days / 08:00:00` |
+
+No data was written (no attendance, message or notice confirmation); sign-ins created and ended ordinary sessions of
+existing synthetic accounts. Real Safari on an iPhone is still to be checked by hand.
 
 ## 5. What works on the web vs. the native app
 

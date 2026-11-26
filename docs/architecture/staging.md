@@ -18,6 +18,7 @@ Approved by the owner on 2026-11-19 ("Railway staging i zasebni Supabase testni 
 | Railway service | `admin` (Next.js, `apps/admin`) | europe-west4 (Amsterdam) | source: this repo, branch `claude/vrtricos-master-init-zv9c14`; auto-deploy on push for `apps/admin/**`, `packages/**`, lockfile |
 | Admin URL | `https://admin-staging-7d208881.up.railway.app` | | health: `/api/health` |
 | Mobile | Expo Go on iPhone, Metro on the operator's laptop | | no EAS build, no push (§6) |
+| Mobile web preview | Railway service `mobile-web` (static Expo web export) | https://mobile-web-staging-ba0c5e13.up.railway.app | health: `/health`; staging and synthetic data only — [mobile-web-staging.md](mobile-web-staging.md) |
 
 There is **no** production environment. Nothing here is linked to `main`.
 
