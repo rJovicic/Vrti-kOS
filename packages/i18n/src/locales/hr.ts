@@ -3,6 +3,7 @@ export const hr = {
   common: {
     appName: 'VrtićOS',
     demoBanner: 'DEMO: izmišljeni podaci',
+    demoBannerWeb: 'STAGING (web): izmišljeni podaci, samo za testiranje',
     retry: 'Pokušaj ponovno',
     cancel: 'Odustani',
     close: 'Zatvori',

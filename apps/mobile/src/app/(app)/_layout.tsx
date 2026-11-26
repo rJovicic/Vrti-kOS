@@ -45,6 +45,8 @@ function AppTabs() {
         tabBarStyle: { backgroundColor: c.bgSurface, borderColor: c.borderSubtle },
         tabBarLabelStyle: { fontSize: type.footnote.size, fontWeight: '600' },
         tabBarIcon: () => null,
+        // Web preview: the empty icon slot would push the label below the bar's edge; drop the slot on the web only.
+        ...(Platform.OS === 'web' ? { tabBarIconStyle: { display: 'none' as const } } : {}),
         sceneStyle: { backgroundColor: c.bgCanvas },
       }}
     >

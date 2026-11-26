@@ -14,7 +14,7 @@ const noUiInShared = {
 export default tseslint.config(
   {
     ignores: [
-      '**/node_modules/**', '**/dist/**', '**/.next/**', '**/.expo/**', 'apps/mobile/expo-env.d.ts',
+      '**/node_modules/**', '**/dist/**', '**/dist-web/**', '**/.next/**', '**/.expo/**', 'apps/mobile/expo-env.d.ts',
       'apps/admin/next-env.d.ts', 'packages/db-types/src/database.ts', '.claude/**', '.impeccable/**',
       'design/**', 'supabase/**',
     ],

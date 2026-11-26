@@ -80,6 +80,14 @@ jobs:
           (pnpm --filter @vrticos/admin start > admin.log 2>&1 &)
           for i in $(seq 1 60); do curl -fs -o /dev/null http://localhost:3000/sign-in && break; sleep 1; done
           pnpm --filter @vrticos/integration-tests run e2e
+      - name: mobile web preview e2e — Expo web export, static server, code sign-in, RLS, live update, session policy (Playwright)
+        run: |
+          KEY=$(node scripts/supabase.mjs status -o json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s.slice(s.indexOf('{'))).PUBLISHABLE_KEY))")
+          EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$KEY" EXPO_PUBLIC_APP_ENV=demo EXPO_OFFLINE=1 \
+            pnpm --filter @vrticos/mobile export:web
+          (EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 EXPO_PUBLIC_APP_ENV=demo PORT=8090 pnpm --filter @vrticos/mobile serve:web > mobile-web.log 2>&1 &)
+          for i in $(seq 1 30); do curl -fs -o /dev/null http://localhost:8090/health && break; sleep 1; done
+          pnpm --filter @vrticos/integration-tests run e2e:mobile-web
       # D5: the demo is repeatable — reset, scenario, presentation-like changes, reset, identical scenario.
       # Last step of the job because it resets the database.
       - name: concurrency — corrections and same-day cancellations serialize with event writers (D-41b, Q-T22)
@@ -106,10 +114,14 @@ jobs:
         run: pnpm --filter @vrticos/mobile export
         env:
           EXPO_OFFLINE: '1'
+      - name: export the staging web preview of the mobile app (Expo web, local public defaults)
+        run: pnpm --filter @vrticos/mobile export:web
+        env:
+          EXPO_OFFLINE: '1'
       # supabase-js contains the bare prefix "sb_secret_" (key-format detection) and Hermes packs strings
       # back-to-back, so match a real key body (alphanumeric first character, 16+ chars).
       - name: no secret keys in client bundles (SR-SUP-04)
-        run: "! grep -rlaE 'sb_secret_[A-Za-z0-9][A-Za-z0-9_-]{15,}|service_role' apps/mobile/dist apps/admin/.next/static"
+        run: "! grep -rlaE 'sb_secret_[A-Za-z0-9][A-Za-z0-9_-]{15,}|service_role' apps/mobile/dist apps/mobile/dist-web apps/admin/.next/static"
 
   security:
     name: secrets · dependencies

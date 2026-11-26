@@ -21,7 +21,11 @@
       "package": "hr.vrticos.demo"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "VrtićOS (staging web)",
+      "shortName": "VrtićOS staging",
+      "lang": "hr"
     },
     "scheme": "vrticos",
     "plugins": [

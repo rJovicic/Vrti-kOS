@@ -1,21 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import * as SecureStore from 'expo-secure-store';
 import { AppState } from 'react-native';
 import type { Database } from '@vrticos/db-types';
 import { createChunkedStorage } from '@vrticos/domain';
+import { deviceStore } from './deviceStore';
 import { env } from './env';
 
 /**
- * Session tokens live only in the OS keychain/keystore (SR-SESS-01, SR-MOB-01), never in AsyncStorage.
- * Values are chunked (a Supabase session exceeds SecureStore's per-value size) and bound to this device:
- * not migrated through backups or to a new phone.
+ * Session tokens: OS keychain/keystore on iOS and Android (SR-SESS-01, SR-MOB-01), never AsyncStorage; the tab's
+ * sessionStorage in the staging web build (deviceStore.web.ts). Values are chunked (a Supabase session exceeds
+ * SecureStore's per-value size).
  */
-const keychain = { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY };
-export const sessionStorage = createChunkedStorage({
-  get: (key) => SecureStore.getItemAsync(key, keychain),
-  set: (key, value) => SecureStore.setItemAsync(key, value, keychain),
-  delete: (key) => SecureStore.deleteItemAsync(key, keychain),
-});
+export const sessionStorage = createChunkedStorage(deviceStore);
 
 export const SESSION_KEY = 'vrticos.session';
 
