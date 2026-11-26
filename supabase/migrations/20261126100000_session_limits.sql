@@ -1,11 +1,12 @@
--- VrtićOS — SR-SESS-04, option B (owner decision 2026-11-25, docs/security/pre-pilot-decisions.md §1.4):
+-- VrtićOS — SR-SESS-04, option B (owner decision 2026-11-25; guardian limits set to 30 days / 14 days for the pilot
+-- on 2026-11-26 — docs/security/pre-pilot-decisions.md §1.4 and §7.1, ADR-0019):
 -- session lifetime and inactivity limits per role, enforced in the custom_access_token hook, i.e. every time Auth
 -- issues an access token: at sign-in, at MFA verification and at every refresh.
 --
 --   class      roles                          max age (from auth.sessions.created_at)  inactivity
 --   manager    org_admin, director, platform  7 days                                    8 hours
 --   staff      educator                       30 days                                   30 days
---   guardian   guardian                       90 days                                   30 days
+--   guardian   guardian                       30 days                                   14 days
 --
 -- Facts this design relies on (GoTrue v2.197.0 source, scratchpad review 2026-11-26; re-verify on upgrades):
 --   * the Postgres hook runs inside the same transaction that creates or refreshes the session, with
@@ -17,7 +18,7 @@
 --
 -- Rules:
 --   * age and inactivity come only from auth.sessions (never from claims or user metadata);
---   * several roles → the strictest limit of each kind;
+--   * several roles → the strictest limit of each kind, separately (educator + guardian: 30 days / 14 days);
 --   * limits are frozen per session and can only tighten (auth_hooks.session_limits): a new membership in another
 --     kindergarten, a demotion or an ended role never lengthens a running session; a promotion shortens it at the
 --     next token. A person with no active role gets the strictest limits, without freezing them, so a freshly
@@ -61,7 +62,7 @@ language sql stable security definer set search_path = '' as $$
   ), limits(role_class, max_age, idle_timeout, rank) as (
     values ('manager',  interval '7 days',  interval '8 hours', 1),
            ('staff',    interval '30 days', interval '30 days', 2),
-           ('guardian', interval '90 days', interval '30 days', 3)
+           ('guardian', interval '30 days', interval '14 days', 3)
   )
   select
     (select l.role_class from roles r join limits l using (role_class) order by l.rank limit 1),

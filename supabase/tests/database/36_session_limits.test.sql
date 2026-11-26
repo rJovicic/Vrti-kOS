@@ -4,7 +4,7 @@
 -- Synthetic fixtures, rolled back. Real-GoTrue behaviour: tests/integration/src/session-limits.test.ts.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(55);
+select plan(66);
 
 -- Fixtures ------------------------------------------------------------------------------------------------------
 insert into auth.users (id, email, aud, role, email_confirmed_at)
@@ -73,11 +73,11 @@ select is((select confdeltype::text from pg_constraint where conrelid = 'auth_ho
 -- Limits per role --------------------------------------------------------------------------------------------------
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000001')), '(manager,"7 days",08:00:00)', 'director: 7 days / 8 hours');
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000002')), '(staff,"30 days","30 days")', 'educator: 30 days / 30 days');
-select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000003')), '(guardian,"90 days","30 days")', 'guardian: 90 days / 30 days');
-select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000004')), '(staff,"30 days","30 days")', 'educator in A + guardian in B: the stricter (staff)');
+select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000003')), '(guardian,"30 days","14 days")', 'guardian: 30 days / 14 days');
+select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000004')), '(staff,"30 days","14 days")', 'educator in A + guardian in B: strictest of each kind (30 days age, guardian''s 14 days idle)');
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000005')), '(manager,"7 days",08:00:00)', 'director in A + guardian in B: manager limits');
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000006')), '(,"7 days",08:00:00)', 'no role: strictest limits, no class');
-select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000007')), '(guardian,"90 days","30 days")', 'a suspended director role does not count');
+select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000007')), '(guardian,"30 days","14 days")', 'a suspended director role does not count');
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000009')), '(manager,"7 days",08:00:00)', 'platform admin: manager limits');
 select is((select row(role_class, max_age, idle_timeout)::text from auth_hooks.session_role_limits('d5360000-0000-4000-8000-000000000011')), '(,"7 days",08:00:00)', 'ended and not-yet-valid memberships do not count');
 
@@ -95,8 +95,8 @@ select is(pg_temp.verdict('01', pg_temp.sess('01', '7 days' - interval '1 second
 select is(pg_temp.verdict('01', pg_temp.sess('01', '7 days', '1 minute')), '401', 'manager: at 7 days → refused');
 select is(pg_temp.verdict('02', pg_temp.sess('02', '30 days' - interval '1 second', '1 minute')), 'ok', 'staff: 1 s before 30 days → token');
 select is(pg_temp.verdict('02', pg_temp.sess('02', '30 days', '1 minute')), '401', 'staff: at 30 days → refused');
-select is(pg_temp.verdict('03', pg_temp.sess('03', '90 days' - interval '1 second', '1 minute')), 'ok', 'guardian: 1 s before 90 days → token');
-select is(pg_temp.verdict('03', pg_temp.sess('03', '90 days', '1 minute')), '401', 'guardian: at 90 days → refused');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '30 days' - interval '1 second', '1 minute')), 'ok', 'guardian: 1 s before 30 days → token');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '30 days', '1 minute')), '401', 'guardian: at 30 days → refused');
 
 -- Inactivity, at the boundary (from the last refresh; from creation when never refreshed) -------------------------------
 select is(pg_temp.verdict('01', pg_temp.sess('01', '2 days', '8 hours' - interval '1 second')), 'ok', 'manager: idle 1 s under 8 h → token');
@@ -104,8 +104,11 @@ select is(pg_temp.verdict('01', pg_temp.sess('01', '2 days', '8 hours')), '401',
 select is(pg_temp.verdict('01', pg_temp.sess('01', '8 hours')), '401', 'manager: never refreshed for 8 h → refused (inactivity from creation)');
 select is(pg_temp.verdict('02', pg_temp.sess('02', '31 days', '30 days' - interval '1 second')), '401', 'staff: age over 30 days wins even when idle is under its limit');
 select is(pg_temp.verdict('02', pg_temp.sess('02', '29 days', '29 days' - interval '1 second')), 'ok', 'staff: idle under 30 days → token');
-select is(pg_temp.verdict('03', pg_temp.sess('03', '60 days', '30 days' - interval '1 second')), 'ok', 'guardian: 60-day-old session, idle 1 s under 30 days → token');
-select is(pg_temp.verdict('03', pg_temp.sess('03', '60 days', '30 days')), '401', 'guardian: idle 30 days → refused');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '20 days', '14 days' - interval '1 second')), 'ok', 'guardian: idle 1 s under 14 days → token');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '20 days', '14 days')), '401', 'guardian: idle 14 days → refused');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '14 days')), '401', 'guardian: never refreshed for 14 days → refused (inactivity from creation)');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '29 days 23 hours', '13 days')), 'ok', 'guardian refreshing within 14 days: valid just before 30 days');
+select is(pg_temp.verdict('03', pg_temp.sess('03', '30 days 1 minute', '1 minute')), '401', 'guardian refreshing every minute: refused after 30 days');
 
 -- An active session that refreshes regularly lives until its maximum age, not longer --------------------------------
 select is(pg_temp.verdict('01', pg_temp.sess('01', '6 days 23 hours', '10 minutes')), 'ok', 'manager refreshing every few minutes: still valid just before 7 days');
@@ -114,10 +117,13 @@ select is(pg_temp.verdict('01', pg_temp.sess('01', '7 days 1 minute', '10 minute
 -- Several roles: the strictest applies ------------------------------------------------------------------------------
 select is(pg_temp.verdict('05', pg_temp.sess('05', '8 days', '1 minute')), '401', 'director + guardian: 8-day-old session refused (manager limit, not guardian)');
 select is(pg_temp.verdict('05', pg_temp.sess('05', '1 day', '9 hours')), '401', 'director + guardian: 9 h idle refused (manager inactivity)');
-select is(pg_temp.verdict('04', pg_temp.sess('04', '31 days', '1 minute')), '401', 'educator + guardian: 31-day-old session refused (staff limit)');
+select is(pg_temp.verdict('04', pg_temp.sess('04', '31 days', '1 minute')), '401', 'educator + guardian: 31-day-old session refused');
+select is(pg_temp.verdict('04', pg_temp.sess('04', '20 days', '14 days')), '401', 'educator + guardian: idle 14 days refused (guardian inactivity, not staff''s 30)');
+select is(pg_temp.verdict('04', pg_temp.sess('04', '20 days', '14 days' - interval '1 second')), 'ok', 'educator + guardian: idle just under 14 days → token');
 
 -- Suspended membership ----------------------------------------------------------------------------------------------
 select is(pg_temp.verdict('07', pg_temp.sess('07', '10 days', '1 minute')), 'ok', 'suspended director, active guardian: guardian limits (suspension removes the role, RLS removes the data)');
+select is(pg_temp.verdict('07', pg_temp.sess('07', '31 days', '1 minute')), '401', 'suspended director, active guardian: refused after the guardian''s 30 days');
 
 -- No role: strictest limits, not frozen -----------------------------------------------------------------------------
 select is(pg_temp.verdict('06', pg_temp.sess('06', '8 days', '1 minute')), '401', 'no role: 8-day-old session refused');
@@ -149,6 +155,23 @@ insert into public.memberships (organization_id, profile_id, role, status, valid
 values ('d5360000-0000-4000-8000-00000000000a', 'd5360000-0000-4000-8000-000000000010', 'director', 'active', daterange(current_date - 1, null));
 select is(pg_temp.verdict('10', (select sid from ratchet)), '401', 'promoted to director: the same session is refused at the next token (manager limit)');
 select is((select row(role_class, max_age)::text from auth_hooks.session_limits where session_id = (select sid from ratchet)), '(manager,"7 days")', 'frozen limits tightened to manager');
+
+-- Staff ↔ guardian: the inactivity limit only tightens.
+update ratchet set sid = pg_temp.sess('02', '1 day', '1 minute');
+select is(pg_temp.verdict('02', (select sid from ratchet)), 'ok', 'educator session: staff limits (30 / 30) frozen');
+update public.memberships set valid_during = daterange(current_date - 30, current_date) where profile_id = 'd5360000-0000-4000-8000-000000000002';
+insert into public.memberships (organization_id, profile_id, role, status, valid_during)
+values ('d5360000-0000-4000-8000-00000000000b', 'd5360000-0000-4000-8000-000000000002', 'guardian', 'active', daterange(current_date - 1, null));
+update auth.sessions set refreshed_at = (now() - interval '15 days') at time zone 'UTC' where id = (select sid from ratchet);
+select is(pg_temp.verdict('02', (select sid from ratchet)), '401', 'educator → guardian: 15 days idle now refused (tightened to 14 days)');
+select is((select row(max_age, idle_timeout)::text from auth_hooks.session_limits where session_id = (select sid from ratchet)), '("30 days","14 days")', 'frozen limits tightened to the guardian''s 14 days');
+update ratchet set sid = pg_temp.sess('03', '1 day', '1 minute');
+select is(pg_temp.verdict('03', (select sid from ratchet)), 'ok', 'guardian session: guardian limits (30 / 14) frozen');
+insert into public.memberships (organization_id, profile_id, role, status, valid_during)
+values ('d5360000-0000-4000-8000-00000000000b', 'd5360000-0000-4000-8000-000000000003', 'educator', 'active', daterange(current_date - 1, null));
+update public.memberships set valid_during = daterange(current_date - 30, current_date) where profile_id = 'd5360000-0000-4000-8000-000000000003' and role = 'guardian';
+update auth.sessions set refreshed_at = (now() - interval '20 days') at time zone 'UTC' where id = (select sid from ratchet);
+select is(pg_temp.verdict('03', (select sid from ratchet)), '401', 'guardian → educator: 20 days idle still refused (never relaxed to 30 days)');
 
 -- Fail closed --------------------------------------------------------------------------------------------------------
 select is((auth_hooks.custom_access_token('{"user_id":"d5360000-0000-4000-8000-000000000001","authentication_method":"token_refresh","claims":{"amr":[{"method":"otp","timestamp":1}]}}') -> 'error' ->> 'http_code'),

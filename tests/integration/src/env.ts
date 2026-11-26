@@ -6,6 +6,8 @@ interface Status {
   PUBLISHABLE_KEY: string;
   SECRET_KEY: string;
   MAILPIT_URL: string;
+  /** The local stack's well-known demo JWT secret (never a hosted value). */
+  JWT_SECRET: string;
 }
 
 /** Reads the public, well-known keys of the LOCAL stack and refuses anything that is not localhost. */

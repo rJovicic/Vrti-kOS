@@ -3,6 +3,7 @@
 // expiry is proven end to end with a 60-second margin, by moving a session's timestamps back with the database owner's
 // connection (local stack only — never staging). Synthetic accounts.
 import { spawn, spawnSync } from 'node:child_process';
+import { createHmac } from 'node:crypto';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { anonClient, claims, createKindergarten, email, enrolMfa, service, signInWithCode, stack } from './helpers.ts';
 
@@ -60,14 +61,14 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     for (const t of [m, e, g]) expect((await refresh(t)).error).toBeUndefined();
     expect(frozen(m)).toBe('manager 7 days 08:00:00');
     expect(frozen(e)).toBe('staff 30 days 30 days');
-    expect(frozen(g)).toBe('guardian 90 days 30 days');
+    expect(frozen(g)).toBe('guardian 30 days 14 days');
   }, 90_000);
 
   it('maximum age: a token is issued a minute before the limit and refused a minute after it, for every role', async () => {
     for (const [address, limit] of [
       [kg.managerEmail, 7],
       [kg.educatorEmail, 30],
-      [guardianEmail, 90],
+      [guardianEmail, 30],
     ] as const) {
       let t = await signIn(address);
       setTimes(t, `${limit} days - 60 seconds`, '1 minute');
@@ -85,7 +86,7 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     for (const [address, idle] of [
       [kg.managerEmail, '8 hours'],
       [kg.educatorEmail, '30 days'],
-      [guardianEmail, '30 days'],
+      [guardianEmail, '14 days'],
     ] as const) {
       let t = await signIn(address);
       setTimes(t, '1 day', `${idle} - 60 seconds`);
@@ -115,6 +116,15 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     // Still refreshing every few minutes, but past 7 days: refused.
     sql(`update auth.sessions set created_at = now() - interval '7 days 60 seconds' where id = '${sid(t)}'`);
     expect((await refresh(t)).error?.status).toBe(401);
+
+    // A guardian who opens the app at least every 14 days keeps the session until 30 days, not longer.
+    let g = await signIn(guardianEmail);
+    setTimes(g, '29 days 23 hours', '13 days 23 hours');
+    const g1 = await refresh(g);
+    expect(g1.error).toBeUndefined();
+    g = g1.next!;
+    sql(`update auth.sessions set created_at = now() - interval '30 days 60 seconds' where id = '${sid(g)}'`);
+    expect((await refresh(g)).error?.status).toBe(401);
   }, 90_000);
 
   it('MFA: an AAL2 manager session keeps AAL2 on refresh and is limited like any manager session', async () => {
@@ -143,6 +153,20 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     expect((await refresh(t)).error?.status).toBe(401);
   }, 120_000);
 
+  it('several roles: educator who is also a guardian gets the guardian\'s 14-day inactivity limit', async () => {
+    const k = await createKindergarten('slim-eg');
+    const educatorId = sql(`select id from auth.users where email = '${k.educatorEmail}'`);
+    await service.from('memberships').insert({ organization_id: kg.orgId, profile_id: educatorId, role: 'guardian', valid_during: '[2026-01-01,)' }).throwOnError();
+    let t = await signIn(k.educatorEmail);
+    expect(frozen(t)).toBe('staff 30 days 14 days');
+    setTimes(t, '20 days', '13 days 23 hours');
+    const ok = await refresh(t);
+    expect(ok.error).toBeUndefined();
+    t = ok.next!;
+    setTimes(t, '20 days', '14 days 60 seconds');
+    expect((await refresh(t)).error?.status).toBe(401);
+  }, 120_000);
+
   it('role change during a session: promotion shortens it at the next token, demotion never lengthens it', async () => {
     // Promotion: an educator session of 10 days is fine as staff, refused once the person becomes a director.
     const k = await createKindergarten('slim-role');
@@ -164,7 +188,22 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     expect(frozen(m)).toBe('manager 7 days 08:00:00');
     // A new session of the now-guardian gets guardian limits.
     m = await signIn(k.managerEmail);
-    expect(frozen(m)).toBe('guardian 90 days 30 days');
+    expect(frozen(m)).toBe('guardian 30 days 14 days');
+
+    // Educator → guardian: the inactivity limit tightens from 30 to 14 days for the running session.
+    const k2 = await createKindergarten('slim-role2');
+    let s2 = await signIn(k2.educatorEmail);
+    expect(frozen(s2)).toBe('staff 30 days 30 days');
+    sql(`update public.memberships set role = 'guardian' where id = '${k2.educatorMembershipId}'`);
+    setTimes(s2, '2 days', '15 days');
+    expect((await refresh(s2)).error?.status).toBe(401);
+    // Guardian → educator: a guardian session is never relaxed to staff limits.
+    s2 = await signIn(k2.educatorEmail);
+    expect(frozen(s2)).toBe('guardian 30 days 14 days');
+    sql(`update public.memberships set role = 'educator' where id = '${k2.educatorMembershipId}'`);
+    setTimes(s2, '2 days', '20 days');
+    expect((await refresh(s2)).error?.status).toBe(401);
+    expect(frozen(m)).toBe('guardian 30 days 14 days');
   }, 120_000);
 
   it('suspended membership: the role no longer counts (strictest limits apply), and data access ends at once', async () => {
@@ -178,6 +217,15 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     e = await signIn(k.educatorEmail);
     setTimes(e, '2 days', '9 hours');
     expect((await refresh(e)).error).toBeUndefined();
+    // A suspended guardian membership: the guardian's limits no longer apply either (strictest limits).
+    const g = await signIn(guardianEmail);
+    sql(`update public.memberships set status = 'suspended' where profile_id = '${guardianId}'`);
+    setTimes(g, '2 days', '9 hours');
+    try {
+      expect((await refresh(g)).error?.status).toBe(401);
+    } finally {
+      sql(`update public.memberships set status = 'active' where profile_id = '${guardianId}'`);
+    }
   }, 120_000);
 
   it('after "sign out everywhere": refresh refused and the frozen limits are gone with the sessions', async () => {
@@ -188,9 +236,32 @@ describe('session limits per role (SR-SESS-04 option B, real Auth)', () => {
     await client.auth.signOut({ scope: 'global' });
     expect((await refresh(t)).error).toBeDefined();
     expect(sql(`select count(*) from auth_hooks.session_limits where user_id = '${guardianId}'`)).toBe('0');
-    // The access token issued before sign-out stays valid until it expires (≤ 15 min; SR-SESS-04 does not change it).
+    // The access token issued before sign-out stays valid until it expires — never longer than 15 minutes:
+    // every token lives exactly jwt_expiry (900 s), and after revocation no new one can be obtained.
     expect(await restStatus(t.access)).toBe(200);
+    const c = claims(t.access);
+    expect(Number(c.exp) - Number(c.iat)).toBe(900);
+    expect(Number(c.exp) - Math.floor(Date.now() / 1000)).toBeLessThanOrEqual(900);
   }, 90_000);
+
+  it('an access token is refused by the API once it has expired: 15 minutes plus PostgREST\'s 30-second clock tolerance', async () => {
+    const t = await signIn(kg.educatorEmail);
+    const header = JSON.parse(Buffer.from(t.access.split('.')[0]!, 'base64url').toString()) as { alg: string };
+    const c = claims(t.access);
+    expect(Number(c.exp) - Number(c.iat)).toBe(900);
+    // Same claims, signed with the local stack's JWT secret: valid now → accepted (control); expired → refused.
+    const mint = (exp: number) => {
+      const enc = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
+      const body = `${enc({ alg: 'HS256', typ: 'JWT' })}.${enc({ ...c, iat: exp - 900, exp })}`;
+      return `${body}.${createHmac('sha256', stack.JWT_SECRET).update(body).digest('base64url')}`;
+    };
+    const now = Math.floor(Date.now() / 1000);
+    expect(await restStatus(mint(now + 600)), `control (local signing alg ${header.alg})`).toBe(200);
+    // PostgREST tolerates 30 s of clock skew past `exp` (measured: 29 s → 200, 31 s → 401). The real ceiling after a
+    // revocation is therefore jwt_expiry + 30 s = 15 min 30 s on the REST API.
+    expect(await restStatus(mint(now - 20))).toBe(200);
+    expect(await restStatus(mint(now - 40))).toBe(401);
+  }, 60_000);
 
   it('after a refused refresh, the last access token still works until it expires (at most 15 minutes)', async () => {
     const t = await signIn(kg.educatorEmail);
