@@ -69,6 +69,13 @@ export function normalizeIp(raw: string): string | null {
 export function clientAddress(headers: Pick<Headers, 'get'>, env: RuntimeEnv): string {
   if (!onRailway(env)) return 'unknown';
   const value = headers.get('x-real-ip');
+  // TEMPORARY diagnostic (PP-S2 staging check, removed in the next commit): header shape only, no addresses.
+  {
+    const xff = (headers.get('x-forwarded-for') ?? '').split(',').map((v) => v.trim()).filter(Boolean);
+    const probe = xff.map((v) => (v.startsWith('198.51.100.') ? 'probe' : isIP(v) ? `v${isIP(v)}` : 'bad'));
+    const real = value?.trim() ?? '';
+    console.warn(JSON.stringify({ event: 'client_ip_shape', xff: probe, real: real.startsWith('198.51.100.') ? 'probe' : isIP(real) ? `v${isIP(real)}` : real ? 'bad' : 'none', realIndex: xff.indexOf(real) }));
+  }
   return (value && normalizeIp(value)) || 'unknown';
 }
 
