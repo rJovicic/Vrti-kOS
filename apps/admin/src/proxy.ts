@@ -53,6 +53,11 @@ export async function proxy(request: NextRequest) {
   response.headers.set('Referrer-Policy', 'no-referrer');
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Cache-Control', 'no-store');
+  // PP-S2: a refused sign-in step redirects here with the wait in minutes; state it as a standard header too.
+  const retry = request.nextUrl.searchParams.get('retry');
+  if (request.nextUrl.pathname.startsWith('/sign-in') && request.nextUrl.searchParams.get('e') === 'RATE_LIMITED' && retry && /^[1-9]\d?$/.test(retry)) {
+    response.headers.set('Retry-After', String(Number(retry) * 60));
+  }
   return response;
 }
 

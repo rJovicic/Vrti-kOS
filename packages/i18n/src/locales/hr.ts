@@ -690,6 +690,7 @@ export const hr = {
     ABSENCE_ALREADY_CANCELLED: 'Ova prijava je već otkazana.',
     ABSENCE_ALREADY_PAST: 'Prijava se odnosi na prošle dane i ne može se otkazati.',
     RATE_LIMITED: 'Previše pokušaja. Pričekajte trenutak.',
+    RATE_LIMITED_RETRY: 'Previše pokušaja. Pokušajte ponovno za {{minutes}} min.',
     INTERNAL: 'Došlo je do pogreške. Oznaka: {{correlationId}}',
   },
 

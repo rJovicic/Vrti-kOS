@@ -338,6 +338,36 @@ describe('admin app (browser)', () => {
     await p.close();
   });
 
+  it('PP-S2: code requests are limited in the admin server, identically for known and unknown addresses, with the wait shown', async () => {
+    // Local admin is not on Railway: client addresses are not trusted, so a forged X-Real-IP changes nothing.
+    const outcome = async (address: string, forgedIp: string) => {
+      const p = await browser.newPage({ extraHTTPHeaders: { 'x-real-ip': forgedIp, 'x-forwarded-for': forgedIp } });
+      await p.goto(`${ADMIN}/sign-in`);
+      await p.getByLabel('E-adresa').fill(address);
+      await p.getByRole('button', { name: 'Pošalji kod' }).click();
+      await p.waitForURL((u) => /\/sign-in\/code$/.test(u.pathname) || /e=RATE_LIMITED/.test(u.search));
+      const url = new URL(p.url());
+      const text = url.pathname.endsWith('/code') ? 'code' : await p.locator('p.flash.error').innerText();
+      await p.close();
+      return { path: url.pathname, retry: url.searchParams.get('retry'), text };
+    };
+    // An existing account that has not asked for a code yet; Auth itself refuses a second code within a minute (R-42).
+    const known = email(`pps2-${randomUUID().slice(0, 8)}`);
+    const { error } = await service.auth.admin.createUser({ email: known, email_confirm: true });
+    expect(error).toBeNull();
+    const unknown = `nepostoji-${randomUUID().slice(0, 8)}@demo.vrtic.test`;
+    const knownSeq = [];
+    const unknownSeq = [];
+    for (let i = 0; i < 4; i++) knownSeq.push(await outcome(known, `198.51.100.${i}`));
+    for (let i = 0; i < 4; i++) unknownSeq.push(await outcome(unknown, `203.0.113.${i}`));
+    // Three requests per address and client pass, the fourth is refused — the same for both addresses.
+    expect(knownSeq.map((o) => o.path)).toEqual(['/sign-in/code', '/sign-in/code', '/sign-in/code', '/sign-in']);
+    expect(unknownSeq).toEqual(knownSeq);
+    expect(knownSeq[3]).toEqual({ path: '/sign-in', retry: '15', text: 'Previše pokušaja. Pokušajte ponovno za 15 min.' });
+    const res = await page.request.get(`${ADMIN}/sign-in?e=RATE_LIMITED&retry=15`);
+    expect(res.headers()['retry-after']).toBe('900');
+  });
+
   it('sign-out ends the session', async () => {
     await page.goto(`${ADMIN}/${slug}`);
     await page.getByRole('button', { name: 'Odjava', exact: true }).click();
