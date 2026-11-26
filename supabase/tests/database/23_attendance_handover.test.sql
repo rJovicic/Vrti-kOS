@@ -70,7 +70,11 @@ create function pg_temp.link(n int) returns uuid language sql as $$ select ('d3f
 create function pg_temp.pick(n int) returns uuid language sql as $$ select ('d3f00000-0000-4000-8000-00000000b00' || n)::uuid $$;
 create function pg_temp.k(n int) returns uuid language sql as $$ select ('d3f00000-0000-4000-8000-' || lpad(n::text, 12, '0'))::uuid $$;
 create function pg_temp.ago(m int) returns timestamptz language sql as $$
-  select greatest(now() - make_interval(mins => m), date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb' + make_interval(secs => 200 - m))
+  -- m minutes ago, but never before the kindergarten's local midnight: early in the day the times are scaled into the
+  -- part of today that has passed, keeping their order (larger m = earlier). Valid for m < 1000.
+  select greatest(now() - make_interval(mins => m),
+                  date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb'
+                  + (now() - date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb') * ((1000 - m) / 1000.0))
 $$;
 create function pg_temp.list(c text) returns text language sql as $$
   select coalesce(string_agg(kind || ':' || first_name || case when restricted then '!' else '' end, ',' order by kind, first_name), '')

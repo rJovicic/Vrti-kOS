@@ -59,7 +59,11 @@ create function pg_temp.seq(c text) returns text language sql as $$
 $$;
 -- Today, a given number of minutes ago, always inside today (tests run at any hour).
 create function pg_temp.ago(m int) returns timestamptz language sql as $$
-  select greatest(now() - make_interval(mins => m), date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb' + make_interval(secs => 60 - m))
+  -- m minutes ago, but never before the kindergarten's local midnight: early in the day the times are scaled into the
+  -- part of today that has passed, keeping their order (larger m = earlier). Valid for m < 1000.
+  select greatest(now() - make_interval(mins => m),
+                  date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb'
+                  + (now() - date_trunc('day', now() at time zone 'Europe/Zagreb') at time zone 'Europe/Zagreb') * ((1000 - m) / 1000.0))
 $$;
 grant execute on function pg_temp.ago(int) to authenticated;
 

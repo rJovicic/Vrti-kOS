@@ -39,13 +39,15 @@ select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-00
   '403', 'refresh of a password session: token refused');
 select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"token_refresh","claims":{"amr":[{"method":"totp","timestamp":2},{"method":"password","timestamp":1}]}}') -> 'error' ->> 'http_code',
   '403', 'password session upgraded with TOTP: still refused');
-select is(auth_hooks.custom_access_token('{"user_id":"x","authentication_method":"otp","claims":{"sub":"x","amr":[{"method":"otp","timestamp":1}]}}'),
-  '{"user_id":"x","authentication_method":"otp","claims":{"sub":"x","amr":[{"method":"otp","timestamp":1}]}}'::jsonb, 'e-mail code sign-in: event returned unchanged');
-select is(auth_hooks.custom_access_token('{"user_id":"x","authentication_method":"token_refresh","claims":{"amr":[{"method":"totp","timestamp":2},{"method":"otp","timestamp":1}]}}'),
-  '{"user_id":"x","authentication_method":"token_refresh","claims":{"amr":[{"method":"totp","timestamp":2},{"method":"otp","timestamp":1}]}}'::jsonb, 'refresh of a code + TOTP session: unchanged (AAL2 kept)');
-select is(auth_hooks.custom_access_token('{"user_id":"x","authentication_method":"recovery","claims":{"amr":[{"method":"recovery","timestamp":1}]}}') -> 'error',
+-- A live session for the non-password cases (SR-SESS-04: every token needs a known session, migration 20261126100000).
+insert into auth.sessions (id, user_id, created_at, updated_at) values ('d4900000-0000-4000-8000-0000000000e1', 'd4900000-0000-4000-8000-000000000001', now(), now());
+select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"otp","claims":{"sub":"d4900000-0000-4000-8000-000000000001","session_id":"d4900000-0000-4000-8000-0000000000e1","amr":[{"method":"otp","timestamp":1}]}}'),
+  '{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"otp","claims":{"sub":"d4900000-0000-4000-8000-000000000001","session_id":"d4900000-0000-4000-8000-0000000000e1","amr":[{"method":"otp","timestamp":1}]}}'::jsonb, 'e-mail code sign-in: event returned unchanged');
+select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"token_refresh","claims":{"session_id":"d4900000-0000-4000-8000-0000000000e1","amr":[{"method":"totp","timestamp":2},{"method":"otp","timestamp":1}]}}'),
+  '{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"token_refresh","claims":{"session_id":"d4900000-0000-4000-8000-0000000000e1","amr":[{"method":"totp","timestamp":2},{"method":"otp","timestamp":1}]}}'::jsonb, 'refresh of a code + TOTP session: unchanged (AAL2 kept)');
+select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"recovery","claims":{"session_id":"d4900000-0000-4000-8000-0000000000e1","amr":[{"method":"recovery","timestamp":1}]}}') -> 'error',
   null, 'mailbox-based recovery session: not refused by the hook');
-select is(auth_hooks.custom_access_token('{"user_id":"x","authentication_method":"otp","claims":{"amr":["password", 3, null]}}') -> 'error',
+select is(auth_hooks.custom_access_token('{"user_id":"d4900000-0000-4000-8000-000000000001","authentication_method":"otp","claims":{"session_id":"d4900000-0000-4000-8000-0000000000e1","amr":["password", 3, null]}}') -> 'error',
   null, 'malformed amr entries do not break token issuance');
 
 select * from finish();
