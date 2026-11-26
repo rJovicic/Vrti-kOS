@@ -16,6 +16,7 @@ Nisu podizvršitelji za osobne podatke djece ili korisnika: staging ne smije sad
 |---|---|---|---|---|
 | **Supabase** (projekt `vrticos-staging`) | baza, Auth, API, Edge Functions za testiranje | sintetički seed (`@demo.vrtic.test`), operativni podaci računa vlasnika kod Supabasea | eu-central-1 (Frankfurt) | aktivno, besplatni plan |
 | **Railway** (projekt `vrticos-staging`, servis `admin`) | posluživanje admin web aplikacije | prolazni HTTP promet sa sintetičkim podacima; nema baze ni pohrane | europe-west4 (Amsterdam); Railway Corp. je iz SAD-a ⚖️ ako ikad dobije stvarne podatke | aktivno |
+| **Railway** (projekt `vrticos-staging`, servis `mobile-web`) | posluživanje statičkih datoteka web pregleda mobilne aplikacije (samo staging) | nikakvi osobni podaci: poslužitelj šalje samo JS/HTML; preglednik razgovara izravno sa Supabaseom; tokeni ostaju u kartici preglednika | europe-west4; Railway Corp. iz SAD-a | **pripremljeno (staged), nije aktivno** — čeka odobrenje |
 
 ## 1. Odobreni, ali neaktivni
 
