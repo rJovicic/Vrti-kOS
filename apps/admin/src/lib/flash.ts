@@ -11,7 +11,7 @@ export function readFlash(params: Record<string, string | string[] | undefined>)
   const e = typeof params.e === 'string' ? params.e : undefined;
   const code = errorCodes.find((c) => c === e);
   if (code === 'RATE_LIMITED' && typeof params.retry === 'string' && /^[1-9]\d?$/.test(params.retry)) {
-    return { kind: 'error', text: t('errors.RATE_LIMITED_RETRY', { minutes: params.retry }) };
+    return { kind: 'error', text: t('auth.rateLimitedRetry', { minutes: params.retry }) };
   }
   if (code) {
     const ref = typeof params.ref === 'string' && /^[0-9a-f-]{36}$/.test(params.ref) ? params.ref : '—';

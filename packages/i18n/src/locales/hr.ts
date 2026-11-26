@@ -100,6 +100,7 @@ export const hr = {
     mfaCode: 'Kod iz aplikacije',
     signOut: 'Odjava',
     signOutEverywhere: 'Odjava sa svih uređaja',
+    rateLimitedRetry: 'Previše pokušaja. Pokušajte ponovno za {{minutes}} min.',
     signOutEverywhereHint: 'Završava prijavu na svim telefonima i preglednicima, npr. ako ste izgubili uređaj.',
     noAdminAccess: 'Ovaj račun nema pristup administraciji.',
     noAdminAccessHelp: 'Administracija je namijenjena upravi vrtića. Odgojitelji i roditelji koriste mobilnu aplikaciju VrtićOS.',
@@ -690,7 +691,6 @@ export const hr = {
     ABSENCE_ALREADY_CANCELLED: 'Ova prijava je već otkazana.',
     ABSENCE_ALREADY_PAST: 'Prijava se odnosi na prošle dane i ne može se otkazati.',
     RATE_LIMITED: 'Previše pokušaja. Pričekajte trenutak.',
-    RATE_LIMITED_RETRY: 'Previše pokušaja. Pokušajte ponovno za {{minutes}} min.',
     INTERNAL: 'Došlo je do pogreške. Oznaka: {{correlationId}}',
   },
 
