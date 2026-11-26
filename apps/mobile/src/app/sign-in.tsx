@@ -32,8 +32,10 @@ export default function SignIn() {
     setBusy(true);
     setError(null);
     try {
-      const { error: e } = await supabase.auth.signInWithOtp({ email: parsed.data.email, options: { shouldCreateUser: false } });
-      if (e?.status === 429) return setError(t('errors.RATE_LIMITED'));
+      // Known and unknown addresses continue identically (SR-AUTHN-03), including Auth's refusal (429): it happens only
+      // for existing addresses (a code was sent less than a minute ago, or the e-mail send limit), so showing it would
+      // reveal that the account exists (R-42, same rule as the admin). The person uses the code already sent.
+      await supabase.auth.signInWithOtp({ email: parsed.data.email, options: { shouldCreateUser: false } });
       setEmail(parsed.data.email);
       setStep('code');
     } catch {
