@@ -125,6 +125,9 @@ describe('mobile web preview (iPhone viewport)', () => {
     const { client } = await signInWithCode(address);
     const { data: own } = await client.from('children').select('first_name');
     expect(own?.length).toBeGreaterThan(0);
+    // Let Auth's per-address code interval pass and keep the code mail just used out of the next sign-in's window:
+    // a second request inside the interval is refused by Auth (the app then continues without a new code — R-42).
+    await new Promise((r) => setTimeout(r, 2_500));
     const { page, errors } = await newPhone();
     await signIn(page, address);
     const text = await waitForText(page, new RegExp(own![0]!.first_name as string));
