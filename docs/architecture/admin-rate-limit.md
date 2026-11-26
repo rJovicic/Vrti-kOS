@@ -1,6 +1,8 @@
 # Admin sign-in rate limit (PP-S2)
 
 Status: implemented 2026-11-26 (owner decision: PP-S2 option (b), [pre-pilot-decisions.md §2.3](../security/pre-pilot-decisions.md)).
+Remaining risk (R-63) **accepted by the owner for the limited pilot on 2026-11-26, on condition that the admin
+service stays on one instance.**
 Code: `apps/admin/src/lib/rate-limit.ts`, `apps/admin/src/lib/sign-in-guard.ts`; used by
 `app/sign-in/actions.ts` (send code, verify code) and `app/mfa/actions.ts` (TOTP check).
 

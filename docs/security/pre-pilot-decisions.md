@@ -16,7 +16,7 @@ Oznake dokaza: **[test]** automatski test u repozitoriju, **[mjereno]** izmjeren
 
 | # | Tema | Stanje | Najvažniji rizik | Preporuka | Tko odlučuje |
 |---|---|---|---|---|---|
-| 1 | Sesije | **Odlučeno i izvedeno 2026-11-26 (opcija B, §7.1):** rokovi po ulozi u Auth hooku; odjava sa svih uređaja | Krađa refresh tokena se ne otkriva trenutačno (PP-S1); ograničena rokom uloge | — | migracija na staging/produkciju: odobrenje vlasnika |
+| 1 | Sesije | **Odlučeno i izvedeno 2026-11-26 (opcija B, §7.1, ADR-0019):** uprava 7 d / 8 h, osoblje 30 / 30 d, skrbnici 30 / 14 d; odjava sa svih uređaja | Krađa refresh tokena se ne otkriva trenutačno (PP-S1); ograničena rokom uloge | — | migracija na staging/produkciju: odobrenje vlasnika |
 | 2 | E-pošta | Samo Mailpit lokalno; staging bez SMTP-a (2 poruke/h); **PP-S2 izveden 2026-11-26 (§7.2)** | Bez pružatelja nema pilota | **Scaleway TEM** (EU), alternativa Brevo; testirati isporučivost prije odluke | vlasnik + DPO (ugovor o obradi) |
 | 3 | Baza: veze, SSL, mreža | Nitko ne koristi izravnu vezu; SSL nije prisiljen; mreža otvorena `0.0.0.0/0` | Lozinka baze je jedina zaštita izravnog pristupa | Uključiti SSL i zatvoriti mrežu (plan u §3.4) — **uz odobrenje**, kratki restart | vlasnik |
 | 4 | Retencija i brisanje | Ništa se ne briše; baza odbija brisanje osobe/djeteta sa zapisima | Nema postupka za zahtjev za brisanje; nema rokova | Odluka po kategoriji (§4.3), anonimizacija umjesto brisanja zapisa | vrtić (voditelj obrade) + DPO + pravnik |
@@ -337,7 +337,10 @@ Izvori ([dok.]): [Supabase — rate limits](https://supabase.com/docs/guides/aut
 
 ## 7. Izvedba odluka (2026-11-26)
 
-### 7.1 SR-SESS-04 — opcija B
+### 7.1 SR-SESS-04 — opcija B ([ADR-0019](../decisions/0019-session-policy.md))
+
+Rokovi za skrbnike odobreni za pilot 2026-11-26: **30 dana / 14 dana** (prije 90 / 30). Migracija je izmijenjena na mjestu jer
+nije bila primijenjena ni na jednom hostanom projektu.
 Migracija `supabase/migrations/20261126100000_session_limits.sql` (**lokalno i u CI-ju; na staging nije primijenjena** —
 promjena staginga traži odobrenje vlasnika).
 
@@ -345,7 +348,7 @@ promjena staginga traži odobrenje vlasnika).
 |---|---|---|
 | Uprava (`org_admin`, `director`, platform admin) | 7 dana | 8 sati |
 | Odgojitelji / osoblje (`educator`) | 30 dana | 30 dana |
-| Skrbnici (`guardian`) | 90 dana | 30 dana |
+| Skrbnici (`guardian`) | 30 dana | 14 dana |
 
 Kako radi:
 - Auth poziva hook **pri svakom izdavanju access tokena**: prijava kodom, potvrda MFA-a, svako osvježavanje. Hook radi u
@@ -353,7 +356,7 @@ Kako radi:
 - Dob i neaktivnost čitaju se samo iz `auth.sessions` (piše ih isključivo Auth), nikad iz zahtjeva, claimova ili
   korisničkih metapodataka. U trenutku poziva hooka `refreshed_at` je još prethodno osvježavanje (= zadnja aktivnost).
 - Uloge: aktivna članstva važeća danas (vremenska zona vrtića), kao i za pristup podacima; više uloga → najstroži rok
-  svake vrste.
+  svake vrste zasebno (npr. odgojitelj koji je i skrbnik: 30 dana / **14 dana** neaktivnosti).
 - **Rokovi se po sesiji samo pooštravaju** (`auth_hooks.session_limits`, briše se zajedno sa sesijom): novo članstvo u
   drugom vrtiću, gubitak uloge ili „degradacija” ne produljuju tekuću sesiju; unapređenje (npr. odgojitelj → ravnatelj)
   skraćuje je pri sljedećem tokenu. Osoba bez aktivne uloge dobiva najstrože rokove, ali se oni ne zamrzavaju (pozvana
@@ -367,22 +370,24 @@ Dokazi:
 | Vrsta isteka / slučaj | pgTAP 36 (granica: 1 s prije / na roku) | Integracija sa stvarnim Authom (`session-limits.test.ts`, ±60 s) |
 |---|---|---|
 | Nova sesija svake uloge | ✅ token, rokovi zamrznuti | ✅ prijava, osvježavanje, zamrznuti rokovi |
-| Najdulja dob (7 / 30 / 90 dana) | ✅ sve tri uloge | ✅ sve tri uloge, 401 „Session expired. Sign in again.” |
-| Neaktivnost (8 h / 30 / 30 dana) | ✅ sve tri uloge + nikad osvježena | ✅ sve tri uloge + nikad osvježena |
-| Aktivna sesija koja se redovito osvježava | ✅ vrijedi do najdulje dobi, ne dulje | ✅ svako osvježavanje pomiče zadnju aktivnost; odbijena nakon 7 dana |
-| Više uloga | ✅ ravnatelj + skrbnik, odgojitelj + skrbnik | ✅ ravnatelj + skrbnik u drugom vrtiću |
-| Suspendirano članstvo | ✅ suspendirana uloga se ne broji | ✅ najstroži rokovi; nakon reaktivacije nova sesija dobiva rokove uloge |
-| Promjena uloge tijekom sesije | ✅ degradacija ne produljuje, unapređenje skraćuje, članstvo u drugom vrtiću ne produljuje | ✅ isto, sa stvarnim Authom |
+| Najdulja dob (7 / 30 / 30 dana) | ✅ sve tri uloge | ✅ sve tri uloge, 401 „Session expired. Sign in again.” |
+| Neaktivnost (8 h / 30 / 14 dana) | ✅ sve tri uloge + nikad osvježena | ✅ sve tri uloge + nikad osvježena |
+| Aktivna sesija koja se redovito osvježava | ✅ vrijedi do najdulje dobi, ne dulje (uprava, skrbnik) | ✅ svako osvježavanje pomiče zadnju aktivnost; uprava odbijena nakon 7 dana, skrbnik nakon 30 |
+| Više uloga | ✅ ravnatelj + skrbnik, odgojitelj + skrbnik (14 dana neaktivnosti od skrbnika) | ✅ ravnatelj + skrbnik u drugom vrtiću; odgojitelj + skrbnik: odbijen nakon 14 dana neaktivnosti |
+| Suspendirano članstvo | ✅ suspendirana uloga se ne broji; skrbnik odbijen nakon 30 dana | ✅ najstroži rokovi (i za suspendiranog skrbnika); nakon reaktivacije nova sesija dobiva rokove uloge |
+| Promjena uloge tijekom sesije | ✅ degradacija ne produljuje, unapređenje skraćuje, članstvo u drugom vrtiću ne produljuje; odgojitelj → skrbnik pooštrava na 14 dana, skrbnik → odgojitelj ne popušta na 30 | ✅ isto, sa stvarnim Authom |
 | Globalna odjava | — | ✅ osvježavanje odbijeno, zamrznuti rokovi obrisani sa sesijama |
-| Postojeći access token nakon opoziva / odbijenog osvježavanja | — | ✅ vrijedi do isteka (≤ 15 min) — svjesno prihvaćeno (opcija B) |
+| Postojeći access token nakon opoziva / odbijenog osvježavanja | — | ✅ `exp − iat = 900 s`; novi token se ne može dobiti; istekli token odbijen nakon 30 s tolerancije PostgRESTa (≤ 15 min 30 s) |
 | Greška ili nedostupnost hooka | ✅ neispravan ID baca grešku; nepoznata/tuđa sesija 401 | ✅ greška: nema tokena, isti refresh token radi nakon oporavka; baza ne odgovara: Auth čeka, nema tokena bez provjere |
 | MFA/AAL2 | ✅ claimovi nepromijenjeni | ✅ AAL2 ostaje pri osvježavanju; vrijede rokovi uprave |
 
 Ponašanje nakon globalne odjave: Auth briše sve sesije osobe → svako osvježavanje odbijeno na svim uređajima; zamrznuti
-rokovi nestaju sa sesijama; access token koji je već izdan vrijedi do isteka (najviše 15 min) — za REST, Realtime i SSE.
+rokovi nestaju sa sesijama; access token koji je već izdan vrijedi do isteka: token traje točno 900 s (izmjereno), a
+PostgREST prihvaća token još **30 s** nakon `exp` zbog ugrađene tolerancije sata (izmjereno: 29 s → 200, 31 s → 401). Najdulji
+prozor nakon opoziva na REST API-ju je dakle **15 min 30 s**. Admin SSE tok se sam zatvara 60 s prije isteka tokena.
 
 Što ostaje (R-62 **ostaje otvoren**, ublažen): krađa refresh tokena **ne otkriva se trenutačno** (PP-S1) — napadač koji
-prvi osvježi ukradeni token zadržava sesiju do roka uloge (skrbnik do 90 dana, uz 30 dana neaktivnosti), dok je ne prekine
+prvi osvježi ukradeni token zadržava sesiju do roka uloge (skrbnik do 30 dana, uz korištenje barem svakih 14 dana), dok je ne prekine
 odjava sa svih uređaja ili suspenzija. Učinkovito trajanje = rok + do 15 min JWT-a.
 
 ### 7.2 PP-S2 — ograničenje prijave u administraciji
@@ -402,10 +407,11 @@ Tehnički opis: [architecture/admin-rate-limit.md](../architecture/admin-rate-li
   ukupnu kvotu (prijava kasni do 5 min); ciljana blokada jedne e-adrese do 15 min. R-63 **ostaje otvoren** (ublažen).
 
 ### 7.3 Odluke koje ostaju vlasniku
-1. Primjena migracije `20261126100000` na staging (a kasnije produkciju) — staging je namjerno nepromijenjen.
+1. Primjena migracije `20261126100000` na staging (a kasnije produkciju) — staging je namjerno nepromijenjen; čeka izričito
+   odobrenje vlasnika.
 2. R-62: prihvatiti preostali rizik (krađa se ne otkriva do roka) ili tražiti vezanje sesije uz uređaj / kraće rokove za
    skrbnike.
-3. R-63: prihvatiti preostali rizik za pilot ili kasnije `Sb-Forwarded-For` (tajni ključ na serveru administracije) /
-   zajednička pohrana brojača prije više instanci.
+3. R-63: **prihvaćen kao preostali rizik ograničenog pilota** (vlasnik, 2026-11-26), uz uvjet da administracija ostane na
+   jednoj instanci; prije više instanci ili šire uporabe: `Sb-Forwarded-For` ili zajednička pohrana brojača.
 4. Ne povećavati broj replika administracije bez zajedničke pohrane brojača.
 
